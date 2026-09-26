@@ -1,1 +1,7 @@
-검사/
+# 검사 도구는 올리되, 만들어지는 파일은 빼기
+검사/chrome-prof/
+검사/*.png
+검사/*.wav
+node_modules/
+.omc/
+**/.omc/
