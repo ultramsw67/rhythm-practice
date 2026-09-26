@@ -63,7 +63,10 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .brand .wm{font-weight:800;font-size:26px;letter-spacing:.28em;margin-right:-.28em;color:var(--ink);opacity:.16;line-height:1.2;user-select:none}
 @media (max-width:600px){ .brand{margin:0 0 6px} .brand img{width:64px;height:64px;border-width:2px} .brand .wm{font-size:18px} }
 body{touch-action:manipulation}
-.paper .now path,.paper .now rect{fill:var(--accent)!important;stroke:var(--accent)!important}
+/* 진행 표시: 지금 음 = 진한 주황빨강 + 빛, 지나간 음 = 연한 회색 (크림색 종이 위에서 검은 음표와 뚜렷이 구별) */
+.paper .now path,.paper .now rect{fill:#ff3d00!important;stroke:#ff3d00!important}
+.paper .now{filter:drop-shadow(0 0 2px #ff3d00) drop-shadow(0 0 6px rgba(255,61,0,.75))}
+.paper .done path,.paper .done rect{fill:#b4b9c2!important;stroke:#b4b9c2!important}
 .paper .sel path,.paper .sel rect{fill:#c2410c!important;stroke:#c2410c!important}
 .info{font-size:13px;color:var(--sub);margin-top:8px}
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
@@ -307,7 +310,7 @@ details[open] summary::after{content:" ▴"}
       <h2>이 앱에 대해</h2>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v1.3 · 2026-09-26</p>
+      <p class="muted" style="margin:8px 0 0">버전 v1.4 · 2026-09-26</p>
     </div>
   </section>
 </main>
@@ -1343,6 +1346,7 @@ function renderScore(host, sc, opt) {
   ctx.scale(scale, scale);
   const noteOf = {}, staveOf = {}, lineOf = {};
   const hits = [];
+  const beamList = [];                                 // 빔 id ↔ 음표 id (진행 표시에서 지나간 빔을 회색으로)
   lines.forEach((ln, li) => {
     const heads = ln.map((mi, k) => k === 0 ? headW(mi === 0) : 0);
     const mins = ln.map(mi => minW[mi]);
@@ -1391,7 +1395,7 @@ function renderScore(host, sc, opt) {
       evs.forEach((e, i) => { const u = sc.measures[mi].units.find(u => e.start >= u.start && e.start < u.start + u.len); const key = u ? u.id : 'x'; (byUnit[key] = byUnit[key] || []).push(i); });
       for (const idxs of Object.values(byUnit)) {
         let run = [];
-        const flush = () => { if (run.length >= 2) beams.push(new VF.Beam(run.map(i => notes[i]), melody)); run = []; };
+        const flush = () => { if (run.length >= 2) { const bm = new VF.Beam(run.map(i => notes[i]), melody); const bid = 'bm' + beamList.length; bm.setAttribute('id', bid); beamList.push({ id: bid, ev: run.map(i => evs[i].id) }); beams.push(bm); } run = []; };
         for (const i of idxs) {
           const e = evs[i];
           const beamable = !e.rest && ['8', '16', '32'].includes(e.base);
@@ -1444,7 +1448,7 @@ function renderScore(host, sc, opt) {
       new VF.Curve(null, b, opts).setContext(ctx).draw();     // 다음 줄 처음부터
     }
   }
-  host._hits = hits; host._scale = scale;
+  host._hits = hits; host._scale = scale; host._beams = beamList;
   if (opt.selected != null) { const el = document.getElementById('vf-ev' + opt.selected); if (el) el.classList.add('sel'); }
 }
 
@@ -1628,20 +1632,27 @@ function playScore() {
     const now = c.currentTime - playing.t0;
     const want = new Set();
     tl.notes.forEach((n, k) => { if (now >= n.t && now < n.t + Math.max(n.nominal, lens[k], 0.08)) n.ids.forEach(i => want.add(i)); });   // 박 길이만큼 표시(소리 틈과 무관)
-    for (const id of playing.on) if (!want.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) el.classList.remove('now'); }
+    for (const id of playing.on) if (!want.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) { el.classList.remove('now'); el.classList.add('done'); } }
     for (const id of want) if (!playing.on.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) el.classList.add('now'); }
-    playing.on = want;
+    playing.on = want; beamsDone();
     if (now > tl.total + 0.1) { stopPlay(); return; }
     playing.raf = requestAnimationFrame(tick);
   };
   playing.raf = requestAnimationFrame(tick);
+}
+// 빔으로 묶인 음이 모두 지나가면 빔도 회색
+function beamsDone() {
+  for (const b of $('#score')._beams || []) {
+    const el = document.getElementById('vf-' + b.id); if (!el || el.classList.contains('done')) continue;
+    if (b.ev.every(id => { const n = document.getElementById('vf-ev' + id); return n && n.classList.contains('done'); })) el.classList.add('done');
+  }
 }
 function stopPlay() {
   if (!playing) return;
   cancelAnimationFrame(playing.raf);
   for (const n of playing.nodes) { try { n.stop(); } catch (e) { } }
   try { playing.master.disconnect(); } catch (e) { }
-  document.querySelectorAll('#score .now').forEach(el => el.classList.remove('now'));
+  document.querySelectorAll('#score .now, #score .done').forEach(el => el.classList.remove('now', 'done'));
   playing = null;
   $('#playBtn').textContent = '▶ 들어보기';
 }
@@ -1812,9 +1823,9 @@ async function startRecInner(c) {
     } else big.classList.add('hide');
     const want = new Set();
     for (const n of tl.notes) if (rel >= n.t && rel < n.t + Math.max(n.dur, 0.08)) n.ids.forEach(i => want.add(i));
-    for (const id of rec.on) if (!want.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) el.classList.remove('now'); }
+    for (const id of rec.on) if (!want.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) { el.classList.remove('now'); el.classList.add('done'); } }
     for (const id of want) if (!rec.on.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) el.classList.add('now'); }
-    rec.on = want;
+    rec.on = want; beamsDone();
     drawWave();
     if (now >= rec.endAt) { finishRec(false); return; }
     rec.raf = requestAnimationFrame(loop);
@@ -1831,7 +1842,7 @@ async function finishRec(aborted) {
   try { r.master.disconnect(); } catch (e) { }
   r.cap.stop(); r.stream.getTracks().forEach(t => t.stop());
   try { if (wakeLock) await wakeLock.release(); } catch (e) { } wakeLock = null;
-  document.querySelectorAll('#score .now').forEach(el => el.classList.remove('now'));
+  document.querySelectorAll('#score .now, #score .done').forEach(el => el.classList.remove('now', 'done'));
   $('#countBig').classList.add('hide');
   $('#recBtn').textContent = '● 녹음 시작';
   if (aborted) { $('#recStatus').textContent = '녹음을 멈췄습니다. 저장하지 않았습니다.'; return; }
