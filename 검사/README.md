@@ -14,6 +14,12 @@
 | `node gen-wav.js ../index.html '<SET json>' fake.wav 0.7` 후 `FAKE_WAV=<fake.wav 절대경로> node cdp.js t4.js` | 가짜 마이크로 녹음→채점→저장 | `100점` |
 | `URL0=https://ultramsw67.github.io/rhythm-practice/ node cdp.js t5-live.js` | 배포된 실주소 | `secure true`, 가상 연주 100 |
 | `node build-guide.js` | 볼트 설명서 md → `../guide.html` | |
+| `node build-offline.js` | 오프라인 두 판(`../offline/`, 바탕화면 `리듬 연습 오프라인\`) 만들기 | 끝에 `offline built vX` |
+| `MODE=web PORT=8771 KILL_CMD=... node cdp.js t21-offline.js` / `MODE=file FAKE_WAV=... node cdp.js t21-offline.js` | 오프라인 앱을 서버 끄고 다시 열기 / PC 파일판 녹음 | 채점 시험 100, 녹음 100 |
+| `STALE=1 PORT=8791 node qa-e/serve2.js <root>` + `node cdp.js t25-offline-update.js` | 10분 캐시 서버에서 오프라인 업데이트 | 새로고침 1번에 새 버전 |
+| `node cdp.js t23-clip.js` / `t24-tune.js` / `t20-melody-mobile.js` | 찢어짐·악센트 대비 / 소리 균형 / 휴대폰 스피커 크기 | 최대 < 0.99, 악센트 ≥ 3.5dB, 모든 악기 > -26dB |
+| `FAKE_WAV=... node cdp.js t22-scriptproc.js` | 예비 녹음 방식(ScriptProcessor) | 100점 |
+| `node cdp.js t26-live-offline.js` | 실주소 오프라인 앱 | 차단 후 다시 열어 100 |
 
 주의
 - 가짜 마이크 시험(t4)은 **녹음을 맨 먼저** 해야 정확하다. 앞에 다른 시험을 돌리면 크롬이 소리 파일을 미리 틀어 점수가 낮게 나온다
