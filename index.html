@@ -354,7 +354,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <h2>이 앱에 대해</h2>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v1.8 · 2026-09-26</p>
+      <p class="muted" style="margin:8px 0 0">버전 v1.9 · 2026-09-26</p>
     </div>
   </section>
 </main>
@@ -1630,14 +1630,20 @@ function schedulePlayback(c, dest, t0, tl, melody) {
     const o1 = c.createOscillator(), o2 = c.createOscillator(), mix2 = c.createGain(), f = c.createBiquadFilter(), g = c.createGain();
     o1.type = 'sawtooth'; o2.type = 'triangle'; mix2.gain.value = 0.9;
     f.type = 'lowpass'; f.Q.value = 0.8;
-    o1.connect(f); o2.connect(mix2).connect(f); f.connect(g).connect(dest);
+    // 낮은 음일수록 휴대폰 스피커가 잘 내는 1~2kHz 배음을 키운다 (이어폰에서도 음높이는 그대로 들림)
+    const lowHz = Math.min(...plan.slice(i, j + 1).map(p => hz(p.n)));
+    const pres = c.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 1500; pres.Q.value = 0.6;
+    pres.gain.value = Math.max(0, Math.min(15, 20 * Math.log10(466 / lowHz) * 1.1));
+    mix2.gain.value = lowHz < 300 ? 0.35 : 0.9;                 // 삼각파(기음 위주)는 휴대폰에서 안 들리니 줄임
+    o1.connect(f); o2.connect(mix2).connect(f); f.connect(pres).connect(g).connect(dest);
     const ts = t0 + plan[i].t;
     g.gain.setValueAtTime(0, ts);
     for (let k = i; k <= j; k++) {
       const p = plan[k], t = t0 + p.t, fr = hz(p.n);
       if (k === i) { o1.frequency.setValueAtTime(fr, t); o2.frequency.setValueAtTime(fr, t); }
       else { o1.frequency.setTargetAtTime(fr, t, 0.008); o2.frequency.setTargetAtTime(fr, t, 0.008); }
-      const top = Math.min(9000, fr * 3 * p.bright), base = Math.min(7000, fr * 2.2);
+      // 휴대폰 스피커는 500Hz 아래를 거의 못 낸다 → 낮은 악기도 배음이 그 위까지 남게 필터를 열어 둔다 (음높이는 그대로)
+      const top = Math.min(9000, Math.max(3600, fr * 3) * p.bright), base = Math.min(7000, Math.max(2000, fr * 2.2));
       f.frequency.setValueAtTime(k === i ? top : Math.max(base, top * 0.8), t); f.frequency.setTargetAtTime(base, t + 0.01, 0.07);
       if (k === i) g.gain.linearRampToValueAtTime(L * p.peak, t + 0.006);
       else if (p.peak > 1) g.gain.setTargetAtTime(L * p.peak, t, 0.004);
