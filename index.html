@@ -349,7 +349,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <h2>이 앱에 대해</h2>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v1.6 · 2026-09-26</p>
+      <p class="muted" style="margin:8px 0 0">버전 v1.7 · 2026-09-26</p>
     </div>
   </section>
 </main>
@@ -2335,6 +2335,7 @@ $('#resetAll').onclick = () => {
   $('#countIn').value = '1'; store.set('countIn', 1);
   store.set('setOpen', null); $('#setBox').open = window.innerWidth >= 900;
   store.set('libSort', 'new'); $('#libSort').value = 'new';
+  store.set('startSeen', false); $('#startCard').classList.remove('hide');      // 처음 안내 카드도 다시
   syncForm(); rebuild();
   toast('설정을 처음 상태로 되돌렸습니다 (악기·녹음은 그대로)');
 };
