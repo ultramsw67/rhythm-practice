@@ -1,0 +1,24 @@
+const SET = require('./sets.json').melody4;
+module.exports = async (c) => {
+  await c.size(390, 844);
+  await c.go('http://127.0.0.1:8772/');
+  await c.ev(`(()=>{ indexedDB.deleteDatabase('rhythm-practice'); localStorage.clear(); })()`);
+  await c.go('http://127.0.0.1:8772/');
+  await c.ev(`(()=>{ Object.assign(RP.set, ${JSON.stringify(SET)}); RP.rebuild(); })()`);
+  await c.ev(`(async()=>{ document.querySelector('#selfSloppy').click(); await new Promise(r=>setTimeout(r,3000)); })()`);
+  const infoOf = id => c.ev(`(()=>{ const el=document.getElementById('vf-ev${id}'); const p=el&&el.querySelector('.vf-notehead path'); if(!p) return null; return { style: p.getAttribute('style'), computedFill: getComputedStyle(p).fill, groupStyle: el.getAttribute('style'), groupComputed: getComputedStyle(el).fill }; })()`);
+  const sampleId = await c.ev(`RPX.take.result.notes.find(n=>n.grade!=='miss'&&n.ids&&n.ids.length).ids[0]`);
+  const out = {};
+  out.grade = await c.ev(`RPX.take.result.notes.find(n=>n.ids&&n.ids[0]===${sampleId}).grade`);
+  out.before = await infoOf(sampleId);
+  await c.ev(`document.querySelector('#themeBtn').click()`);
+  await c.sleep(150);
+  await c.ev(`document.querySelector('#themeBtn').click()`);
+  await c.sleep(200);
+  out.afterThemeNoRerender = await infoOf(sampleId);
+  await c.ev(`document.querySelector('nav.tabs [data-tab=library]').click()`);
+  await c.ev(`document.querySelector('nav.tabs [data-tab=result]').click()`);
+  await c.sleep(300);
+  out.afterReenter = await infoOf(sampleId);
+  console.log(JSON.stringify(out, null, 1));
+};

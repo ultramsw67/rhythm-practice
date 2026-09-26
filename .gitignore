@@ -1,7 +1,15 @@
 # 검사 도구는 올리되, 만들어지는 파일은 빼기
-검사/chrome-prof/
-검사/*.png
-검사/*.wav
+검사/**/chrome-prof*/
+검사/**/*.png
+검사/**/*.wav
+검사/**/*.webm
+검사/qa-*/downloads/
 node_modules/
 .omc/
 **/.omc/
+검사/**/*.log
+검사/**/*.crdownload
+검사/**/*.htm
+검사/qa-c/guide-dl.html
+검사/qa-b/*.json
+!검사/qa-b/sets.json

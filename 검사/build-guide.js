@@ -42,6 +42,7 @@ const page = `<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>리듬 연습 사용법</title>
+<link rel="icon" href="img/sood-192.jpg">
 <style>
 :root{--bg:#f4f5f7;--card:#fff;--ink:#1b1f27;--sub:#5b6472;--line:#dde1e7;--accent:#1f5fbf;--soft:#e8eefa}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12151b;--card:#1b2029;--ink:#e7eaf0;--sub:#9aa3b2;--line:#2d3441;--accent:#6ea2ff;--soft:#223049}}
@@ -68,7 +69,7 @@ th{background:var(--soft)}
 </style>
 </head>
 <body>
-<header><h1>${esc(title)}</h1><a href="./">앱으로</a></header>
+<header><img src="img/sood-192.jpg" alt="" width="34" height="34" style="border-radius:50%"><h1>${esc(title)}</h1><a href="./">앱으로</a></header>
 <main><div class="doc">
 ${html.replace('<hr>\n', tocHtml + '\n<hr>\n')}
 </div></main>

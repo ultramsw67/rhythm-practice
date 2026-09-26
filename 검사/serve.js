@@ -10,4 +10,4 @@ http.createServer((req, res) => {
     res.writeHead(200, { 'Content-Type': ext === '.html' ? 'text/html; charset=utf-8' : 'application/octet-stream', 'Cache-Control': 'no-store' });
     res.end(d);
   });
-}).listen(8765, '127.0.0.1', () => console.log('ok 8765'));
+}).listen(+process.env.PORT || 8765, '127.0.0.1', () => console.log('ok ' + (process.env.PORT || 8765)));

@@ -1,0 +1,20 @@
+const SET = require('./sets.json').melody4;
+module.exports = async (c) => {
+  await c.size(390, 844);
+  await c.go('http://127.0.0.1:8772/');
+  await c.ev(`(()=>{ indexedDB.deleteDatabase('rhythm-practice'); localStorage.clear(); })()`);
+  await c.go('http://127.0.0.1:8772/');
+  await c.ev(`(()=>{ Object.assign(RP.set, ${JSON.stringify(SET)}); RP.rebuild(); })()`);
+  await c.ev(`(async()=>{ document.querySelector('#selfSloppy').click(); await new Promise(r=>setTimeout(r,3000)); })()`);
+  await c.shotEl('qa-b/vis-1-before.png', '#resScore');
+  await c.ev(`document.querySelector('#themeBtn').click()`);
+  await c.sleep(150);
+  await c.ev(`document.querySelector('#themeBtn').click()`);
+  await c.sleep(250);
+  await c.shotEl('qa-b/vis-2-afterthemenorerender.png', '#resScore');
+  await c.ev(`document.querySelector('nav.tabs [data-tab=library]').click()`);
+  await c.ev(`document.querySelector('nav.tabs [data-tab=result]').click()`);
+  await c.sleep(300);
+  await c.shotEl('qa-b/vis-3-afterreenter.png', '#resScore');
+  console.log('done');
+};

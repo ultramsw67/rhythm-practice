@@ -1,0 +1,54 @@
+{
+ "rhythm4": {
+  "mode": "rhythm",
+  "meter": "4/4",
+  "level": 2,
+  "bars": 4,
+  "key": "C",
+  "inst": "clarinet",
+  "bpm": 90,
+  "pickup": "off",
+  "artic": "auto",
+  "seed": 11,
+  "edits": {}
+ },
+ "melody4": {
+  "mode": "melody",
+  "meter": "4/4",
+  "level": 2,
+  "bars": 4,
+  "key": "Bb",
+  "inst": "clarinet",
+  "bpm": 90,
+  "pickup": "off",
+  "artic": "auto",
+  "seed": 21,
+  "edits": {}
+ },
+ "melodyLong16": {
+  "mode": "melody",
+  "meter": "4/4",
+  "level": 2,
+  "bars": 16,
+  "key": "C",
+  "inst": "flute",
+  "bpm": 100,
+  "pickup": "off",
+  "artic": "auto",
+  "seed": 31,
+  "edits": {}
+ },
+ "rhythmPickup": {
+  "mode": "rhythm",
+  "meter": "4/4",
+  "level": 2,
+  "bars": 4,
+  "key": "C",
+  "inst": "clarinet",
+  "bpm": 90,
+  "pickup": "on",
+  "artic": "auto",
+  "seed": 41,
+  "edits": {}
+ }
+}

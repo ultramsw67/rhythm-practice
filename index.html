@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>리듬 연습</title>
 <meta name="theme-color" content="#1f3b63">
+<link rel="icon" href="img/sood-192.jpg">
+<link rel="apple-touch-icon" href="img/sood-192.jpg">
 <style>
 :root{
   --bg:#f4f5f7; --card:#ffffff; --ink:#1b1f27; --sub:#5b6472; --line:#dde1e7;
@@ -54,7 +56,13 @@ input[type=range]{width:100%;accent-color:var(--accent)}
 .hide{display:none!important}
 .tempo{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center}
 .paper{background:var(--paper);color:var(--paper-ink);border-radius:10px;padding:6px 0;overflow:hidden;position:relative;touch-action:manipulation}
-.paper svg{display:block}
+.paper svg{display:block;position:relative;z-index:1}
+.paper::after{content:"수트와후드";position:absolute;right:12px;bottom:6px;font-weight:800;font-size:15px;letter-spacing:.12em;color:#1f3b63;opacity:.14;pointer-events:none;z-index:0}
+.brand{display:flex;flex-direction:column;align-items:center;gap:2px;margin:4px 0 10px}
+.brand img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--card);box-shadow:0 1px 6px rgba(0,0,0,.18);background:var(--card)}
+.brand .wm{font-weight:800;font-size:26px;letter-spacing:.28em;margin-right:-.28em;color:var(--ink);opacity:.16;line-height:1.2;user-select:none}
+@media (max-width:600px){ .brand{margin:0 0 6px} .brand img{width:64px;height:64px;border-width:2px} .brand .wm{font-size:18px} }
+body{touch-action:manipulation}
 .paper .now path,.paper .now rect{fill:var(--accent)!important;stroke:var(--accent)!important}
 .paper .sel path,.paper .sel rect{fill:#c2410c!important;stroke:#c2410c!important}
 .info{font-size:13px;color:var(--sub);margin-top:8px}
@@ -62,7 +70,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;backgroun
 nav.tabs button{flex:1;border:0;background:transparent;color:var(--sub);font:inherit;font-size:12px;padding:8px 0 10px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav.tabs button svg{width:22px;height:22px}
 nav.tabs button[aria-selected="true"]{color:var(--accent);font-weight:600}
-.sheet{position:fixed;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom));z-index:9;max-height:60vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 16px;box-shadow:0 -4px 18px rgba(0,0,0,.18)}
+.sheet{position:fixed;left:0;right:0;bottom:var(--navh, calc(61px + env(safe-area-inset-bottom)));z-index:9;max-height:60vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 16px;box-shadow:0 -4px 18px rgba(0,0,0,.18)}
 .sheet .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .chip{font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -108,6 +116,10 @@ details[open] summary::after{content:" ▴"}
 <main>
   <!-- ===== 연습 ===== -->
   <section id="tab-practice">
+    <div class="brand">
+      <img src="img/sood-192.jpg" alt="수트와후드 대표 이미지" width="96" height="96">
+      <div class="wm" aria-label="수트와후드">수트와후드</div>
+    </div>
     <div class="cols">
       <div>
         <div class="card">
@@ -116,8 +128,8 @@ details[open] summary::after{content:" ▴"}
             <button type="button" data-v="melody">선율 모드</button>
           </div>
         </div>
-        <details class="card" id="setBox" open>
-          <summary>악보 설정</summary>
+        <details class="card" id="setBox">
+          <summary>악보 설정 <span class="muted" id="setSum" style="font-weight:400"></span></summary>
           <div style="height:10px"></div>
           <div class="grid">
             <label class="f">박자표
@@ -295,7 +307,7 @@ details[open] summary::after{content:" ▴"}
       <h2>이 앱에 대해</h2>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v1.1 · 2026-09-26</p>
+      <p class="muted" style="margin:8px 0 0">버전 v1.2 · 2026-09-26</p>
     </div>
   </section>
 </main>
@@ -1170,7 +1182,12 @@ function applyTheme(t) {
   $('#themeBtn').textContent = '화면: ' + THEME_KO[t];
 }
 let theme = store.get('theme', 'auto'); applyTheme(theme);
-$('#themeBtn').onclick = () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; store.set('theme', theme); applyTheme(theme); };
+$('#themeBtn').onclick = () => {
+  theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; store.set('theme', theme); applyTheme(theme);
+  if (!$('#tab-result').classList.contains('hide')) renderResult();     // 결과 음표 색을 새 테마 색으로
+  drawWave();
+};
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!$('#tab-result').classList.contains('hide')) renderResult(); }); } catch (e) { }
 
 /* ---------- 탭 ---------- */
 document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -1222,6 +1239,7 @@ function syncForm() {
   const M = C.METERS[set.meter];
   $('#beatLabel').textContent = '(' + ({ q: '♩', h: '𝅗𝅥', '8': '♪' }[M.beatName]) + (M.beatDots ? '.' : '') + ' = ' + set.bpm + ', ' + C.tempoName(set.bpm) + ')';
   document.querySelectorAll('.melo').forEach(el => el.classList.toggle('hide', set.mode !== 'melody'));
+  $('#setSum').textContent = `· ${set.meter} · ${set.bars}마디 · ${['쉬움', '보통', '어려움'][set.level - 1]} · BPM ${set.bpm}`;
 }
 function busyRec() {
   if (!rec && !micBusy) return false;
@@ -1246,7 +1264,8 @@ $('#inst').onchange = e => { set.inst = e.target.value; changed({ structural: tr
 $('#key').onchange = e => { set.key = e.target.value; changed({ structural: true }); };
 let bpmTimer;
 function setBpm(v) {
-  v = Math.max(40, Math.min(208, Math.round(+v || 88)));
+  if (String(v).trim() === '' || !Number.isFinite(+v)) { syncForm(); return; }   // 칸을 비우거나 글자를 넣으면 지금 값 유지
+  v = Math.max(40, Math.min(208, Math.round(+v)));
   if (busyRec()) { syncForm(); return; }
   set.bpm = v; syncForm();
   clearTimeout(bpmTimer); bpmTimer = setTimeout(() => changed({ structural: true }), 250);   // 빠르기에 따라 쓸 수 있는 음표가 달라짐
@@ -1264,10 +1283,12 @@ let score = null;
 let colors = null;           // 채점 뒤 음표 색 (5단계)
 let selected = null;
 function rebuild() {
+  if (selected != null || !$('#articSheet').classList.contains('hide')) { selected = null; $('#articSheet').classList.add('hide'); document.body.classList.remove('sheet-on'); }   // 악보가 바뀌면 기호 창을 닫는다
   stopPlay();
   try { score = C.generate(set); }
   catch (e) { console.error(e); toast('악보를 만들지 못했습니다. 새 악보를 누르세요'); return; }
   colors = null;
+  $('#setSum').textContent = `· ${set.meter} · ${set.bars}마디 · ${['쉬움', '보통', '어려움'][set.level - 1]} · BPM ${set.bpm}`;
   draw();
   const k = score.concertKey, w = score.writtenKey;
   let info = `악보 번호 ${set.seed} · ${set.meter} · ${set.bars}마디${score.pickLen ? ' + 못갖춘마디' : ''} · ${['쉬움', '보통', '어려움'][set.level - 1]}`;
@@ -1294,7 +1315,7 @@ window.addEventListener('resize', () => { const w = $('#score').clientWidth; if 
 function renderScore(host, sc, opt) {
   const VF = VFC();
   host.innerHTML = '';
-  const W = Math.max(280, host.clientWidth);
+  const W = Math.max(200, host.clientWidth);           // 칸보다 넓게 그리면 오른쪽이 잘린다 (320px 폰)
   lastW = W;
   const scale = W < 480 ? 0.68 : W < 800 ? 0.8 : 0.92;
   const DW = W / scale;
@@ -1473,8 +1494,11 @@ function toggleArtic(id, k) {
     const at = ed.s.findIndex(([a, b]) => id >= a && id <= b);
     const nx = score.events[id + 1], pv = score.events[id - 1];
     const endsBefore = pv && !pv.rest ? ed.s.findIndex(([a, b]) => b === id - 1) : -1;
+    const same = (a, b) => a && b && a.midi === b.midi;                                     // 같은 높이 음끼리는 붙임줄과 헷갈려서 막는다
     if (at >= 0) ed.s.splice(at, 1);                                                        // 슬러 안의 음 → 지우기
+    else if (endsBefore >= 0 && same(pv, e)) toast('같은 높이 음끼리는 슬러를 이을 수 없습니다');
     else if (endsBefore >= 0) ed.s[endsBefore][1] = id;                                     // 슬러 바로 뒤 음 → 늘리기
+    else if (nx && !nx.rest && same(e, nx)) toast('같은 높이 음끼리는 슬러를 이을 수 없습니다');
     else if (nx && !nx.rest && !ed.s.some(([a]) => a === id + 1)) ed.s.push([id, id + 1]);  // 새 슬러
     else if (nx && !nx.rest) { const k2 = ed.s.findIndex(([a]) => a === id + 1); ed.s[k2][0] = id; }   // 다음 슬러를 앞으로 늘리기
     else toast('다음이 쉼표라 슬러를 이을 수 없습니다');
@@ -2105,7 +2129,7 @@ $('#libList').addEventListener('click', async ev => {
     inp.onkeydown = e => { if (e.key === 'Enter') nm.querySelector('[data-a=saveName]').click(); };
   } else if (a === 'saveName') {
     const v = card.querySelector('.nm input').value.trim();
-    if (v) { t.name = v; if (!(await DB.put(t))) toast('이름을 바꾸지 못했습니다'); }
+    if (v) { t.name = v.slice(0, 80); if (!(await DB.put(t))) toast('이름을 바꾸지 못했습니다'); }
     renderLibrary();
   } else if (a === 'del') {
     await DB.del(id); toast('삭제했습니다'); if (curTake && curTake.id === id) curTake = null; renderLibrary();
@@ -2133,7 +2157,7 @@ $('#bakIn').onchange = async e => {
         if (!validTake(t)) throw new Error('bad');
         const bin = atob(t.audio64 || ''); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
         const { audio64, ...rest } = t;
-        if (!rest.name) rest.name = '불러온 녹음';
+        rest.name = String(rest.name || '불러온 녹음').slice(0, 80);
         if (await DB.put(Object.assign(rest, { audio: new Blob([u8], { type: 'audio/wav' }) }))) n++; else skip++;
       } catch (e1) { skip++; }
     }
@@ -2143,6 +2167,23 @@ $('#bakIn').onchange = async e => {
 };
 
 window.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+// 기호 창 밖(악보 말고 다른 곳)을 누르면 닫는다
+document.addEventListener('click', e => {
+  const sh = $('#articSheet');
+  if (sh.classList.contains('hide')) return;
+  if (sh.contains(e.target) || $('#score').contains(e.target)) return;
+  closeSheet();
+}, true);
+// 악보 설정 칸: 휴대폰에서는 접어 두어 악보·녹음 버튼이 먼저 보이게. 펼침 상태는 기억
+{
+  const box = $('#setBox');
+  const saved = store.get('setOpen', null);
+  box.open = saved == null ? window.innerWidth >= 900 : !!saved;
+  box.addEventListener('toggle', () => store.set('setOpen', box.open));
+}
+// 아래 탭 막대의 실제 높이 → 기호 창이 딱 그 위에 오게
+function syncNavH() { try { document.documentElement.style.setProperty('--navh', document.querySelector('nav.tabs').offsetHeight + 'px'); } catch (e) { } }
+syncNavH(); window.addEventListener('resize', syncNavH);
 window.RP = { get score() { return score; }, get set() { return set; }, draw, rebuild };
 syncForm();
 rebuild();
