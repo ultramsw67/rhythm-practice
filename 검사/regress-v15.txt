@@ -1,0 +1,5 @@
+{"st":"100점 — 보관함에 저장했습니다","cap":{"n":340,"samples":696320,"span":14.464,"sr":48000,"first":-0.6,"kind":"worklet"},"played":96,"matched":28,"sr":1}
+{"artSide":{"bad":0,"tot":0},"shareOpen":{"hash":"","bars":8,"seed":123,"pickup":"off"},"afterReload":{"bars":2,"seed":123},"secondLink":{"meter":"6/8","seed":777,"drawn":777},"badLink":{"svg":true,"err":"","bars":4},"self":{"total":"100","same":true,"worker":"function"},"dbMissing":"ok","sheet":{"f
+{"w320":{"overflowPx":0,"setOpen":false,"scoreTop":455,"navTop":639,"sum":"·4/4·8마디·쉬움·BPM180"},"sheet":{"sameSlurBlocked":true,"openedA":true,"sheetGap":0,"closedOnRebuild":true,"openedB":true,"closedOutside":true,"chipKeepsOpen":true,"s
+{"marks":[0,1,1,1,1,1,1,1,1,1,1,1],"btn":"■ 멈추기","after":0}
+runs 6000 fail 0 {"tup":29174,"tie":9292,"pickup":2601,"dd":522,"t32":3958,"artic":18998,"slur":3236,"acc":69852,"comfortOver":6,"overNotes":8328}
