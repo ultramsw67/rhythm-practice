@@ -62,10 +62,11 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;backgroun
 nav.tabs button{flex:1;border:0;background:transparent;color:var(--sub);font:inherit;font-size:12px;padding:8px 0 10px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 nav.tabs button svg{width:22px;height:22px}
 nav.tabs button[aria-selected="true"]{color:var(--accent);font-weight:600}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:9;background:var(--card);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -4px 18px rgba(0,0,0,.18)}
+.sheet{position:fixed;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom));z-index:9;max-height:60vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 16px;box-shadow:0 -4px 18px rgba(0,0,0,.18)}
 .sheet .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
 .chip{font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+body.sheet-on{padding-bottom:calc(330px + env(safe-area-inset-bottom))}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90vw;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:.95}
 .placeholder{padding:28px 10px;text-align:center;color:var(--sub)}
@@ -100,6 +101,7 @@ details[open] summary::after{content:" ▴"}
 <body>
 <header>
   <h1>리듬 연습</h1>
+  <a class="theme-btn" href="guide.html" style="text-decoration:none;display:inline-flex;align-items:center">사용법</a>
   <button class="theme-btn" id="themeBtn" type="button">화면: 자동</button>
 </header>
 
@@ -277,7 +279,7 @@ details[open] summary::after{content:" ▴"}
       </div>
       <div class="muted" id="calMsg" style="min-height:22px"></div>
       <label class="f" style="margin-top:8px">직접 맞추기 (ms)
-        <input type="range" id="latRange" min="-50" max="400" step="5">
+        <input type="range" id="latRange" min="-200" max="500" step="5">
       </label>
       <p class="muted" style="margin-bottom:0"><b>스피커 측정</b>: 휴대폰을 책상에 두고 조용히 기다리세요. 클릭 8번을 스스로 듣고 잽니다.<br><b>손뼉 측정</b>: 이어폰으로 클릭 8번을 들으며 박자에 맞춰 손뼉을 치세요. 블루투스 이어폰은 이 방법을 쓰세요.</p>
     </div>
@@ -292,7 +294,8 @@ details[open] summary::after{content:" ▴"}
     <div class="card">
       <h2>이 앱에 대해</h2>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
-      <p class="muted" style="margin:8px 0 0">버전 v1.0 · 2026-09-26</p>
+      <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
+      <p class="muted" style="margin:8px 0 0">버전 v1.1 · 2026-09-26</p>
     </div>
   </section>
 </main>
@@ -314,7 +317,7 @@ details[open] summary::after{content:" ▴"}
     <button class="btn" id="sheetClose" type="button">닫기</button>
   </div>
   <div class="chips" id="sheetChips"></div>
-  <div class="muted">같은 음표를 다시 누르면 기호를 더 고를 수 있습니다. 슬러는 누른 음표에서 다음 음표까지 이어지고, 이어진 끝 음표에서 다시 누르면 한 음씩 늘어납니다.</div>
+  <div class="muted">슬러: 누른 음표에서 다음 음표까지 이어집니다. 슬러 바로 뒤 음표에서 누르면 그 음까지 늘어나고, 슬러 안의 음표에서 누르면 지워집니다. 페르마타는 마지막 음에만 붙습니다.</div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -565,73 +568,86 @@ function generate(set) {
 
   // 음정 (선율 모드)
   if (melody) {
+    // 선율은 악기와 상관없이 '으뜸음에서 몇 도'로 만든다 → 같은 링크면 모든 악기가 같은 선율(음정 간격)을 받는다.
+    // 그다음 악기 음역에 가장 잘 맞는 옥타브에 놓는다.
     const [lo, hi] = inst.r[lv - 1];
     const alts = keyAlts(wkey.fifths);
     const tl = tonicLetter(wkey);
-    const center = (lo + hi) / 2;
-    const midiOf = d => dMidi(d, alts[((d % 7) + 7) % 7]);
-    // 시작음: 가운데에 가까운 으뜸음
-    // 시작음: 가운데에 가까운 으뜸음 (음역 안에 없으면 5음 → 3음)
-    let best = null;
-    for (const deg of [0, 4, 2]) {
-      for (let d = 0; d < 70; d++) if (((d % 7) + 7) % 7 === (tl + deg) % 7) { const m = midiOf(d); if (m >= lo && m <= hi && (best == null || Math.abs(m - center) < Math.abs(midiOf(best) - center))) best = d; }
-      if (best != null) break;
-    }
-    let cur = best == null ? 28 : best;
+    const [rlo, rhi] = [[-2, 4], [-3, 6], [-5, 9]][lv - 1];        // 으뜸음 기준 도 범위 (쉬움은 한 옥타브 안)
+    const rc = (rlo + rhi) / 2, rq = (rhi - rlo) / 4;
     const stepsW = [
       { 0: 1, 1: 6, 2: 3 },
       { 0: 1, 1: 6, 2: 3, 3: 2, 4: 1 },
       { 0: 1, 1: 5, 2: 3, 3: 2, 4: 2, 5: 1, 7: 1 },
     ][lv - 1];
     const notes = events.filter(e => !e.rest);
+    let cur = 0;                                                  // 으뜸음에서 시작
+    const rel = [];
     notes.forEach((e, i) => {
       const prev = notes[i - 1];
-      if (prev && prev.tie) { e.pitch = { ...prev.pitch }; return; }
+      if (prev && prev.tie) { rel.push(cur); return; }
       if (i > 0) {
         const opts = [];
         for (const k of Object.keys(stepsW)) {
           const s = +k;
           for (const sg of (s === 0 ? [1] : [1, -1])) {
-            const d = cur + s * sg, m = midiOf(d);
-            if (m < lo || m > hi) continue;
+            const d = cur + s * sg;
+            if (d < rlo || d > rhi) continue;
             let w = stepsW[k];
-            const mm = midiOf(cur);
-            if (mm > center + (hi - lo) / 4 && sg > 0 && s) w *= 0.4;
-            if (mm < center - (hi - lo) / 4 && sg < 0 && s) w *= 0.4;
+            if (cur > rc + rq && sg > 0 && s) w *= 0.4;
+            if (cur < rc - rq && sg < 0 && s) w *= 0.4;
             opts.push({ d, w });
           }
         }
         if (opts.length) cur = wpick(r, opts, o => o.w).d;
       }
-      e.pitch = { d: cur, alt: alts[((cur % 7) + 7) % 7] };
+      rel.push(cur);
     });
     // 끝음 = 가장 가까운 으뜸음
-    const lastN = notes[notes.length - 1];
-    if (lastN) {
-      let bd = null;
-      for (let d = lastN.pitch.d - 7; d <= lastN.pitch.d + 7; d++) if (((d % 7) + 7) % 7 === tl) { const m = midiOf(d); if (m >= lo && m <= hi && (bd == null || Math.abs(d - lastN.pitch.d) < Math.abs(bd - lastN.pitch.d))) bd = d; }
-      if (bd != null) { lastN.pitch = { d: bd, alt: alts[tl] }; const pv = notes[notes.length - 2]; if (pv && pv.tie) pv.tie = false; }
+    if (rel.length) {
+      const L = rel.length - 1, v = rel[L];
+      const cands = [-7, 0, 7].filter(t => t >= rlo - 2 && t <= rhi + 2);
+      rel[L] = cands.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a);
+      const pv = notes[L - 1]; if (pv && pv.tie && rel[L - 1] !== rel[L]) pv.tie = false;
     }
+    // 옥타브 고르기: 악기 음역을 가장 적게 벗어나고 가운데에 가까운 곳
+    const midiOf = d => dMidi(d, alts[((d % 7) + 7) % 7]);
+    let base = tl + 28, bestCost = Infinity;
+    for (let oc = 0; oc <= 8; oc++) {
+      const b = tl + oc * 7;
+      let mn = Infinity, mx = -Infinity;
+      for (const x of rel) { const m = midiOf(b + x); if (m < mn) mn = m; if (m > mx) mx = m; }
+      const cost = Math.max(0, lo - mn) + Math.max(0, mx - hi) + 0.01 * Math.abs((mn + mx) / 2 - (lo + hi) / 2);
+      if (cost < bestCost) { bestCost = cost; base = b; }
+    }
+    // 반음 올림(chrom)도 으뜸음 기준으로 정한다 → 악기가 달라도 결과가 같다
+    const chrom = rel.map(() => 0);
+    const step = x => midiOf(base + x + 1) - midiOf(base + x);          // 이 음에서 한 도 위까지 반음 수
     // 단조: 으뜸음으로 올라가는 이끎음은 반음 올림 (화성단음계)
     if (wkey.minor) {
-      const lead = (tl + 6) % 7;
       notes.forEach((e, i) => {
-        const nx = notes[i + 1];
-        const pv = notes[i - 1];
-        if (nx && ((e.pitch.d % 7) + 7) % 7 === lead && nx.pitch.d === e.pitch.d + 1 && !e.tie && !(pv && pv.tie)) e.pitch.alt += 1;
+        const nx = notes[i + 1], pv = notes[i - 1];
+        if (nx && ((rel[i] % 7) + 7) % 7 === 6 && rel[i + 1] === rel[i] + 1 && !e.tie && !(pv && pv.tie)) chrom[i] = 1;
       });
     }
-    // 어려움: 가끔 반음 경과음
+    // 어려움: 가끔 반음 경과음 (온음 사이에서만)
     if (lv === 3) {
       notes.forEach((e, i) => {
         const pv = notes[i - 1], nx = notes[i + 1];
         if (!pv || !nx || e.tie || pv.tie) return;
-        if (nx.pitch.d === e.pitch.d + 1 && pv.pitch.d === e.pitch.d - 1 && r() < 0.25 && e.pitch.alt < 1) {
-          const cand = { d: e.pitch.d, alt: e.pitch.alt + 1 };
-          if (dMidi(cand.d, cand.alt) < dMidi(nx.pitch.d, nx.pitch.alt)) e.pitch = cand;
-        }
+        if (rel[i + 1] === rel[i] + 1 && rel[i - 1] === rel[i] - 1 && r() < 0.25 && chrom[i] === 0 && step(rel[i]) === 2) chrom[i] = 1;
       });
     }
+    // 악기가 낼 수 없는 음(전체 음역 밖)만 옥타브를 옮긴다
+    const [flo, fhi] = inst.r[2];
+    notes.forEach((e, i) => {
+      let d = base + rel[i];
+      const altOf = dd => alts[((dd % 7) + 7) % 7] + chrom[i];
+      for (let k = 0; k < 3 && dMidi(d, altOf(d)) < flo; k++) d += 7;
+      for (let k = 0; k < 3 && dMidi(d, altOf(d)) > fhi; k++) d -= 7;
+      e.pitch = { d, alt: altOf(d) };
+      e.rp = rel[i] * 4 + chrom[i];                                      // 악기와 상관없는 음 이름표
+    });
     for (const e of notes) e.midi = dMidi(e.pitch.d, e.pitch.alt);
   }
 
@@ -651,8 +667,8 @@ function generate(set) {
           let j = i;
           while (j < notes.length - 1 && j - i < len - 1 && notes[j + 1].id === notes[j].id + 1) j++;
           const seg = notes.slice(i, j + 1);
-          const sameNext = seg.some((n, k) => k > 0 && n.midi === seg[k - 1].midi);     // 같은 음끼리 슬러 = 붙임줄과 헷갈림
-          if (j > i && !seg.slice(0, -1).some(n => n.tie) && !sameNext) { slurs.push([notes[i].id, notes[j].id]); i = j + 1; }
+          const sameNext = seg.some((n, k) => k > 0 && n.rp === seg[k - 1].rp);         // 같은 음끼리 슬러 = 붙임줄과 헷갈림
+          if (j > i && !seg.slice(0, -1).some(n => n.tie) && !sameNext) { slurs.push([notes[i].id, notes[j].id]); i = j; }
         }
       }
     }
@@ -661,16 +677,26 @@ function generate(set) {
     notes.forEach(e => {
       if (tiedInto.has(e.id)) return;
       const long = e.dur >= 1680;
-      const g1 = ['stac', 'stacc', 'ten'].filter(k => P[k] && !(inSlur.has(e.id)) && !((k === 'stac' || k === 'stacc') && (long || e.tie)));
+      // 끊은 뒤 남는 소리가 0.06초도 안 되면 들을 수 없으니 붙이지 않는다
+      const sec = e.dur * spt;
+      const tooShort = k => (k === 'stac' && sec * 0.5 < 0.06) || (k === 'stacc' && sec * 0.28 < 0.06);
+      const g1 = ['stac', 'stacc', 'ten'].filter(k => P[k] && !(inSlur.has(e.id)) && !((k === 'stac' || k === 'stacc') && (long || e.tie)) && !tooShort(k));
       for (const k of g1) if (r() < P[k]) { e.artic.push(k); break; }
       for (const k of ['acc', 'marc']) if (P[k] && !inSlur.has(e.id) && r() < P[k]) { e.artic.push(k); break; }
     });
     if (lv >= 2 && r() < 0.5) { const ln = notes[notes.length - 1]; if (ln && !ln.artic.includes('ferm')) ln.artic = ln.artic.filter(a => a !== 'stac' && a !== 'stacc').concat('ferm'); }
   }
   // 직접 고친 기호
-  const ed = set.edits || {};
-  if (ed.a) for (const id of Object.keys(ed.a)) { const e = events[+id]; if (e) e.artic = e.rest ? ed.a[id].filter(a => a === 'ferm') : ed.a[id].slice(); }
-  if (ed.s) slurs = ed.s.filter(([a, b]) => events[a] && events[b] && a < b).map(x => x.slice());
+  // (공유 링크로 들어온 값일 수 있으니 모양을 확인하고 쓴다. 페르마타는 마지막 음에만)
+  const ed = set.edits && typeof set.edits === 'object' ? set.edits : {};
+  const lastId = events.length - 1;
+  if (ed.a && typeof ed.a === 'object') for (const id of Object.keys(ed.a)) {
+    const e = events[+id], v = ed.a[id];
+    if (!e || !Array.isArray(v)) continue;
+    const list = [...new Set(v.filter(a => ARTIC[a] && (a !== 'ferm' || e.id === lastId)))];
+    e.artic = e.rest ? list.filter(a => a === 'ferm') : list;
+  }
+  if (Array.isArray(ed.s)) slurs = ed.s.filter(x => Array.isArray(x) && x.length === 2 && x.every(Number.isInteger) && events[x[0]] && events[x[1]] && x[0] < x[1]).map(x => x.slice());
 
   return {
     set, M, measures, events, slurs, end, pickLen, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
@@ -718,7 +744,7 @@ function timeline(score, countIn) {
 
 /* ---------- 공유 링크용 압축 ---------- */
 function encodeSet(set) {
-  const o = { m: set.mode[0], t: set.meter, l: set.level, b: set.bars, k: set.key, p: set.pickup[0], a: set.artic[0], s: set.seed, v: set.bpm };
+  const o = { m: set.mode[0], t: set.meter, l: set.level, b: set.bars, k: set.key, p: { auto: 'a', on: 'o', off: 'f' }[set.pickup] || 'a', a: set.artic[0], s: set.seed, v: set.bpm, i: set.inst };
   if (set.edits && (set.edits.a || set.edits.s)) o.e = set.edits;
   return JSON.stringify(o);
 }
@@ -729,13 +755,18 @@ function decodeSet(str, base) {
   if (o.m) s.mode = o.m === 'm' ? 'melody' : 'rhythm';
   if (METERS[o.t]) s.meter = o.t;
   if ([1, 2, 3].includes(o.l)) s.level = o.l;
-  if (o.b >= 1 && o.b <= 32) s.bars = o.b;
+  if (Number.isInteger(o.b) && o.b >= 1 && o.b <= 32) s.bars = o.b;
   if (KEY_BY[o.k]) s.key = o.k;
   if (P[o.p]) s.pickup = P[o.p];
   if (A[o.a]) s.artic = A[o.a];
   if (Number.isFinite(o.s)) s.seed = o.s >>> 0;
-  if (o.v >= 40 && o.v <= 208) s.bpm = Math.round(o.v);
-  s.edits = o.e && typeof o.e === 'object' ? o.e : {};
+  if (Number.isFinite(o.v) && o.v >= 40 && o.v <= 208) s.bpm = Math.round(o.v);
+  // 악기는 받는 사람이 이미 골라 둔 것이 있으면 그대로 둔다(선율은 악기와 상관없이 같게 나옴)
+  if (INSTS[o.i] && !(base && INSTS[base.inst])) s.inst = o.i;
+  const e = o.e && typeof o.e === 'object' && !Array.isArray(o.e) ? o.e : {};
+  s.edits = {};
+  if (e.a && typeof e.a === 'object' && !Array.isArray(e.a)) s.edits.a = e.a;
+  if (Array.isArray(e.s)) s.edits.s = e.s;
   return s;
 }
 
@@ -763,8 +794,8 @@ function decimate(x, sr, q) {
   return out;
 }
 // 음량 곡선: 5ms 간격, dB
-function envelope(x, sr, hopSec) {
-  const hop = Math.max(1, Math.round(sr * hopSec)), win = hop * 2;
+function envelope(x, sr, hopSec, winSec) {
+  const hop = Math.max(1, Math.round(sr * hopSec)), win = Math.max(hop * 2, Math.round(sr * (winSec || 0)));
   const n = Math.max(0, Math.floor((x.length - win) / hop));
   const L = new Float32Array(n);
   for (let i = 0; i < n; i++) {
@@ -898,7 +929,9 @@ function robustFit(xs, ys) {
 
 function analyze(pcm, sr, score, tl, lat, opt = {}) {
   const melody = score.melody;
-  const env = envelope(pcm, sr, 0.005);
+  // 낮은 음은 한 주기가 길어 창이 짧으면 음량이 출렁여 가짜 시작점이 생긴다 → 가장 낮은 음 한 주기 이상으로
+  const lowHz = melody ? Math.min(...tl.notes.map(n => 440 * Math.pow(2, (n.concert - 69) / 12))) : 466;
+  const env = envelope(pcm, sr, 0.005, Math.min(0.035, 1.3 / lowHz));
   const sortedL = Float32Array.from(env.L).sort();
   const floor = sortedL.length ? sortedL[Math.floor(sortedL.length * 0.1)] : -90;
   const exp = tl.notes.map(n => n.t + lat);
@@ -975,7 +1008,8 @@ function analyze(pcm, sr, score, tl, lat, opt = {}) {
       for (let k = Math.max(0, Math.floor((a0 - tr.t0) / tr.hop)); k <= Math.min(st.length - 1, Math.ceil((a1 - tr.t0) / tr.hop)); k++) if (!Number.isNaN(st[k])) vals.push(st[k]);
       if (vals.length) {
         let c = 100 * (median(vals) - n.concert);
-        const oct = Math.round(c / 1200); if (oct) c -= 1200 * oct;
+        let oct = Math.round(c / 1200);
+        if (oct && Math.abs(c - 1200 * oct) < 150) c -= 1200 * oct; else oct = 0;      // 옥타브 차이일 때만 접는다
         r.cents = c; r.octave = !!oct;
         const ev = score.events[n.ev];
         const l = ((ev.pitch.d % 7) + 7) % 7;
@@ -1154,15 +1188,22 @@ const DEFAULT = { mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', in
 let set = Object.assign({}, DEFAULT, store.get('set', {}));
 set.edits = set.edits || {};
 if (!store.get('set', null)) set.seed = newSeed();
-// 공유 링크로 들어온 경우
-try {
-  if (location.hash.length > 3) {
+// 공유 링크로 들어온 경우: 한 번 읽고 저장한 뒤 주소에서 지운다 (새로고침 때 다시 덮어쓰지 않게)
+function readHash() {
+  if (location.hash.length <= 3) return false;
+  let ok = false;
+  try {
     const raw = decodeURIComponent(location.hash.slice(1));
     const json = raw.startsWith('{') ? raw : decodeURIComponent(escape(atob(raw)));
     set = C.decodeSet(json, set);
-    toast('공유받은 악보를 열었습니다');
-  }
-} catch (e) { /* 잘못된 링크: 기본값 사용 */ }
+    store.set('set', set);
+    ok = true;
+  } catch (e) { /* 잘못된 링크: 지금 설정 유지 */ }
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { }
+  toast(ok ? '공유받은 악보를 열었습니다' : '공유 링크를 읽지 못했습니다');
+  return ok;
+}
+readHash();
 function newSeed() { return (Math.random() * 4294967295) >>> 0; }
 
 // 선택 목록 채우기
@@ -1182,7 +1223,14 @@ function syncForm() {
   $('#beatLabel').textContent = '(' + ({ q: '♩', h: '𝅗𝅥', '8': '♪' }[M.beatName]) + (M.beatDots ? '.' : '') + ' = ' + set.bpm + ', ' + C.tempoName(set.bpm) + ')';
   document.querySelectorAll('.melo').forEach(el => el.classList.toggle('hide', set.mode !== 'melody'));
 }
+function busyRec() {
+  if (!rec && !micBusy) return false;
+  toast('녹음 중에는 악보를 바꿀 수 없습니다');
+  return true;
+}
+let lockedSet = null;             // 녹음 중 바뀐 폼을 되돌릴 때 쓰는 값
 function changed(opts = {}) {
+  if (busyRec()) { if (lockedSet) set = lockedSet; syncForm(); return; }
   if (opts.reseed) set.seed = newSeed();
   if (opts.reseed || opts.structural) set.edits = {};
   store.set('set', set);
@@ -1199,13 +1247,17 @@ $('#key').onchange = e => { set.key = e.target.value; changed({ structural: true
 let bpmTimer;
 function setBpm(v) {
   v = Math.max(40, Math.min(208, Math.round(+v || 88)));
+  if (busyRec()) { syncForm(); return; }
   set.bpm = v; syncForm();
   clearTimeout(bpmTimer); bpmTimer = setTimeout(() => changed({ structural: true }), 250);   // 빠르기에 따라 쓸 수 있는 음표가 달라짐
 }
 $('#bpmRange').oninput = e => setBpm(e.target.value);
 $('#bpmNum').onchange = e => setBpm(e.target.value);
 $('#tempoName').onchange = e => { if (e.target.value) setBpm(e.target.value); e.target.value = ''; };
-$('#newBtn').onclick = () => { stopPlay(); changed({ reseed: true }); };
+$('#newBtn').onclick = () => { if (busyRec()) return; stopPlay(); changed({ reseed: true }); };
+window.addEventListener('hashchange', () => { if (!busyRec() && readHash()) { stopPlay(); syncForm(); rebuild(); } });
+// 빠르기를 막 바꾼 직후라면 먼저 악보를 새로 만든다
+function flushBpm() { if (bpmTimer) { clearTimeout(bpmTimer); bpmTimer = null; changed({ structural: true }); } }
 
 /* ---------- 악보 ---------- */
 let score = null;
@@ -1312,17 +1364,7 @@ function renderScore(host, sc, opt) {
       const voice = new VF.Voice({ num_beats: sc.M.num, beat_value: sc.M.den }).setMode(VF.Voice.Mode.SOFT);
       voice.addTickables(notes);
       if (melody) VF.Accidental.applyAccidentals([voice], sc.writtenKey.name);
-      // 아티큘레이션
-      evs.forEach((e, i) => {
-        for (const a of e.artic) {
-          const art = new VF.Articulation(C.ARTIC[a].vf);
-          const up = notes[i].getStemDirection ? notes[i].getStemDirection() === 1 : true;
-          const above = a === 'ferm' || a === 'marc' || !up || e.rest;
-          art.setPosition(above ? VF.Modifier.Position.ABOVE : VF.Modifier.Position.BELOW);
-          notes[i].addModifier(art, 0);
-        }
-      });
-      // 빔: 묶음 단위(박)마다 이어진 짧은 음표끼리
+      // 빔: 묶음 단위(박)마다 이어진 짧은 음표끼리 (빔이 기둥 방향을 바꾸므로 기호보다 먼저)
       const beams = [];
       const byUnit = {};
       evs.forEach((e, i) => { const u = sc.measures[mi].units.find(u => e.start >= u.start && e.start < u.start + u.len); const key = u ? u.id : 'x'; (byUnit[key] = byUnit[key] || []).push(i); });
@@ -1336,6 +1378,16 @@ function renderScore(host, sc, opt) {
         }
         flush();
       }
+      // 아티큘레이션: 기둥 반대쪽(머리 쪽)에
+      evs.forEach((e, i) => {
+        for (const a of e.artic) {
+          const art = new VF.Articulation(C.ARTIC[a].vf);
+          const up = notes[i].getStemDirection ? notes[i].getStemDirection() === 1 : true;
+          const above = a === 'ferm' || a === 'marc' || !up || e.rest;
+          art.setPosition(above ? VF.Modifier.Position.ABOVE : VF.Modifier.Position.BELOW);
+          notes[i].addModifier(art, 0);
+        }
+      });
       new VF.Formatter().joinVoices([voice]).formatToStave([voice], st);
       voice.draw(ctx, st);
       beams.forEach(b => b.setContext(ctx).draw());
@@ -1401,16 +1453,17 @@ function openSheet(id) {
   const e = score.events[id];
   $('#sheetTitle').textContent = e.rest ? '쉼표 기호' : '음표 기호';
   const chips = $('#sheetChips');
-  const keys = e.rest ? ['ferm'] : Object.keys(C.ARTIC);
+  const isLast = id === score.events.length - 1;                    // 페르마타는 마지막 음에만
+  const keys = (e.rest ? ['ferm'] : Object.keys(C.ARTIC)).filter(k => k !== 'ferm' || isLast);
   const inSlur = score.slurs.some(([a, b]) => id >= a && id <= b);
   chips.innerHTML = keys.map(k => `<button class="chip" type="button" data-k="${k}" aria-pressed="${e.artic.includes(k)}">${C.ARTIC[k].ko}</button>`).join('') +
     (e.rest || !score.melody ? '' : `<button class="chip" type="button" data-k="slur" aria-pressed="${inSlur}">슬러</button>`) +
     `<button class="chip" type="button" data-k="clear">모두 지우기</button>`;
   chips.querySelectorAll('button').forEach(b => b.onclick = () => toggleArtic(id, b.dataset.k));
-  $('#articSheet').classList.remove('hide');
+  $('#articSheet').classList.remove('hide'); document.body.classList.add('sheet-on');
   draw();
 }
-function closeSheet() { selected = null; $('#articSheet').classList.add('hide'); draw(); }
+function closeSheet() { selected = null; $('#articSheet').classList.add('hide'); document.body.classList.remove('sheet-on'); draw(); }
 $('#sheetClose').onclick = closeSheet;
 function toggleArtic(id, k) {
   const ed = curEdits();
@@ -1418,13 +1471,13 @@ function toggleArtic(id, k) {
   if (!ed.s) ed.s = score.slurs.map(x => x.slice());
   if (k === 'slur') {
     const at = ed.s.findIndex(([a, b]) => id >= a && id <= b);
-    const endAt = ed.s.findIndex(([a, b]) => b === id);
-    const nextNote = score.events.slice(id + 1).find(x => !x.rest);
-    const nextIsAdj = nextNote && score.events.slice(id + 1, nextNote.id).every(x => !x.rest);
-    if (endAt >= 0 && nextNote && nextIsAdj) ed.s[endAt][1] = nextNote.id;                 // 슬러 늘리기
-    else if (at >= 0) ed.s.splice(at, 1);                                                   // 슬러 지우기
-    else if (nextNote && nextIsAdj) ed.s.push([id, nextNote.id]);
-    else toast('다음 음표가 쉼표 뒤에 있어 슬러를 이을 수 없습니다');
+    const nx = score.events[id + 1], pv = score.events[id - 1];
+    const endsBefore = pv && !pv.rest ? ed.s.findIndex(([a, b]) => b === id - 1) : -1;
+    if (at >= 0) ed.s.splice(at, 1);                                                        // 슬러 안의 음 → 지우기
+    else if (endsBefore >= 0) ed.s[endsBefore][1] = id;                                     // 슬러 바로 뒤 음 → 늘리기
+    else if (nx && !nx.rest && !ed.s.some(([a]) => a === id + 1)) ed.s.push([id, id + 1]);  // 새 슬러
+    else if (nx && !nx.rest) { const k2 = ed.s.findIndex(([a]) => a === id + 1); ed.s[k2][0] = id; }   // 다음 슬러를 앞으로 늘리기
+    else toast('다음이 쉼표라 슬러를 이을 수 없습니다');
   } else if (k === 'clear') {
     ed.a[id] = [];
     ed.s = ed.s.filter(([a, b]) => !(id >= a && id <= b));
@@ -1441,6 +1494,8 @@ function toggleArtic(id, k) {
 
 /* ---------- 소리 ---------- */
 let actx = null;
+// iOS 17+: 무음 스위치가 켜져 있어도 소리가 나고, 녹음 중에도 재생되게
+function audioMode(type) { try { if (navigator.audioSession) navigator.audioSession.type = type; } catch (e) { } }
 function audio() {
   if (!actx) { const AC = window.AudioContext || window.webkitAudioContext; actx = new AC(); }
   if (actx.state === 'suspended') actx.resume();
@@ -1473,6 +1528,8 @@ let playing = null;
 function playScore() {
   if (playing) { stopPlay(); return; }
   if (rec || cal) return;
+  flushBpm();
+  audioMode('playback');
   closeSheet();
   const c = audio();
   const master = c.createGain(); master.gain.value = 0.9; master.connect(c.destination);
@@ -1526,8 +1583,8 @@ $('#shareBtn').onclick = async () => {
 /* ============================================================
    4단계: 마이크·녹음·지연 보정
    ============================================================ */
-const WORKLET = `class RpCap extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0;this.t=0;}
-process(inp){const ch=inp[0]&&inp[0][0];if(ch){if(this.n===0)this.t=currentTime;this.b.set(ch,this.n);this.n+=ch.length;if(this.n>=2048){this.port.postMessage({t:this.t,d:this.b.slice(0,this.n)});this.n=0;}}return true;}}
+const WORKLET = `class RpCap extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0;this.t=0;this.alive=true;this.port.onmessage=()=>{this.alive=false;};}
+process(inp){const ch=inp[0]&&inp[0][0];if(ch){if(this.n===0)this.t=currentTime;this.b.set(ch,this.n);this.n+=ch.length;if(this.n>=2048){this.port.postMessage({t:this.t,d:this.b.slice(0,this.n)});this.n=0;}}return this.alive;}}
 registerProcessor('rp-cap',RpCap);`;
 async function openMic() {
   if (!window.isSecureContext) { const e = new Error('https'); e.name = 'Insecure'; throw e; }
@@ -1564,7 +1621,7 @@ async function capture(c, stream, onData) {
   src.connect(node); node.connect(sink);
   return {
     chunks, kind: node.port ? 'worklet' : 'script',
-    stop() { try { src.disconnect(); node.disconnect(); sink.disconnect(); } catch (e) { } if (node.port) node.port.onmessage = null; else node.onaudioprocess = null; },
+    stop() { try { src.disconnect(); node.disconnect(); sink.disconnect(); } catch (e) { } if (node.port) { try { node.port.postMessage(0); } catch (e) { } node.port.onmessage = null; } else node.onaudioprocess = null; },
   };
 }
 function assemble(chunks, T0, durSec, sr) {
@@ -1631,12 +1688,18 @@ function drawWave() {
   if (!n) { g.fillRect(0, H / 2, W, 1 * dpr); }
 }
 
-let rec = null, wakeLock = null, lastCap = null;
+let rec = null, wakeLock = null, lastCap = null, micBusy = false;
 async function startRec() {
   if (rec) { finishRec(true); return; }
-  if (!score || cal) return;
+  if (!score || cal || micBusy) return;
+  flushBpm();
+  audioMode('play-and-record');
   const c = audio();                       // iOS: 누른 순간(await 전)에 소리를 켜야 함
   stopPlay(); closeSheet();
+  micBusy = true;
+  try { await startRecInner(c); } finally { micBusy = false; }
+}
+async function startRecInner(c) {
   const btn = $('#recBtn');
   btn.disabled = true; $('#recStatus').textContent = '마이크 준비 중…';
   let stream;
@@ -1655,6 +1718,7 @@ async function startRec() {
   const metro = $('#metroOn').checked;
   for (const k of tl.clicks) if (k.t < tl.lead - 1e-6 || metro) nodes.push(scheduleClick(c, master, t0 + k.t, k.level));
   const lat = latSec();
+  lockedSet = JSON.parse(JSON.stringify(set));
   rec = { c, stream, cap, t0, tl, nodes, master, endAt: t0 + tl.total + Math.max(0, lat) + 0.5, spk, lat, score, set: JSON.parse(JSON.stringify(set)), raf: 0, on: new Set() };
   btn.disabled = false; btn.textContent = '■ 그만하기';
   $('#recStatus').textContent = '녹음 중 — 예비박을 듣고 시작하세요';
@@ -1683,7 +1747,7 @@ async function startRec() {
   me.timer = setTimeout(() => { if (rec === me) finishRec(false); }, (me.endAt - c.currentTime) * 1000 + 300);
 }
 async function finishRec(aborted) {
-  const r = rec; if (!r) return; rec = null;
+  const r = rec; if (!r) return; rec = null; lockedSet = null;
   cancelAnimationFrame(r.raf); clearTimeout(r.timer);
   for (const n of r.nodes) { try { n.stop(); } catch (e) { } }
   try { r.master.disconnect(); } catch (e) { }
@@ -1701,38 +1765,74 @@ async function finishRec(aborted) {
   lastCap = { n: chs.length, samples: chs.reduce((s, c) => s + c.d.length, 0), span: chs.length ? chs[chs.length - 1].t - chs[0].t : 0, sr, first: chs.length ? chs[0].t - r.t0 : null, kind: r.cap.kind };
   let peak = 0; for (let i = 0; i < pcm.length; i += 7) peak = Math.max(peak, Math.abs(pcm[i]));
   if (peak < 0.003) { $('#recStatus').textContent = '소리가 거의 녹음되지 않았습니다. 마이크 가까이에서 다시 하세요.'; return; }
-  let res;
-  try { res = C.analyze(pcm, sr, r.score, r.tl, r.lat, { speaker: r.spk }); }
-  catch (e) { console.error(e); $('#recStatus').textContent = '채점 중 오류가 났습니다. 다시 녹음하세요.'; return; }
-  const take = makeTake(r.set, r.score, res, toWav(pcm, sr), pcm.length / sr, { latencyMs: Math.round(r.lat * 1000), listen: r.spk ? 'spk' : 'ear', kind: 'rec' });
+  let take;
+  try {
+    const res = await analyzeAsync(pcm, sr, r.set, r.tl, r.score, r.lat, { speaker: r.spk });
+    take = makeTake(r.set, r.score, res, toWav(pcm, sr), pcm.length / sr, { latencyMs: Math.round(r.lat * 1000), listen: r.spk ? 'spk' : 'ear', kind: 'rec' });
+  } catch (e) { console.error(e); $('#recStatus').textContent = '채점 중 오류가 났습니다. 다시 녹음하세요.'; return; }
   const ok = await DB.put(take);
   $('#recStatus').textContent = ok ? `${take.result.total}점 — 보관함에 저장했습니다` : `${take.result.total}점 — 저장은 못 했습니다`;
   showResult(take, !ok);
 }
 $('#recBtn').onclick = startRec;
 
+// 채점은 뒤에서(Worker) 돌린다 — 긴 녹음·낮은 악기에서 휴대폰 화면이 멈추지 않게. 안 되면 여기서 바로 계산
+let scoreWorker = null, workerBroken = false;
+function analyzeAsync(pcm, sr, tset, tl, sc, lat, opt) {
+  const direct = () => C.analyze(pcm, sr, sc, tl, lat, opt);
+  if (workerBroken || !window.Worker) return Promise.resolve().then(direct);
+  const ci = Math.round(tl.lead / (sc.measLen * sc.spt));
+  return new Promise((resolve, reject) => {
+    try {
+      if (!scoreWorker) {
+        const src = document.getElementById('core').textContent +
+          '\nself.onmessage=function(e){var d=e.data;try{var sc=Core.generate(d.set);var tl=Core.timeline(sc,d.ci);self.postMessage({ok:true,r:Core.analyze(d.pcm,d.sr,sc,tl,d.lat,d.opt)});}catch(err){self.postMessage({ok:false,err:String(err&&err.stack||err)});}};';
+        scoreWorker = new Worker(URL.createObjectURL(new Blob([src], { type: 'text/javascript' })));
+      }
+      const w = scoreWorker;
+      const done = () => { clearTimeout(to); w.onmessage = null; w.onerror = null; };
+      const to = setTimeout(() => { done(); workerBroken = true; try { w.terminate(); } catch (e) { } scoreWorker = null; try { resolve(direct()); } catch (e) { reject(e); } }, 60000);
+      w.onmessage = e => { done(); if (e.data && e.data.ok) resolve(e.data.r); else { console.error(e.data && e.data.err); try { resolve(direct()); } catch (er) { reject(er); } } };
+      w.onerror = ev => { ev.preventDefault && ev.preventDefault(); done(); workerBroken = true; scoreWorker = null; try { resolve(direct()); } catch (er) { reject(er); } };
+      w.postMessage({ pcm, sr, set: tset, ci, lat, opt });
+    } catch (e) { workerBroken = true; try { resolve(direct()); } catch (er) { reject(er); } }
+  });
+}
+
 // 지연 측정
 let cal = null;
 async function calibrate(kind) {
-  if (rec || cal) return;
+  if (rec || cal || micBusy) return;
+  cal = true;                              // 바로 잠가 두 번 눌러도 한 번만
+  audioMode('play-and-record');
   const c = audio();                       // iOS: await 전에 소리 켜기
   stopPlay();
   const msg = t => { $('#calMsg').textContent = t; };
-  msg('마이크 준비 중…');
-  let stream; try { stream = await openMic(); } catch (e) { micError(e); msg($('#recStatus').textContent); return; }
-  try { await c.resume(); } catch (e) { }
-  let cap; try { cap = await capture(c, stream); } catch (e) { stream.getTracks().forEach(t => t.stop()); msg('측정을 시작하지 못했습니다.'); return; }
-  cal = true;
-  const N = 8, gap = 0.6, t0 = c.currentTime + 0.9;
-  const master = c.createGain(); master.gain.value = kind === 'spk' ? 1 : 0.8; master.connect(c.destination);
-  const nodes = [];
-  for (let k = 0; k < N; k++) nodes.push(scheduleClick(c, master, t0 + k * gap, 2));
-  msg(kind === 'spk' ? '클릭 소리를 재는 중입니다. 조용히 기다리세요…' : '클릭에 맞춰 손뼉을 치세요…');
-  await new Promise(res => setTimeout(res, (t0 - c.currentTime + N * gap + 0.6) * 1000));
-  cap.stop(); stream.getTracks().forEach(t => t.stop()); try { master.disconnect(); } catch (e) { }
-  cal = null;
-  const sr = c.sampleRate, pre = 0.3;
-  const pcm = assemble(cap.chunks, t0 - pre, N * gap + 0.9, sr);
+  ['#calSpk', '#calClap'].forEach(q => { $(q).disabled = true; });
+  let stream = null, cap = null, master = null;
+  try {
+    msg('마이크 준비 중…');
+    try { stream = await openMic(); } catch (e) { micError(e); msg($('#recStatus').textContent); return; }
+    try { await c.resume(); } catch (e) { }
+    try { cap = await capture(c, stream); } catch (e) { msg('측정을 시작하지 못했습니다.'); return; }
+    const N = 8, gap = 0.6, t0 = c.currentTime + 0.9;
+    master = c.createGain(); master.gain.value = kind === 'spk' ? 1 : 0.8; master.connect(c.destination);
+    for (let k = 0; k < N; k++) scheduleClick(c, master, t0 + k * gap, 2);
+    msg(kind === 'spk' ? '클릭 소리를 재는 중입니다. 조용히 기다리세요…' : '클릭에 맞춰 손뼉을 치세요…');
+    await new Promise(res => setTimeout(res, (t0 - c.currentTime + N * gap + 0.6) * 1000));
+    calcLatency(kind, cap.chunks, c.sampleRate, t0, N, gap, msg);
+  } catch (e) { console.error(e); msg('측정 중 오류가 났습니다. 다시 하세요.'); }
+  finally {
+    if (cap) cap.stop();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    try { if (master) master.disconnect(); } catch (e) { }
+    cal = null;
+    ['#calSpk', '#calClap'].forEach(q => { $(q).disabled = false; });
+  }
+}
+function calcLatency(kind, chunks, sr, t0, N, gap, msg) {
+  const pre = 0.3;
+  const pcm = assemble(chunks, t0 - pre, N * gap + 0.9, sr);
   const env = C.envelope(pcm, sr, 0.005);
   const sorted = Float32Array.from(env.L).sort();
   const floor = sorted[Math.floor(sorted.length * 0.1)] || -90;
@@ -1749,7 +1849,7 @@ async function calibrate(kind) {
   const spread = C.median(offs.map(o => Math.abs(o - med)));
   latency = { ms: Math.round(med * 1000 / 5) * 5, src: kind, at: Date.now() };
   store.set('latency', latency); showLat();
-  msg(`${offs.length}번 중 ${offs.length}번을 들었습니다. 지연 ${latency.ms}ms 로 맞췄습니다.` + (spread > 0.03 ? ' 들쭉날쭉하니 한 번 더 재 보세요.' : ''));
+  msg(`${N}번 중 ${offs.length}번을 들었습니다. 지연 ${latency.ms}ms 로 맞췄습니다.` + (spread > 0.03 ? ' 들쭉날쭉하니 한 번 더 재 보세요.' : ''));
 }
 $('#calSpk').onclick = () => calibrate('spk');
 $('#calClap').onclick = () => calibrate('clap');
@@ -1784,6 +1884,7 @@ function renderResult() {
   $('#resBox').classList.toggle('hide', !take);
   if (!take) return;
   const R = take.result, S = take.set;
+  $('#resNote').textContent = '음표를 누르면 무엇이 어긋났는지 보여줍니다.';
   let sc; try { sc = C.generate(S); } catch (e) { return; }
   $('#resTotal').textContent = R.total;
   $('#resTitle').textContent = take.name;
@@ -1851,8 +1952,17 @@ function playBlob(blob, btn, label) {
   player.onended = () => { btn.textContent = label; playerBtn = null; };
 }
 $('#resPlay').onclick = e => { if (curTake && curTake.audio) playBlob(asBlob(curTake.audio), e.currentTarget, '▶ 내 연주 듣기'); };
+// 녹음 기록의 설정을 깊게 복사해 쓴다 (고쳐도 기록은 그대로, 옛 기록은 기본값으로 채움)
+function useTakeSet(ts) {
+  const inst = set.inst;
+  set = Object.assign({}, DEFAULT, JSON.parse(JSON.stringify(ts || {})));
+  if (!C.INSTS[set.inst]) set.inst = inst;
+  set.edits = set.edits && typeof set.edits === 'object' ? set.edits : {};
+  store.set('set', set); syncForm(); rebuild();
+}
 $('#resAgain').onclick = () => {
-  if (curTake) { set = Object.assign({}, curTake.set); store.set('set', set); syncForm(); rebuild(); }
+  if (busyRec()) return;
+  if (curTake) useTakeSet(curTake.set);
   showTab('practice');
 };
 $('#resSave').onclick = async () => { if (!curTake) return; const ok = await DB.put(curTake); if (ok) { $('#resSave').classList.add('hide'); toast('보관함에 저장했습니다'); } else toast('저장하지 못했습니다'); };
@@ -1865,11 +1975,14 @@ async function selfTest(sloppy) {
   const sr = 44100, ci = +$('#countIn').value;
   const tl = C.timeline(score, ci);
   const o = sloppy ? { seed: Date.now() % 1000, jitter: 45, detune: 20, wrong: 0.08, drop: 0.06, tempo: 1.04, lenScale: 1.15 } : { seed: 3 };
-  const pcm = C.synth(score, tl, sr, o);
-  const res = C.analyze(pcm, sr, score, tl, 0, {});
-  const take = makeTake(JSON.parse(JSON.stringify(set)), score, res, toWav(pcm, sr), pcm.length / sr, { kind: 'self' });
-  take.name = (sloppy ? '흔들린' : '정확한') + ' 가상 연주 ' + take.name.slice(0, 11);
-  showResult(take, true);
+  const sc = score, snap = JSON.parse(JSON.stringify(set));
+  try {
+    const pcm = C.synth(sc, tl, sr, o);
+    const res = await analyzeAsync(pcm, sr, snap, tl, sc, 0, {});
+    const take = makeTake(snap, sc, res, toWav(pcm, sr), pcm.length / sr, { kind: 'self' });
+    take.name = (sloppy ? '흔들린' : '정확한') + ' 가상 연주 ' + take.name.slice(0, 11);
+    showResult(take, true);
+  } catch (e) { console.error(e); toast('채점 시험 중 오류가 났습니다'); }
 }
 $('#selfPerfect').onclick = () => selfTest(false);
 $('#selfSloppy').onclick = () => selfTest(true);
@@ -1878,7 +1991,7 @@ $('#selfSloppy').onclick = () => selfTest(true);
    6단계: 보관함 (IndexedDB)
    ============================================================ */
 const DB = {
-  db: null, mem: null, note: '',
+  db: null, mem: new Map(), note: '',
   async open() {
     try {
       if (!window.indexedDB) throw new Error('no idb');
@@ -1898,7 +2011,7 @@ const DB = {
       try {
         const t = this.db.transaction('takes', mode), s = t.objectStore('takes');
         const out = fn(s);
-        t.oncomplete = () => res(out && out.result !== undefined ? out.result : out);
+        t.oncomplete = () => res(out instanceof IDBRequest ? out.result : out);     // 없는 id 는 undefined
         t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('abort'));
       } catch (e) { rej(e); }
     });
@@ -1939,8 +2052,9 @@ function takeInfo(t) {
   const { audio, ...rest } = t;
   return new Blob([JSON.stringify(rest, null, 1)], { type: 'application/json' });
 }
+const validTake = t => t && typeof t.id === 'string' && t.result && Number.isFinite(t.result.total) && t.set && C.METERS[t.set.meter];
 async function renderLibrary() {
-  const list = await DB.all();
+  const list = (await DB.all()).filter(validTake);
   const sort = $('#libSort').value;
   const cmp = { new: (a, b) => b.created - a.created, old: (a, b) => a.created - b.created, hi: (a, b) => b.result.total - a.result.total || b.created - a.created, lo: (a, b) => a.result.total - b.result.total || b.created - a.created, name: (a, b) => a.name.localeCompare(b.name, 'ko') }[sort];
   list.sort(cmp);
@@ -1981,7 +2095,7 @@ $('#libList').addEventListener('click', async ev => {
   const a = b.dataset.a;
   if (a === 'play') playBlob(asBlob(t.audio), b, '▶ 듣기');
   else if (a === 'result') showResult(t, false);
-  else if (a === 'practice') { set = Object.assign({}, t.set); store.set('set', set); syncForm(); rebuild(); showTab('practice'); }
+  else if (a === 'practice') { if (busyRec()) return; useTakeSet(t.set); showTab('practice'); }
   else if (a === 'wav') download(asBlob(t.audio), safeName(t.name) + '.wav');
   else if (a === 'json') download(takeInfo(t), safeName(t.name) + '.json');
   else if (a === 'rename') {
@@ -2013,14 +2127,19 @@ $('#bakIn').onchange = async e => {
   try {
     const j = JSON.parse(await f.text());
     if (j.app !== 'rhythm-practice' || !Array.isArray(j.takes)) throw new Error('형식');
-    let n = 0;
+    let n = 0, skip = 0;
     for (const t of j.takes) {
-      const bin = atob(t.audio64 || ''); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
-      const { audio64, ...rest } = t;
-      if (await DB.put(Object.assign(rest, { audio: new Blob([u8], { type: 'audio/wav' }) }))) n++;
+      try {                                                   // 한 개가 망가져도 나머지는 불러온다
+        if (!validTake(t)) throw new Error('bad');
+        const bin = atob(t.audio64 || ''); const u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        const { audio64, ...rest } = t;
+        if (!rest.name) rest.name = '불러온 녹음';
+        if (await DB.put(Object.assign(rest, { audio: new Blob([u8], { type: 'audio/wav' }) }))) n++; else skip++;
+      } catch (e1) { skip++; }
     }
-    toast(`${n}개를 불러왔습니다`); renderLibrary();
+    toast(`${n}개를 불러왔습니다` + (skip ? ` (읽지 못한 ${skip}개는 건너뜀)` : ''));
   } catch (err) { toast('백업 파일을 읽지 못했습니다'); }
+  renderLibrary();
 };
 
 window.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
