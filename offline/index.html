@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>리듬 연습</title>
+<title>리듬 연습 (오프라인)</title>
 <meta name="theme-color" content="#1f3b63">
 <link rel="icon" href="img/icon-192.png">
 <link rel="apple-touch-icon" href="img/icon-180.png">
@@ -117,13 +117,14 @@ details[open] summary::after{content:" ▴"}
 .start-card li{margin:3px 0}
 body.recording #setBox, body.recording #modeSeg, body.recording #newBtn, body.recording #playBtn, body.recording #shareBtn,
 body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, body.recording #listen, body.recording nav.tabs button:not([aria-selected="true"]){opacity:.4;pointer-events:none}
+.off-badge{display:inline-block;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#2f855a;border-radius:999px;padding:2px 8px;margin-left:4px}
 .home-btn{background:none;border:0;padding:4px 0;margin:0;font:inherit;color:inherit;cursor:pointer;min-height:36px}
 @media (min-width:900px){ .cols{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start} }
 </style>
 </head>
 <body>
 <header>
-  <h1><button type="button" id="homeBtn" class="home-btn" title="연습 화면 맨 위로">리듬 연습</button></h1>
+  <h1><button type="button" id="homeBtn" class="home-btn" title="연습 화면 맨 위로">리듬 연습</button> <span class="off-badge">오프라인</span></h1>
   <a class="theme-btn" href="guide.html" style="text-decoration:none;display:inline-flex;align-items:center">사용법</a>
   <button class="theme-btn" id="themeBtn" type="button">화면: 자동</button>
 </header>
@@ -352,10 +353,10 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
     </div>
     <div class="card">
       <h2>이 앱에 대해</h2>
+      <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
-      <p class="muted" style="margin:8px 0 0">버전 v2.0 · 2026-09-27</p>
+      <p class="muted" style="margin:8px 0 0">버전 v2.0 (오프라인 앱) · 2026-09-27</p>
     </div>
   </section>
 </main>
@@ -382,7 +383,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
+<script src="vexflow.js"></script>
 
 <!-- ============================================================
      CORE : 화면·소리와 무관한 순수 계산 (node 로도 시험 가능)
@@ -2398,6 +2399,29 @@ showLat();
 drawWave();
 DB.open().then(() => { if (DB.note) $('#latInfo').textContent += ' ' + DB.note; });
 window.RPX = { DB, get take() { return curTake; }, get lastCap() { return lastCap; }, schedulePlayback, articPlan, toWav, outChain, selfTest, renderLibrary, showResult };
+})();
+</script>
+<script>
+// 서비스워커: 처음 한 번 열 때 앱·악보 도구·그림을 이 기기에 저장 → 다음부터 인터넷 없이 열림
+(function () {
+  var el = document.getElementById('offlineStatus');
+  function say(t) { if (el) el.textContent = t; }
+  if (!('serviceWorker' in navigator)) { say('이 브라우저는 오프라인 저장을 지원하지 않습니다. 크롬·사파리 최신판을 쓰세요.'); return; }
+  var ok = false;
+  function net() { return navigator.onLine ? ' (지금 인터넷 연결됨)' : ' (지금 인터넷 끊김 — 저장본으로 동작 중)'; }
+  function show() { if (ok) say('✅ 이 기기에 저장됨 — 인터넷 없이도 열립니다' + net()); }
+  window.addEventListener('online', show); window.addEventListener('offline', show);
+  // 새 버전이 들어오면 한 번만 저절로 새로고침 (처음 설치 때는 하지 않음)
+  var had = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    if (!had) { had = true; return; }
+    try { if (sessionStorage.getItem('rp-sw-reloaded')) return; sessionStorage.setItem('rp-sw-reloaded', '1'); } catch (e) { }
+    say('새 버전으로 바꾸는 중…'); location.reload();
+  });
+  try { setTimeout(function () { sessionStorage.removeItem('rp-sw-reloaded'); }, 10000); } catch (e) { }
+  navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; })
+    .then(function () { ok = true; show(); })
+    .catch(function () { say('오프라인 저장에 실패했습니다. 인터넷에 연결된 상태에서 한 번 다시 여세요.'); });
 })();
 </script>
 </body>

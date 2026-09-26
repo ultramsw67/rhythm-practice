@@ -33,7 +33,7 @@ module.exports = async (c) => {
       const hp1 = oc.createBiquadFilter(); hp1.type='highpass'; hp1.frequency.value=500; hp1.Q.value=0.7;
       const hp2 = oc.createBiquadFilter(); hp2.type='highpass'; hp2.frequency.value=500; hp2.Q.value=0.7;
       if (window.__FULL) { hp1.frequency.value = 10; hp2.frequency.value = 10; } hp1.connect(hp2).connect(oc.destination);
-      RPX.schedulePlayback(oc, hp1, 0, tl, v.melody);
+      const mst = oc.createGain(); mst.gain.value = 0.9; mst.connect(hp1); RPX.schedulePlayback(oc, RPX.outChain ? RPX.outChain(oc, mst) : hp1, 0, tl, v.melody);   // 실제 재생과 같은 출력단
       const x = (await oc.startRendering()).getChannelData(0);
       // 혀 소리(첫 25ms)를 뺀 음 몸통의 크기
       let s=0, n=0; for (const nt of notes) { const a=Math.floor((nt.t+0.04)*sr), b=Math.floor((nt.t+0.3)*sr); for (let i=a;i<b;i++){ s+=x[i]*x[i]; n++; } }

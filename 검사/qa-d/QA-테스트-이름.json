@@ -1,0 +1,187 @@
+{
+ "id": "muj009x2hcrx",
+ "name": "QA-테스트-이름",
+ "created": 1790463950390,
+ "set": {
+  "mode": "rhythm",
+  "meter": "4/4",
+  "level": 1,
+  "bars": 2,
+  "key": "C",
+  "inst": "c_treble",
+  "bpm": 100,
+  "pickup": "off",
+  "artic": "auto",
+  "seed": 3,
+  "edits": {}
+ },
+ "result": {
+  "total": 100,
+  "raw": 100,
+  "parts": {
+   "rhythm": 1,
+   "tempo": 1,
+   "artic": 1
+  },
+  "weights": {
+   "rhythm": 50,
+   "tempo": 25,
+   "artic": 25
+  },
+  "played": 100,
+  "meanDevMs": 0,
+  "extras": 0,
+  "matched": 9,
+  "count": 9,
+  "hasMarks": true,
+  "notes": [
+   {
+    "ev": 0,
+    "ids": [
+     0
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.9,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 1,
+    "ids": [
+     1
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.91,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 2,
+    "ids": [
+     2
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.91,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 3,
+    "ids": [
+     3
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.91,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 4,
+    "ids": [
+     4
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.92,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 5,
+    "ids": [
+     5
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.92,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 6,
+    "ids": [
+     6
+    ],
+    "artic": [
+     "acc"
+    ],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.92,
+    "checks": [
+     [
+      "acc",
+      1
+     ]
+    ],
+    "rS": 1
+   },
+   {
+    "ev": 7,
+    "ids": [
+     7
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.92,
+    "checks": [],
+    "rS": 1
+   },
+   {
+    "ev": 8,
+    "ids": [
+     8
+    ],
+    "artic": [],
+    "matched": true,
+    "grade": "ok",
+    "dev": 0,
+    "keyErr": false,
+    "octave": false,
+    "ratio": 0.91,
+    "checks": [],
+    "rS": 1
+   }
+  ]
+ },
+ "dur": 8,
+ "audioType": "audio/wav",
+ "latencyMs": 0,
+ "listen": "ear",
+ "kind": "rec"
+}

@@ -13,3 +13,5 @@ node_modules/
 검사/qa-c/guide-dl.html
 검사/qa-b/*.json
 !검사/qa-b/sets.json
+검사/qa-e/site*/
+검사/regress-*.txt
