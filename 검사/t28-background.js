@@ -4,6 +4,7 @@ module.exports = async (c) => {
   await c.size(390, 844, true);
   await c.go(process.env.URL0 || 'http://127.0.0.1:' + (process.env.PORT || 8765) + '/');
   const hide = (h) => `(()=>{ Object.defineProperty(document, 'hidden', { value: ${h}, configurable: true }); Object.defineProperty(document, 'visibilityState', { value: '${h ? 'hidden' : 'visible'}', configurable: true }); document.dispatchEvent(new Event('visibilitychange')); window.dispatchEvent(new Event(${h} ? 'pagehide' : 'pageshow')); })()`;
+  await c.ev(`(async()=>{ for (let i=0;i<100 && !window.RP;i++) await new Promise(r=>setTimeout(r,100)); })()`);  // 새 프로필은 악보 도구를 받느라 늦게 준비됨
   const out = {};
   // ① 녹음 중에 다른 앱으로 → 돌아옴
   out.recBackground = await c.ev(`(async()=>{

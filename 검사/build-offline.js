@@ -5,7 +5,7 @@
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
 const OUT1 = process.env.OFFLINE_OUT1 || path.join(ROOT, 'offline');          // 시험 때는 다른 곳으로
-const OUT2 = 'C:/Users/ultramsw67/Desktop/리듬 연습 오프라인';
+const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습 오프라인';
 const ONLINE = 'https://ultramsw67.github.io/rhythm-practice/';
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>';
 let src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -20,9 +20,9 @@ if (process.env.VER_OVERRIDE) { src = src.replace('버전 ' + ver + ' · ', '버
 // 공통: 제목·배지·오프라인 상태 줄
 function common(s, badge) {
   s = s.replace(/\n\s*<p [^>]*id="offlineLinkP"[^\n]*<\/p>/, '');                 // 오프라인판에는 '오프라인 버전 열기' 줄이 필요 없음
-  need(s, '<title>리듬 연습</title>'); s = s.replace('<title>리듬 연습</title>', '<title>리듬 연습 (오프라인)</title>');
-  need(s, 'title="연습 화면 맨 위로">리듬 연습</button></h1>');
-  s = s.replace('title="연습 화면 맨 위로">리듬 연습</button></h1>', 'title="연습 화면 맨 위로">리듬 연습</button> <span class="off-badge">오프라인</span></h1>');
+  need(s, '<title>수드 리듬 연습</title>'); s = s.replace('<title>수드 리듬 연습</title>', '<title>수드 리듬 연습 (오프라인)</title>');
+  need(s, 'title="연습 화면 맨 위로">수드 리듬 연습</button></h1>');
+  s = s.replace('title="연습 화면 맨 위로">수드 리듬 연습</button></h1>', 'title="연습 화면 맨 위로">수드 리듬 연습</button> <span class="off-badge">오프라인</span></h1>');
   need(s, '.home-btn{'); s = s.replace('.home-btn{', '.off-badge{display:inline-block;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#2f855a;border-radius:999px;padding:2px 8px;margin-left:4px}\n.home-btn{');
   const v = `버전 ${ver} · `; need(s, v);
   s = s.replace(v, `버전 ${ver} (오프라인 ${badge}) · `);
@@ -67,9 +67,9 @@ const SOUNDS = fs.readdirSync(path.join(ROOT, 'sounds')).filter(f => /\.(js|txt)
 fs.mkdirSync(path.join(OUT1, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT1, 'sounds', f));
 fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT1, 'LICENSES.txt'));  // 외부 자료 라이선스 전문
-fs.writeFileSync(path.join(OUT1, 'guide.html'), guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>'));
+fs.writeFileSync(path.join(OUT1, 'guide.html'), guide.replace('<title>수드 리듬 연습 사용법</title>', '<title>수드 리듬 연습 사용법 (오프라인)</title>'));
 const man = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
-Object.assign(man, { id: './', name: '리듬 연습 오프라인 — 수트와후드', short_name: '리듬 연습(오프)', start_url: './', scope: './' });
+Object.assign(man, { id: './', name: '수드 리듬 연습 오프라인 — 수트와후드', short_name: '수드 리듬(오프)', start_url: './', scope: './' });
 fs.writeFileSync(path.join(OUT1, 'manifest.webmanifest'), JSON.stringify(man, null, 2));
 // 저장할 파일 목록과 내용 지문 → 앱을 고치면 캐시 이름이 바뀌어 새 버전을 받는다
 const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png', 'LICENSES.txt'].concat(SOUNDS.map(f => 'sounds/' + f));
@@ -113,22 +113,22 @@ d = d.replace('</body>', `<script>
 (function () { var el = document.getElementById('offlineStatus'); if (el) el.textContent = '✅ PC 파일 버전 — 인터넷 없이 바로 열립니다. 녹음은 이 PC 의 브라우저 안에 저장됩니다.'; })();
 </script>
 </body>`);
-fs.writeFileSync(path.join(OUT2, '리듬 연습 오프라인.html'), d);
+fs.writeFileSync(path.join(OUT2, '수드 리듬 연습 오프라인.html'), d);
 fs.mkdirSync(path.join(OUT2, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT2, 'sounds', f));
 fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT2, 'LICENSES.txt'));
-let g = guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>')
+let g = guide.replace('<title>수드 리듬 연습 사용법</title>', '<title>수드 리듬 연습 사용법 (오프라인)</title>')
   .split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"')
   .replace('<link rel="icon" href="img/sood-192.jpg">', '<link rel="icon" href="' + iconPng + '">')
-  .replace('<a href="./">앱으로</a>', '<a href="리듬 연습 오프라인.html">앱으로</a>');
+  .replace('<a href="./">앱으로</a>', '<a href="수드 리듬 연습 오프라인.html">앱으로</a>');
 fs.writeFileSync(path.join(OUT2, '사용법.html'), g);
 fs.writeFileSync(path.join(OUT2, '읽어 주세요.txt'), '\ufeff' + [
-  '리듬 연습 오프라인 (PC 파일 버전) ' + ver,
+  '수드 리듬 연습 오프라인 (PC 파일 버전) ' + ver,
   '',
-  '1. 「리듬 연습 오프라인.html」 을 두 번 누르면 크롬이나 엣지로 열립니다. 인터넷이 없어도 됩니다.',
+  '1. 「수드 리듬 연습 오프라인.html」 을 두 번 누르면 크롬이나 엣지로 열립니다. 인터넷이 없어도 됩니다.',
   '2. 기본 브라우저가 다른 것이면: 파일을 오른쪽 클릭 → 연결 프로그램 → Chrome 또는 Microsoft Edge 를 고르세요.',
   '3. 이 폴더를 통째로 USB 나 다른 PC 에 옮겨도 그대로 열립니다. sounds 폴더(악기 소리)도 꼭 같이 옮기세요.',
   '4. 녹음과 점수는 이 PC 의 브라우저 안에 저장됩니다. 폴더를 옮기면 보관함은 새로 시작하니 먼저 보관함 → 전체 백업 내보내기를 하세요.',
   '5. 공유 링크는 인터넷 버전 주소로 만들어집니다: ' + ONLINE,
 ].join('\r\n') + '\r\n');
-console.log('offline built', ver, CACHE, '| desktop file', Math.round(fs.statSync(path.join(OUT2, '리듬 연습 오프라인.html')).size / 1024) + 'KB');
+console.log('offline built', ver, CACHE, '| desktop file', Math.round(fs.statSync(path.join(OUT2, '수드 리듬 연습 오프라인.html')).size / 1024) + 'KB');

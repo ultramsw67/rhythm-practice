@@ -26,7 +26,7 @@ module.exports = async (c) => {
     await check('web OFFLINE');
   } else {
     await c.send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
-    await c.go('file:///C:/Users/ultramsw67/Desktop/' + encodeURIComponent('리듬 연습 오프라인') + '/' + encodeURIComponent('리듬 연습 오프라인.html'));
+    await c.go('file:///C:/Users/ultramsw67/Desktop/' + encodeURIComponent('수드 리듬 연습 오프라인') + '/' + encodeURIComponent('수드 리듬 연습 오프라인.html'));
     await check('file OFFLINE');
   }
 };
