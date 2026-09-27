@@ -141,7 +141,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <ol>
         <li><b>리듬 모드</b>(박자만) 또는 <b>선율 모드</b>(음정까지)를 고르세요</li>
         <li><b>▶ 들어보기</b>로 모범 연주를 먼저 들으세요</li>
-        <li>이어폰을 끼고 <b>● 녹음 시작</b> → 숫자가 끝나면 첫 박부터 부세요</li>
+        <li>유선 이어폰을 끼고(없으면 스피커로) <b>● 녹음 시작</b> → 숫자가 끝나면 첫 박부터 부세요</li>
         <li>끝나면 저절로 <b>결과</b> 탭에 점수가 나옵니다</li>
       </ol>
       <div class="row">
@@ -226,7 +226,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
 
         <div class="card" id="recCard">
           <h2>녹음</h2>
-          <div class="hint" style="margin:-4px 2px 10px">이어폰을 끼고 <b>● 녹음 시작</b>을 누르세요. 큰 숫자(예비박)가 끝나면 첫 박부터 부세요. 끝나면 저절로 채점합니다.</div>
+          <div class="hint" style="margin:-4px 2px 10px">유선 이어폰을 끼고 <b>● 녹음 시작</b>을 누르세요. 큰 숫자(예비박)가 끝나면 첫 박부터 부세요. 끝나면 저절로 채점합니다. 블루투스 이어폰은 녹음 음질이 떨어지니 없으면 스피커로 하세요.</div>
           <div class="row muted" style="margin-bottom:8px">
             <label><input type="checkbox" id="metroOn" checked> 메트로놈 소리</label>
             <label>예비박
@@ -238,7 +238,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           <div class="row muted" style="margin-bottom:10px">
             <label>듣는 방법
               <select id="listen" style="width:auto;min-height:34px;padding:4px 8px">
-                <option value="ear">이어폰 (권장)</option><option value="spk">스피커</option>
+                <option value="ear">이어폰 (유선 권장)</option><option value="spk">스피커</option>
               </select>
             </label>
           </div>
@@ -320,7 +320,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
   <section id="tab-settings" class="hide">
     <div class="card">
       <h2>이어폰을 끼고 연습하세요</h2>
-      <p class="muted" style="margin:0">스피커로 메트로놈을 틀면 클릭 소리가 녹음에 섞여 채점이 흔들릴 수 있습니다. 유선 이어폰이 가장 정확하고, 블루투스 이어폰은 소리가 늦게 나오므로 아래 지연 보정을 꼭 하세요.</p>
+      <p class="muted" style="margin:0">스피커로 메트로놈을 틀면 클릭 소리가 녹음에 섞여 채점이 흔들릴 수 있습니다. <b>유선 이어폰</b>이 가장 좋습니다. 블루투스 이어폰은 소리가 늦게 나오고, 켠 채 녹음하면 음질이 통화 수준으로 떨어질 수 있습니다. 앱이 휴대폰 마이크로 바꿔 녹음을 시도하지만, 그래도 먹먹하면 블루투스를 끄고 "듣는 방법 → 스피커"로 녹음하세요.</p>
     </div>
     <div class="card">
       <h2>지연 보정</h2>
@@ -356,7 +356,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v2.0 (오프라인 앱) · 2026-09-27</p>
+      <p class="muted" style="margin:8px 0 0">버전 v2.1 (오프라인 앱) · 2026-09-27</p>
     </div>
   </section>
 </main>
@@ -1745,10 +1745,30 @@ $('#shareBtn').onclick = async () => {
 const WORKLET = `class RpCap extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0;this.t=0;this.alive=true;this.port.onmessage=()=>{this.alive=false;};}
 process(inp){const ch=inp[0]&&inp[0][0];if(ch){if(this.n===0)this.t=currentTime;this.b.set(ch,this.n);this.n+=ch.length;if(this.n>=2048){this.port.postMessage({t:this.t,d:this.b.slice(0,this.n)});this.n=0;}}return this.alive;}}
 registerProcessor('rp-cap',RpCap);`;
+// 블루투스 이어폰이 연결된 채 마이크를 켜면 휴대폰이 이어폰 마이크(통화 음질)로 녹음한다 → 내장 마이크로 바꿔 연다
+const BT_RE = /bluetooth|airpods|buds|hands-?free|headset|hfp|\bsco\b|beats|블루투스|헤드셋|핸즈프리|버즈/i;
+let micInfo = null;
 async function openMic() {
   if (!window.isSecureContext) { const e = new Error('https'); e.name = 'Insecure'; throw e; }
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { const e = new Error('nomedia'); e.name = 'NoMedia'; throw e; }
-  return navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 } });
+  const want = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
+  let stream = await navigator.mediaDevices.getUserMedia({ audio: want });
+  let tr = stream.getAudioTracks()[0], label = (tr && tr.label) || '';
+  micInfo = { label, bt: BT_RE.test(label), switched: false };
+  if (micInfo.bt && navigator.mediaDevices.enumerateDevices) {
+    try {
+      const devs = (await navigator.mediaDevices.enumerateDevices())
+        .filter(d => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications' && !BT_RE.test(d.label || ''));
+      const pick = devs.find(d => /built|내장|internal|iphone|phone|microphone|마이크|bottom|top|speakerphone/i.test(d.label || '')) || devs[0];
+      if (pick) {
+        const s2 = await navigator.mediaDevices.getUserMedia({ audio: Object.assign({}, want, { deviceId: { exact: pick.deviceId } }) });
+        const t2 = s2.getAudioTracks()[0], l2 = (t2 && t2.label) || pick.label || '';
+        if (!BT_RE.test(l2)) { stream.getTracks().forEach(t => t.stop()); stream = s2; micInfo = { label: l2, bt: false, switched: true, from: label }; }
+        else s2.getTracks().forEach(t => t.stop());
+      }
+    } catch (e) { /* 바꾸지 못하면 원래 마이크 그대로 쓰고 안내만 */ }
+  }
+  return stream;
 }
 function micError(e) {
   const m = {
@@ -1797,9 +1817,14 @@ function assemble(chunks, T0, durSec, sr) {
   }
   return out;
 }
-function toWav(pcm, sr) {
+function toWav(pcm, sr, norm) {
+  // 원래 음질(표본율) 그대로 저장. 작게 녹음됐으면 들을 때 알맞은 크기로 키운다(최대 4배)
   let x = pcm, rate = sr;
-  if (sr >= 44100) { x = C.decimate(pcm, sr, 2); rate = sr / 2; }
+  if (norm !== false) {
+    let pk = 0; for (let i = 0; i < pcm.length; i++) { const a = Math.abs(pcm[i]); if (a > pk) pk = a; }
+    const g = pk > 0 ? Math.min(4, 0.89 / pk) : 1;
+    if (Math.abs(g - 1) > 0.02) { x = new Float32Array(pcm.length); for (let i = 0; i < pcm.length; i++) x[i] = pcm[i] * g; }
+  }
   const buf = new ArrayBuffer(44 + x.length * 2), v = new DataView(buf);
   const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
   w(0, 'RIFF'); v.setUint32(4, 36 + x.length * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
@@ -1834,6 +1859,14 @@ $('#countIn').value = String(store.get('countIn', 1)); $('#countIn').onchange = 
 // 실시간 파형
 const wave = { peaks: [], max: 400 };
 function pushWave(d) {
+  if (rec) {
+    let clip = 0; for (let i = 0; i < d.length; i++) if (d[i] >= 0.985 || d[i] <= -0.985) clip++;
+    if (clip) {
+      rec.clip = (rec.clip || 0) + clip;
+      const now = Date.now();
+      if (!rec.clipToast || now - rec.clipToast > 4000) { rec.clipToast = now; toast('소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요'); }
+    }
+  }
   for (let i = 0; i < d.length; i += 256) { let p = 0; for (let k = i; k < Math.min(d.length, i + 256); k++) p = Math.max(p, Math.abs(d[k])); wave.peaks.push(p); }
   if (wave.peaks.length > wave.max) wave.peaks.splice(0, wave.peaks.length - wave.max);
 }
@@ -1888,6 +1921,9 @@ async function startRecInner(c) {
   rec = { c, stream, cap, t0, tl, nodes, master, endAt: t0 + tl.total + Math.max(0, lat) + 0.5, spk, lat, score, set: JSON.parse(JSON.stringify(set)), raf: 0, on: new Set() };
   btn.disabled = false; btn.textContent = '■ 그만하기'; $('#recRestart').classList.remove('hide'); document.body.classList.add('recording');
   $('#recStatus').textContent = '녹음 중 — 예비박을 듣고 시작하세요';
+  rec.mic = micInfo ? Object.assign({}, micInfo) : null;
+  if (micInfo && micInfo.switched) toast('블루투스 이어폰이 연결돼 있어 휴대폰 마이크로 녹음합니다');
+  else if (micInfo && micInfo.bt) toast('블루투스 이어폰 마이크로 녹음돼 음질이 떨어집니다. 유선 이어폰이나 스피커로 하세요');
   const perBar = Math.round(score.measLen / score.M.beat);
   const beatSec = score.M.beat * score.spt;
   const loop = () => {
@@ -1918,6 +1954,7 @@ async function finishRec(aborted) {
   for (const n of r.nodes) { try { n.stop(); } catch (e) { } }
   try { r.master.disconnect(); } catch (e) { }
   r.cap.stop(); r.stream.getTracks().forEach(t => t.stop());
+  audioMode('playback');                   // iOS: 녹음 모드로 두면 수화기 쪽 작은 스피커로 재생된다
   try { if (wakeLock) await wakeLock.release(); } catch (e) { } wakeLock = null;
   document.querySelectorAll('#score .now, #score .done').forEach(el => el.classList.remove('now', 'done'));
   $('#countBig').classList.add('hide');
@@ -1934,7 +1971,7 @@ async function finishRec(aborted) {
   let take;
   try {
     const res = await analyzeAsync(pcm, sr, r.set, r.tl, r.score, r.lat, { speaker: r.spk });
-    take = makeTake(r.set, r.score, res, toWav(pcm, sr), pcm.length / sr, { latencyMs: Math.round(r.lat * 1000), listen: r.spk ? 'spk' : 'ear', kind: 'rec' });
+    take = makeTake(r.set, r.score, res, toWav(pcm, sr), pcm.length / sr, { latencyMs: Math.round(r.lat * 1000), listen: r.spk ? 'spk' : 'ear', kind: 'rec', mic: r.mic, clipSec: +((r.clip || 0) / sr).toFixed(3) });
   } catch (e) { console.error(e); $('#recStatus').textContent = '채점 중 오류가 났습니다. 다시 녹음하세요.'; return; }
   const ok = await DB.put(take);
   $('#recStatus').textContent = ok ? `${take.result.total}점 — 보관함에 저장했습니다` : `${take.result.total}점 — 저장은 못 했습니다`;
@@ -1992,7 +2029,7 @@ async function calibrate(kind) {
     if (cap) cap.stop();
     if (stream) stream.getTracks().forEach(t => t.stop());
     try { if (master) master.disconnect(); } catch (e) { }
-    cal = null;
+    cal = null; audioMode('playback');
     ['#calSpk', '#calClap'].forEach(q => { $(q).disabled = false; });
   }
 }
@@ -2067,11 +2104,13 @@ function renderResult() {
   const host = $('#resScore');
   if (host.offsetParent !== null) { try { renderScore(host, sc, { colors }); } catch (e) { console.error(e); } }
   host._res = R; host._sc = sc;
-  $('#resTips').innerHTML = tips(R, S).map(t => `<li>${t}</li>`).join('');
+  $('#resTips').innerHTML = tips(R, S, take).map(t => `<li>${t}</li>`).join('');
 }
 const ARK = { stac: '스타카토', stacc: '스타카티시모', ten: '테누토', acc: '악센트', marc: '마르카토', ferm: '페르마타', slur: '슬러' };
-function tips(R, S) {
+function tips(R, S, take) {
   const out = [];
+  if (take && take.mic && take.mic.bt) out.push('블루투스 이어폰 마이크로 녹음돼 통화 음질이었습니다. 유선 이어폰을 쓰거나, 블루투스를 끄고 "듣는 방법 → 스피커"로 녹음하세요.');
+  if (take && take.clipSec > 0.02) out.push('소리가 너무 커서 녹음이 찌그러졌습니다. 휴대폰을 악기에서 50cm쯤 떨어뜨려 놓으세요.');
   const miss = R.count - R.matched;
   if (miss > 0) out.push(`음 ${miss}개를 못 들었습니다. ${S.mode === 'melody' ? '혀로 음 시작을 또렷하게 하세요.' : '음마다 시작을 또렷하게 끊어 주세요.'}`);
   if (Math.abs(R.meanDevMs) >= 30) out.push(`평균 ${Math.abs(R.meanDevMs)}ms ${R.meanDevMs > 0 ? '늦게' : '빨리'} 들어갑니다. 지연 보정을 했는지도 확인하세요.`);
@@ -2109,6 +2148,7 @@ $('#resScore').addEventListener('click', ev => {
 const player = new Audio();
 let playerUrl = null, playerBtn = null;
 function playBlob(blob, btn, label) {
+  audioMode('playback');
   if (playerBtn === btn && !player.paused) { player.pause(); btn.textContent = label; playerBtn = null; return; }
   if (playerBtn) playerBtn.textContent = playerBtn._label;
   if (playerUrl) URL.revokeObjectURL(playerUrl);
