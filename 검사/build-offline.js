@@ -66,12 +66,13 @@ for (const f of ['sood-192.jpg', 'icon-180.png', 'icon-192.png', 'icon-512.png']
 const SOUNDS = fs.readdirSync(path.join(ROOT, 'sounds')).filter(f => /\.(js|txt)$/.test(f));
 fs.mkdirSync(path.join(OUT1, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT1, 'sounds', f));
+fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT1, 'LICENSES.txt'));  // 외부 자료 라이선스 전문
 fs.writeFileSync(path.join(OUT1, 'guide.html'), guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>'));
 const man = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
 Object.assign(man, { id: './', name: '리듬 연습 오프라인 — 수트와후드', short_name: '리듬 연습(오프)', start_url: './', scope: './' });
 fs.writeFileSync(path.join(OUT1, 'manifest.webmanifest'), JSON.stringify(man, null, 2));
 // 저장할 파일 목록과 내용 지문 → 앱을 고치면 캐시 이름이 바뀌어 새 버전을 받는다
-const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png'].concat(SOUNDS.map(f => 'sounds/' + f));
+const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png', 'LICENSES.txt'].concat(SOUNDS.map(f => 'sounds/' + f));
 const h = crypto.createHash('sha1');
 for (const f of files.slice(1)) h.update(fs.readFileSync(path.join(OUT1, f)));
 const CACHE = 'rp-offline-' + ver + '-' + h.digest('hex').slice(0, 10);
@@ -115,6 +116,7 @@ d = d.replace('</body>', `<script>
 fs.writeFileSync(path.join(OUT2, '리듬 연습 오프라인.html'), d);
 fs.mkdirSync(path.join(OUT2, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT2, 'sounds', f));
+fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT2, 'LICENSES.txt'));
 let g = guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>')
   .split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"')
   .replace('<link rel="icon" href="img/sood-192.jpg">', '<link rel="icon" href="' + iconPng + '">')
