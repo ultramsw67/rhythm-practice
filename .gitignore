@@ -15,3 +15,4 @@ node_modules/
 !검사/qa-b/sets.json
 검사/qa-e/site*/
 검사/regress-*.txt
+검사/.soundcache/

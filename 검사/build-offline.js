@@ -62,12 +62,16 @@ a = a.replace('</body>', `<script>
 fs.writeFileSync(path.join(OUT1, 'index.html'), a);
 fs.writeFileSync(path.join(OUT1, 'vexflow.js'), vex);
 for (const f of ['sood-192.jpg', 'icon-180.png', 'icon-192.png', 'icon-512.png']) fs.copyFileSync(path.join(ROOT, 'img', f), path.join(OUT1, 'img', f));
+// 악기 소리(선율 모드): 모두 복사해 처음 열 때 함께 저장 → 인터넷 없이도 모든 악기 소리
+const SOUNDS = fs.readdirSync(path.join(ROOT, 'sounds')).filter(f => /\.(js|txt)$/.test(f));
+fs.mkdirSync(path.join(OUT1, 'sounds'), { recursive: true });
+for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT1, 'sounds', f));
 fs.writeFileSync(path.join(OUT1, 'guide.html'), guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>'));
 const man = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
 Object.assign(man, { id: './', name: '리듬 연습 오프라인 — 수트와후드', short_name: '리듬 연습(오프)', start_url: './', scope: './' });
 fs.writeFileSync(path.join(OUT1, 'manifest.webmanifest'), JSON.stringify(man, null, 2));
 // 저장할 파일 목록과 내용 지문 → 앱을 고치면 캐시 이름이 바뀌어 새 버전을 받는다
-const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png'];
+const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png'].concat(SOUNDS.map(f => 'sounds/' + f));
 const h = crypto.createHash('sha1');
 for (const f of files.slice(1)) h.update(fs.readFileSync(path.join(OUT1, f)));
 const CACHE = 'rp-offline-' + ver + '-' + h.digest('hex').slice(0, 10);
@@ -109,6 +113,8 @@ d = d.replace('</body>', `<script>
 </script>
 </body>`);
 fs.writeFileSync(path.join(OUT2, '리듬 연습 오프라인.html'), d);
+fs.mkdirSync(path.join(OUT2, 'sounds'), { recursive: true });
+for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT2, 'sounds', f));
 let g = guide.replace('<title>리듬 연습 사용법</title>', '<title>리듬 연습 사용법 (오프라인)</title>')
   .split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"')
   .replace('<link rel="icon" href="img/sood-192.jpg">', '<link rel="icon" href="' + iconPng + '">')
@@ -119,7 +125,7 @@ fs.writeFileSync(path.join(OUT2, '읽어 주세요.txt'), '\ufeff' + [
   '',
   '1. 「리듬 연습 오프라인.html」 을 두 번 누르면 크롬이나 엣지로 열립니다. 인터넷이 없어도 됩니다.',
   '2. 기본 브라우저가 다른 것이면: 파일을 오른쪽 클릭 → 연결 프로그램 → Chrome 또는 Microsoft Edge 를 고르세요.',
-  '3. 이 폴더를 통째로 USB 나 다른 PC 에 옮겨도 그대로 열립니다.',
+  '3. 이 폴더를 통째로 USB 나 다른 PC 에 옮겨도 그대로 열립니다. sounds 폴더(악기 소리)도 꼭 같이 옮기세요.',
   '4. 녹음과 점수는 이 PC 의 브라우저 안에 저장됩니다. 폴더를 옮기면 보관함은 새로 시작하니 먼저 보관함 → 전체 백업 내보내기를 하세요.',
   '5. 공유 링크는 인터넷 버전 주소로 만들어집니다: ' + ONLINE,
 ].join('\r\n') + '\r\n');

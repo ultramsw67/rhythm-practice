@@ -216,7 +216,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           </div>
           <div class="hint" style="margin:-4px 2px 10px">새 악보: 같은 설정으로 다른 악보 · 들어보기: 모범 연주 · 링크 복사: 단원에게 같은 악보 보내기</div>
           <div class="paper" id="score" aria-label="악보"></div>
-          <div class="info" id="scoreInfo"></div>
+          <div class="info"><span id="scoreInfo"></span><span id="soundInfo"></span></div>
           <div class="info" id="editHint"></div>
           <div class="row hide" id="editResetRow" style="margin-top:8px">
             <button class="btn" id="editReset" type="button">기호 처음대로</button>
@@ -356,7 +356,8 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v2.2 (오프라인 앱) · 2026-09-27</p>
+      <p class="muted" style="margin:8px 0 0">악기 소리: FluidR3 GM (Frank Wen, MIT) · midi-js-soundfonts (CC BY 3.0) — <a href="sounds/LICENSE.txt">라이선스</a></p>
+      <p class="muted" style="margin:8px 0 0">버전 v2.3 (오프라인 앱) · 2026-09-27</p>
     </div>
   </section>
 </main>
@@ -1348,6 +1349,8 @@ function rebuild() {
   }
   $('#scoreInfo').textContent = info;
   $('#editHint').textContent = set.artic === 'none' ? '' : '음표를 누르면 아티큘레이션 기호를 붙이거나 뗄 수 있습니다.';
+  if (set.mode === 'melody') loadSound(set.inst);
+  syncSoundInfo();
   syncEditReset();
 }
 
@@ -1637,10 +1640,98 @@ function outChain(c, dest) {
   comp.connect(lim).connect(shp).connect(trim).connect(dest);
   return comp;
 }
+/* ---------- 악기 소리(샘플): 선율 모드에서 고른 악기의 실제 소리로 들어보기 ----------
+   FluidR3 GM (Frank Wen, MIT) · midi-js-soundfonts (CC BY 3.0). 악기마다 3반음 간격 음만 담고 사이 음은 재생 속도로 맞춘다 */
+const SOUND_OF = { flute: 'flute', oboe: 'oboe', clarinet: 'clarinet', alto_sax: 'alto_sax', tenor_sax: 'tenor_sax', bari_sax: 'baritone_sax', trumpet: 'trumpet', horn: 'french_horn', trombone: 'trombone', euphonium: 'tuba', tuba: 'tuba', c_treble: 'acoustic_grand_piano', c_bass: 'acoustic_grand_piano' };
+const SOUND_LOOP = { acoustic_grand_piano: false };          // 피아노는 저절로 사라지는 소리라 되풀이하지 않음
+const smp = {};
+let decodeCtx = null;
+function loadScript(src) { return new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = () => res(); el.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(el); }); }
+function b64ToAb(uri) { const b = atob(uri.slice(uri.indexOf(',') + 1)); const u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u.buffer; }
+function decodeAb(ab) {
+  if (!decodeCtx) { const OC = window.OfflineAudioContext || window.webkitOfflineAudioContext; decodeCtx = new OC(1, 1, 44100); }
+  return new Promise((res, rej) => { const pr = decodeCtx.decodeAudioData(ab, res, rej); if (pr && pr.then) pr.then(res, rej); });
+}
+function soundFor(inst) { const gm = SOUND_OF[inst]; const e = gm && smp[gm]; return e && e.state === 'ready' ? e : null; }
+function loadSound(inst) {
+  const gm = SOUND_OF[inst]; if (!gm) return Promise.resolve(null);
+  const e = smp[gm] || (smp[gm] = { gm });
+  if (e.state === 'ready') return Promise.resolve(e);
+  if (e.promise) return e.promise;
+  e.state = 'loading'; syncSoundInfo();
+  e.promise = (async () => {
+    if (!(window.RP_SOUNDS && window.RP_SOUNDS[gm])) await loadScript('sounds/' + gm + '.js');
+    const data = window.RP_SOUNDS[gm];
+    const buffers = {};
+    await Promise.all(Object.entries(data).map(async ([m, uri]) => { buffers[+m] = await decodeAb(b64ToAb(uri)); }));
+    // 악기마다 녹음 크기가 달라 몸통(0.05~0.5초) 크기를 재서 고르게 맞춘다
+    let sq = 0, n = 0;
+    for (const b of Object.values(buffers)) { const x = b.getChannelData(0), a = Math.floor(b.sampleRate * 0.05), z = Math.min(x.length, Math.floor(b.sampleRate * 0.5)); for (let i = a; i < z; i++) { sq += x[i] * x[i]; n++; } }
+    const rms = Math.sqrt(sq / Math.max(1, n));
+    // 휴대폰 스피커가 내는 대역(500Hz 위)의 크기도 재서, 낮은 악기(튜바 등)가 휴대폰에서 작게 들리지 않게 맞춘다
+    let hp = rms;
+    try {
+      const keys = Object.keys(buffers), seg = 0.4, sr = 22050, OC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+      const oc = new OC(1, Math.ceil(keys.length * seg * sr), sr);
+      const h1 = oc.createBiquadFilter(); h1.type = 'highpass'; h1.frequency.value = 500; const h2 = oc.createBiquadFilter(); h2.type = 'highpass'; h2.frequency.value = 500;
+      h1.connect(h2).connect(oc.destination);
+      keys.forEach((k, i) => { const src = oc.createBufferSource(); src.buffer = buffers[k]; src.connect(h1); src.start(i * seg, 0.05, seg); });
+      const y = (await oc.startRendering()).getChannelData(0); let q2 = 0; for (let i = 0; i < y.length; i++) q2 += y[i] * y[i];
+      hp = Math.sqrt(q2 / y.length) || rms;
+    } catch (er) { }
+    e.gain = rms > 0 ? Math.min(0.26 / rms, Math.max(0.075 / rms, 0.05 / hp)) : 1;     // 전체 크기는 최대 3.5배까지만
+    e.buffers = buffers; e.notes = Object.keys(buffers).map(Number).sort((a, b) => a - b);
+    e.loop = SOUND_LOOP[gm] !== false;
+    e.state = 'ready'; delete window.RP_SOUNDS[gm];
+    return e;
+  })().catch(err => { console.warn(err); e.state = 'fail'; e.promise = null; return null; }).finally(syncSoundInfo);
+  return e.promise;
+}
+function syncSoundInfo() {
+  const el = document.getElementById('soundInfo'); if (!el) return;
+  if (!set || set.mode !== 'melody') { el.textContent = ''; return; }
+  const gm = SOUND_OF[set.inst], e = gm && smp[gm], name = (C.INSTS[set.inst] || {}).name || '';
+  el.textContent = !gm ? '' : !e || e.state === 'loading' ? ' · 악기 소리 불러오는 중…' : e.state === 'ready' ? ' · 🎵 ' + name + ' 소리로 들어보기' : ' · 악기 소리를 못 불러와 기본 소리로 재생';
+}
+// 샘플로 음 하나를 예약 (p: articPlan 항목, t: 시작 시각)
+function sampleNote(c, dest, snd, p, t, hz) {
+  const m = p.n.concert;
+  let s = snd.notes[0]; for (const k of snd.notes) if (Math.abs(k - m) < Math.abs(s - m)) s = k;
+  const buf = snd.buffers[s], rate = Math.pow(2, (m - s) / 12);
+  const src = c.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate;
+  const off = p.cont ? Math.min(0.06, buf.duration * 0.1) : 0;        // 슬러로 이어지는 음은 첫 '톡' 소리를 건너뛴다
+  const len = p.len, room = (buf.duration - off) / rate;
+  if (snd.loop && len > room - 0.12) { src.loop = true; src.loopStart = buf.duration * 0.45; src.loopEnd = buf.duration * 0.85; }
+  const g = c.createGain(), lvl = snd.gain * 0.9;
+  g.gain.setValueAtTime(0, t);
+  g.gain.linearRampToValueAtTime(lvl * p.peak, t + (p.cont ? 0.025 : 0.004));
+  if (p.peak > 1) g.gain.setTargetAtTime(lvl, t + 0.09, 0.07);          // 악센트: 세게 시작해 곧 원래 크기로 (천천히 피는 악기도 들리게 조금 길게)
+  const end = t + len, joined = p.n.legato || !p.decay;               // 슬러·테누토는 부드럽게, 보통·스타카토는 또렷하게 끊는다
+  const rel = joined ? 0.03 : 0.012;
+  g.gain.setTargetAtTime(0, end - (joined ? rel * 0.5 : 0.004), rel);
+  // 낮은 음은 휴대폰 스피커가 잘 내는 1.5kHz 쪽을 조금 살린다
+  const pres = c.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 1500; pres.Q.value = 0.7;
+  pres.gain.value = Math.max(0, Math.min(15, 20 * Math.log10(466 / hz) * 1.0));
+  const shelf = c.createBiquadFilter(); shelf.type = 'lowshelf'; shelf.frequency.value = Math.min(300, hz * 2.5);   // 기음(휴대폰은 못 냄)을 줄여 여유
+  shelf.gain.value = -Math.min(12, pres.gain.value * 0.8);
+  src.connect(g).connect(pres).connect(shelf).connect(dest);
+  src.start(t, off); src.stop(end + rel * 8);
+  // 아주 낮은 음(110Hz 아래)은 같은 소리를 한 옥타브 위로 작게 겹쳐 휴대폰 스피커에서도 들리게 (들리는 음높이는 그대로)
+  if (hz < 110) {
+    const up = c.createBufferSource(); up.buffer = buf; up.playbackRate.value = rate * 2; up.loop = src.loop; up.loopStart = src.loopStart; up.loopEnd = src.loopEnd;
+    const ug = c.createGain(); ug.gain.value = 0.3;
+    up.connect(ug).connect(g); up.start(t, off / 2); up.stop(end + rel * 8);
+  }
+  return src;
+}
 // 연주 계획을 소리로 예약한다 (실시간 재생과 시험용 OfflineAudioContext 가 같이 쓴다)
-function schedulePlayback(c, dest, t0, tl, melody) {
+function schedulePlayback(c, dest, t0, tl, melody, snd) {
   const plan = articPlan(tl), nodes = [], L = 0.14;
   const hz = n => melody ? 440 * Math.pow(2, (n.concert - 69) / 12) : 466.16;
+  if (melody && snd) {                                              // 고른 악기의 실제 소리
+    for (const p of plan) nodes.push(sampleNote(c, dest, snd, p, t0 + p.t, hz(p.n)));
+    return { nodes, plan, sampled: true };
+  }
   let i = 0;
   while (i < plan.length) {
     let j = i; while (plan[j].n.legato && plan[j + 1]) j++;               // i..j = 한 숨(슬러 묶음)
@@ -1696,7 +1787,9 @@ function playScore() {
   const nodes = [];
   const metro = $('#metroOn').checked;
   for (const k of tl.clicks) if (metro || k.t < tl.lead) nodes.push(scheduleClick(c, master, t0 + k.t, k.level));
-  const pb = schedulePlayback(c, outChain(c, master), t0, tl, score.melody);
+  let snd = null;
+  if (score.melody) { snd = soundFor(set.inst); if (!snd) { loadSound(set.inst); if (!playScore._warned) { playScore._warned = true; toast('악기 소리를 불러오는 중이라 이번에는 기본 소리로 들려 드립니다'); } } }
+  const pb = schedulePlayback(c, outChain(c, master), t0, tl, score.melody, snd);
   nodes.push(...pb.nodes);
   const lens = pb.plan.map(p => p.len);
   playing = { nodes, master, t0, tl, raf: 0, on: new Set(), lastT: c.currentTime, lastWall: performance.now() };
@@ -2474,7 +2567,7 @@ rebuild();
 showLat();
 drawWave();
 DB.open().then(() => { if (DB.note) $('#latInfo').textContent += ' ' + DB.note; });
-window.RPX = { DB, get take() { return curTake; }, get lastCap() { return lastCap; }, get actx() { return actx; }, get rec() { return rec; }, get playing() { return playing; }, schedulePlayback, articPlan, toWav, outChain, selfTest, renderLibrary, showResult };
+window.RPX = { loadSound, soundFor, sampleNote, DB, get take() { return curTake; }, get lastCap() { return lastCap; }, get actx() { return actx; }, get rec() { return rec; }, get playing() { return playing; }, schedulePlayback, articPlan, toWav, outChain, selfTest, renderLibrary, showResult };
 })();
 </script>
 <script>
