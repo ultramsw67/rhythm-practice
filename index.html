@@ -211,9 +211,10 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           <div class="row" style="margin-bottom:10px">
             <button class="btn pri" id="newBtn" type="button">🎲 새 악보</button>
             <button class="btn" id="playBtn" type="button">▶ 들어보기</button>
-            <button class="btn" id="shareBtn" type="button">🔗 링크 복사</button>
+            <!-- 링크 보내기: 2026-09-27 사용자 요청으로 잠시 숨김. 다시 넣을 때 style 을 지운다 -->
+            <button class="btn" id="shareBtn" type="button" style="display:none">🔗 링크 복사</button>
           </div>
-          <div class="hint" style="margin:-4px 2px 10px">새 악보: 같은 설정으로 다른 악보 · 들어보기: 모범 연주 · 링크 복사: 단원에게 같은 악보 보내기</div>
+          <div class="hint" style="margin:-4px 2px 10px">새 악보: 같은 설정으로 다른 악보 · 들어보기: 모범 연주</div>
           <div class="paper" id="score" aria-label="악보"></div>
           <div class="info"><span id="scoreInfo"></span><span id="soundInfo"></span></div>
           <div class="info" id="editHint"></div>
@@ -356,7 +357,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악기 소리: FluidR3 GM (Frank Wen, MIT) · midi-js-soundfonts (CC BY 3.0) — <a href="sounds/LICENSE.txt">라이선스</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v2.3 · 2026-09-27</p>
+      <p class="muted" style="margin:8px 0 0">버전 v2.4 · 2026-09-27</p>
     </div>
   </section>
 </main>
