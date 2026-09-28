@@ -6,7 +6,7 @@
 |---|---|---|
 | `node test-core.js ../index.html` | 악보 생성 6,000회 (마디 길이·붙임줄·음역·공유 링크·악기 불변) | `fail 0`, `instrument invariance 2400 / 2400` |
 | `node test-score.js ../index.html` | 가상 연주 18곡 × 11변형 채점 | `perfect` 평균 100, 흔들림·빠짐은 점수가 내려감 |
-| `node serve.js "C:/Users/ultramsw67/Desktop/리듬 연습"` | 로컬 서버 127.0.0.1:8765 (백그라운드로 켜 두고 아래 실행) | |
+| `node serve.js "C:/Users/ultramsw67/Desktop/수드 리듬 연습/개발 원본"` | 로컬 서버 127.0.0.1:8765 (백그라운드로 켜 두고 아래 실행) | |
 | `node cdp.js t1.js` | 악보 4종 캡처 (`r1.png` 등) | 오류 없음 |
 | `node cdp.js t6-fixes.js` | v1.1 에서 고친 버그 재확인 | 모든 항목 기대값 |
 | `node cdp.js t7-art.js` | 기호가 기둥 반대쪽에 붙는지 | `onStemSide 0` |

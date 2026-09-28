@@ -1,11 +1,11 @@
 // 오프라인 버전 만들기 — 원본 index.html 에서 자동 생성 (앱을 고친 뒤 이것만 다시 돌리면 된다)
 //   node build-offline.js
 // ① ../offline/          : 인터넷 주소 …/rhythm-practice/offline/ 에 올라가는 앱. 한 번 열면 서비스워커가 휴대폰에 저장
-// ② 바탕화면/리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
+// ② 바탕화면/수드 리듬 연습/수드 리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
 const OUT1 = process.env.OFFLINE_OUT1 || path.join(ROOT, 'offline');          // 시험 때는 다른 곳으로
-const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습 오프라인';
+const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/수드 리듬 연습 오프라인';     // 2026-09-28 바탕화면 「수드 리듬 연습」 최종 폴더로 정리
 const ONLINE = 'https://ultramsw67.github.io/rhythm-practice/';
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>';
 let src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
