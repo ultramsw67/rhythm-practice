@@ -20,8 +20,11 @@
 | `node cdp.js t23-clip.js` / `t24-tune.js` / `t20-melody-mobile.js` | 찢어짐·악센트 대비 / 소리 균형 / 휴대폰 스피커 크기 | 최대 < 0.99, 악센트 ≥ 3.5dB, 모든 악기 > -26dB |
 | `FAKE_WAV=... node cdp.js t22-scriptproc.js` | 예비 녹음 방식(ScriptProcessor) | 100점 |
 | `node cdp.js t26-live-offline.js` | 실주소 오프라인 앱 | 차단 후 다시 열어 100 |
+| `node cdp.js t33-ui.js` | v2.9 화면: 320px·아주 크게·어두운 화면 캡처(ui-*.png), 가로 넘침·44px 미만 버튼, 글자 크기 단추 | overflowX 0, small [] |
+| `node cdp.js t34-score-fit.js` | 글자 크기 3단계 × 폭 5가지 × 조표 ±7 에서 악보 오른쪽 잘림 | 모든 줄 n 0 |
 
 주의
+- **가짜 마이크 파일(FAKE_WAV)은 영문 경로에 두세요.** 한글 경로(이 폴더)면 크롬이 못 읽어 "소리가 거의 녹음되지 않았습니다"가 나온다 (2026-09-28 확인, 원래 버전도 같음)
 - 가짜 마이크 시험(t4)은 **녹음을 맨 먼저** 해야 정확하다. 앞에 다른 시험을 돌리면 크롬이 소리 파일을 미리 틀어 점수가 낮게 나온다
 - `cdp.js` 는 크롬을 화면 없이 띄운다. 프로필은 `chrome-prof/`(저장소에 안 올라감)
 - Aside 브라우저는 file:// 을 못 열고 캡처가 멈춘다 → 이 도구를 쓴다

@@ -91,112 +91,147 @@
 <meta name="apple-mobile-web-app-title" content="수드 리듬 연습">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
+/* v2.9 화면 (2026-09-28): 따뜻한 미색 바탕 + 차분한 청록, 시니어 단원용 큰 글자·큰 버튼.
+   악보 종이(--paper)·진행 표시 색·채점 색(--ok/--warn/--bad/--miss)·브랜드 남색 #1f3b63 은 그대로 둔다 */
 :root{
-  --bg:#f4f5f7; --card:#ffffff; --ink:#1b1f27; --sub:#5b6472; --line:#dde1e7;
-  --accent:#1f5fbf; --accent-ink:#ffffff; --soft:#e8eefa;
+  --bg:#f5f2ea; --card:#fffefb; --ink:#2b2a27; --sub:#58534c; --line:#e2dccf;
+  --accent:#2a6f6b; --accent-ink:#ffffff; --soft:#e4efec; --field:#faf8f3;
+  --rec:#c4553b; --rec-ink:#ffffff;
   --paper:#fffdf8; --paper-ink:#111111;
   --ok:#1f9d55; --warn:#d99a00; --bad:#d23c3c; --miss:#9aa1ab;
-  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow:0 1px 2px rgba(60,45,20,.06),0 2px 10px rgba(60,45,20,.05);
+  --fs:17px; --fs-s:15px; --fs-xs:14px; --fs-h1:20px; --fs-h2:18px;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#12151b; --card:#1b2029; --ink:#e7eaf0; --sub:#9aa3b2; --line:#2d3441;
-    --accent:#6ea2ff; --accent-ink:#0b1220; --soft:#223049;
+    --bg:#1a1c1b; --card:#232725; --ink:#ece8df; --sub:#b3ada3; --line:#373c39;
+    --accent:#7cc4b8; --accent-ink:#0e1f1c; --soft:#1f3431; --field:#1d201f;
+    --rec:#e0775d; --rec-ink:#1a0d08;
     --paper:#e9e6de; --paper-ink:#111111;
     --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
     --shadow:none;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#12151b; --card:#1b2029; --ink:#e7eaf0; --sub:#9aa3b2; --line:#2d3441;
-  --accent:#6ea2ff; --accent-ink:#0b1220; --soft:#223049;
+  --bg:#1a1c1b; --card:#232725; --ink:#ece8df; --sub:#b3ada3; --line:#373c39;
+  --accent:#7cc4b8; --accent-ink:#0e1f1c; --soft:#1f3431; --field:#1d201f;
+  --rec:#e0775d; --rec-ink:#1a0d08;
   --paper:#e9e6de; --paper-ink:#111111;
   --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
   --shadow:none;
 }
+/* 글자 크기 (설정 → 글자 크기) */
+:root[data-font="1"]{ --fs:15px; --fs-s:13.5px; --fs-xs:12.5px; --fs-h1:18px; --fs-h2:16px; }
+:root[data-font="3"]{ --fs:20px; --fs-s:18px; --fs-xs:16px; --fs-h1:22px; --fs-h2:21px; }
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
-  padding-bottom:calc(72px + env(safe-area-inset-bottom));-webkit-tap-highlight-color:transparent}
-header{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line)}
-header h1{font-size:17px;margin:0;flex:1}
-main{max-width:1100px;margin:0 auto;padding:12px 16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:var(--shadow)}
-.card h2{font-size:15px;margin:0 0 10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px 12px}
-label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--sub)}
-select,input[type=number],input[type=text]{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-height:40px;width:100%}
-input[type=range]{width:100%;accent-color:var(--accent)}
-.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--bg)}
-.seg button{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;padding:8px 6px;min-height:40px;cursor:pointer}
-.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:600}
-.btn{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 14px;min-height:44px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-.btn.rec{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:600}
+body{background:var(--bg);color:var(--ink);font:var(--fs)/1.6 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;
+  padding-bottom:calc(var(--navh, 70px) + 16px);-webkit-tap-highlight-color:transparent;word-break:keep-all;overflow-wrap:anywhere;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:var(--bg);display:flex;align-items:center;gap:8px;padding:10px 16px;padding-top:max(10px,env(safe-area-inset-top));border-bottom:1px solid var(--line)}
+header h1{font-size:var(--fs-h1);margin:0;flex:1;min-width:0;letter-spacing:-.01em}
+main{max-width:1100px;margin:0 auto;padding:14px 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{font-size:var(--fs-h2);margin:0 0 12px;letter-spacing:-.01em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 12px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:var(--fs-s);color:var(--sub);font-weight:600}
+select,input[type=number],input[type=text]{font:inherit;font-weight:400;color:var(--ink);background:var(--field);border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;min-height:52px;width:100%}
+select{-webkit-appearance:none;appearance:none;padding-right:38px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23888' stroke-width='2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+select:focus,input:focus,button:focus-visible,.btn:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+input[type=range]{width:100%;accent-color:var(--accent);height:36px}
+input[type=checkbox]{width:26px;height:26px;accent-color:var(--accent);margin:0;flex:none}
+.seg{display:flex;border:1.5px solid var(--line);border-radius:14px;overflow:hidden;background:var(--field);padding:4px;gap:4px}
+.seg button{flex:1;border:0;border-radius:10px;background:transparent;color:var(--ink);font:inherit;padding:10px 6px;min-height:52px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.btn{font:inherit;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:10px 18px;min-height:56px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;text-align:center;line-height:1.3}
+.btn:active{transform:translateY(1px)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+.btn.rec{background:var(--rec);color:var(--rec-ink);border-color:var(--rec);font-weight:700}
 .btn:disabled{opacity:.45;cursor:default}
-.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.muted{color:var(--sub);font-size:13px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.muted{color:var(--sub);font-size:var(--fs-s)}
 .hide{display:none!important}
-.tempo{display:grid;grid-template-columns:1fr 84px;gap:8px;align-items:center}
-.paper{background:var(--paper);color:var(--paper-ink);border-radius:10px;padding:6px 0;overflow:hidden;position:relative;touch-action:manipulation}
+.tempo{display:grid;grid-template-columns:1fr 96px;gap:10px;align-items:center}
+.paper{background:var(--paper);color:var(--paper-ink);border-radius:12px;padding:6px 0;overflow:hidden;position:relative;touch-action:manipulation;border:1px solid var(--line)}
 .paper svg{display:block;position:relative;z-index:1}
 .paper::after{content:"수트와후드";position:absolute;right:12px;bottom:6px;font-weight:800;font-size:15px;letter-spacing:.12em;color:#1f3b63;opacity:.14;pointer-events:none;z-index:0}
-.brand{display:flex;flex-direction:column;align-items:center;gap:2px;margin:4px 0 10px}
+.brand{display:flex;flex-direction:column;align-items:center;gap:2px;margin:4px 0 12px}
 .brand img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--card);box-shadow:0 1px 6px rgba(0,0,0,.18);background:var(--card)}
 .brand .wm{font-weight:800;font-size:26px;letter-spacing:.28em;margin-right:-.28em;color:var(--ink);opacity:.16;line-height:1.2;user-select:none}
-@media (max-width:600px){ .brand{margin:0 0 6px} .brand img{width:64px;height:64px;border-width:2px} .brand .wm{font-size:18px} }
+@media (max-width:600px){ .brand{margin:0 0 8px} .brand img{width:60px;height:60px;border-width:2px} .brand .wm{font-size:17px} }
 body{touch-action:manipulation}
 /* 진행 표시: 지금 음 = 진한 주황빨강 + 빛, 지나간 음 = 연한 회색 (크림색 종이 위에서 검은 음표와 뚜렷이 구별) */
 .paper .now path,.paper .now rect{fill:#ff3d00!important;stroke:#ff3d00!important}
 .paper .now{filter:drop-shadow(0 0 2px #ff3d00) drop-shadow(0 0 6px rgba(255,61,0,.75))}
 .paper .done path,.paper .done rect{fill:#b4b9c2!important;stroke:#b4b9c2!important}
 .paper .sel path,.paper .sel rect{fill:#c2410c!important;stroke:#c2410c!important}
-.info{font-size:13px;color:var(--sub);margin-top:8px}
-nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav.tabs button{flex:1;border:0;background:transparent;color:var(--sub);font:inherit;font-size:12px;padding:8px 0 10px;min-height:56px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
-nav.tabs button svg{width:22px;height:22px}
-nav.tabs button[aria-selected="true"]{color:var(--accent);font-weight:600}
-.sheet{position:fixed;left:0;right:0;bottom:var(--navh, calc(61px + env(safe-area-inset-bottom)));z-index:9;max-height:60vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:14px 14px 0 0;padding:14px 16px;box-shadow:0 -4px 18px rgba(0,0,0,.18)}
-.sheet .chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
-.chip{font:inherit;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer}
-.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-body.sheet-on{padding-bottom:calc(330px + env(safe-area-inset-bottom))}
-.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;z-index:20;max-width:90vw;opacity:0;transition:opacity .2s;pointer-events:none}
-.toast.on{opacity:.95}
+.info{font-size:var(--fs-s);color:var(--sub);margin-top:10px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding:4px 6px env(safe-area-inset-bottom);box-shadow:0 -2px 12px rgba(60,45,20,.06)}
+nav.tabs button{flex:1;border:0;background:transparent;color:var(--sub);font:inherit;font-size:var(--fs-xs);font-weight:600;padding:6px 0 8px;min-height:66px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:14px}
+nav.tabs button svg{width:26px;height:26px}
+nav.tabs button[aria-selected="true"]{color:var(--accent);font-weight:800}
+nav.tabs button[aria-selected="true"] svg{background:var(--soft);border-radius:999px;padding:3px 16px;width:58px;height:32px;box-sizing:border-box;stroke-width:2.2}
+.sheet{position:fixed;left:0;right:0;bottom:var(--navh, calc(70px + env(safe-area-inset-bottom)));z-index:9;max-height:60vh;overflow:auto;background:var(--card);border-top:1px solid var(--line);border-radius:18px 18px 0 0;padding:16px 16px;box-shadow:0 -4px 18px rgba(0,0,0,.18)}
+.sheet .chips{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}
+.chip{font:inherit;border:1.5px solid var(--line);background:var(--field);color:var(--ink);border-radius:999px;padding:8px 16px;min-height:50px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+body.sheet-on{padding-bottom:calc(60vh + var(--navh, 70px))}
+.toast{position:fixed;left:50%;bottom:calc(var(--navh, 70px) + 14px);transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;font-size:var(--fs-s);z-index:20;max-width:90vw;opacity:0;transition:opacity .2s;pointer-events:none;text-align:center}
+.toast.on{opacity:.96}
 .placeholder{padding:28px 10px;text-align:center;color:var(--sub)}
-.theme-btn{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;min-height:36px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
-details summary{cursor:pointer;font-weight:600;list-style:none}
+.theme-btn{border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;min-height:46px;padding:4px 12px;font:inherit;font-size:var(--fs-xs);font-weight:600;cursor:pointer;white-space:nowrap}
+details summary{cursor:pointer;font-weight:700;list-style:none;min-height:36px;display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;position:relative}
 details summary::-webkit-details-marker{display:none}
-details summary::after{content:" ▾";color:var(--sub)}
-details[open] summary::after{content:" ▴"}
-.note-box{background:var(--soft);border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:8px}
-.wave-wrap{position:relative;background:var(--bg);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+details summary::after{content:"펼치기 ▾";position:absolute;right:0;top:50%;transform:translateY(-50%);color:var(--accent);font-size:var(--fs-xs);font-weight:700;white-space:nowrap}
+details[open] summary::after{content:"접기 ▴"}
+details summary{padding-right:80px}
+.note-box{background:var(--soft);border-radius:12px;padding:12px 14px;font-size:var(--fs-s);margin-bottom:10px}
+.wave-wrap{position:relative;background:var(--field);border:1.5px solid var(--line);border-radius:12px;overflow:hidden}
 #wave{display:block;width:100%;height:90px}
-.count-big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:800;color:var(--accent)}
-.res-head{display:flex;gap:14px;align-items:center}
-.big-score{font-size:44px;font-weight:800;min-width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--accent)}
-.bar{display:grid;grid-template-columns:92px 1fr 44px;gap:8px;align-items:center;font-size:14px;margin:6px 0}
-.bar .track{height:10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;overflow:hidden}
-.bar .fill{height:100%;background:var(--accent)}
-.bar b{text-align:right}
-.legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--sub);margin-bottom:8px}
-.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
-.tips{margin:0;padding-left:18px}
-.tips li{margin:4px 0}
-.take{display:grid;grid-template-columns:52px 1fr;gap:10px;align-items:start}
-.take .sc{font-size:20px;font-weight:800;color:var(--accent);background:var(--soft);border-radius:10px;height:52px;display:flex;align-items:center;justify-content:center}
-.take .nm{font-weight:600;word-break:break-all}
-.take .acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.take .acts .btn{min-height:38px;padding:6px 10px;font-size:13px}
+.count-big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:56px;font-weight:800;color:var(--accent)}
+.res-head{display:flex;gap:16px;align-items:center}
+.big-score{font-size:44px;font-weight:800;min-width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft);color:var(--accent)}
+.bar{display:grid;grid-template-columns:6.6em 1fr auto;gap:10px;align-items:center;font-size:var(--fs-s);margin:8px 0}
+.bar .track{height:14px;background:var(--field);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.bar .fill{height:100%;background:var(--accent);border-radius:8px}
+.bar b{text-align:right;white-space:nowrap}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:var(--fs-s);color:var(--sub);margin-bottom:10px}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;margin-right:5px;vertical-align:-2px}
+.tips{margin:0;padding-left:22px}
+.tips li{margin:6px 0}
+.take{display:grid;grid-template-columns:60px 1fr;gap:12px;align-items:start}
+.take .sc{font-size:22px;font-weight:800;color:var(--accent);background:var(--soft);border-radius:12px;height:60px;display:flex;align-items:center;justify-content:center}
+.take .nm{font-weight:700;word-break:break-all}
+.take .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.take .acts .btn{min-height:48px;padding:6px 14px;font-size:var(--fs-s)}
 .btn.danger{background:var(--bad);color:#fff;border-color:var(--bad)}
-.hint{font-size:12.5px;color:var(--sub);margin:6px 2px 0;line-height:1.45}
-.start-card{border-color:var(--accent);background:var(--soft)}
-.start-card ol{margin:6px 0 10px;padding-left:20px}
-.start-card li{margin:3px 0}
+.hint{font-size:var(--fs-s);color:var(--sub);margin:8px 2px 0;line-height:1.55}
+.start-card{border:2px solid var(--accent);background:var(--soft)}
+.start-card ol{margin:8px 0 14px;padding-left:24px}
+.start-card li{margin:6px 0}
+.opt{display:flex;align-items:center;gap:10px;min-height:52px;font-size:var(--fs);color:var(--ink);cursor:pointer}
+.opt select{width:auto;min-width:130px;flex:1 1 auto;max-width:100%}
+.opts{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin-bottom:8px}
+.lat-big{font-size:32px;font-weight:800;color:var(--accent)}
+.card a{color:var(--accent);font-weight:600}
 body.recording #setBox, body.recording #modeSeg, body.recording #newBtn, body.recording #playBtn, body.recording #shareBtn,
 body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, body.recording #listen, body.recording nav.tabs button:not([aria-selected="true"]){opacity:.4;pointer-events:none}
-.home-btn{background:none;border:0;padding:4px 0;margin:0;font:inherit;color:inherit;cursor:pointer;min-height:36px}
-@media (min-width:900px){ .cols{display:grid;grid-template-columns:340px 1fr;gap:12px;align-items:start} }
+.home-btn{background:none;border:0;padding:4px 0;margin:0;font:inherit;font-weight:800;color:inherit;cursor:pointer;min-height:44px;text-align:left}
+/* 휴대폰: 주요 버튼은 가로로 꽉 차게 */
+@media (max-width:600px){
+  main{padding:12px 12px}
+  .card{padding:16px 14px}
+  .acts2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .acts2 .btn{width:100%;padding:10px 8px}
+  #recBtn{flex:1 1 100%;min-height:64px;font-size:calc(var(--fs) + 2px)}
+  #recRestart{flex:1 1 100%}
+  #resPlay{flex:1 1 100%;min-height:60px}
+  .res-actions .btn:not(#resPlay){flex:1 1 calc(50% - 5px)}
+  .start-card .row .btn{flex:1 1 100%}
+  #latGo{width:100%}
+  .cal-row .btn{flex:1 1 100%}
+}
+@media (max-width:360px){ header{gap:6px;padding-left:12px;padding-right:12px} header h1{font-size:min(var(--fs-h1),18px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .theme-btn{padding:4px 8px} .acts2{grid-template-columns:1fr} }
+@media (min-width:900px){ .cols{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start} }
 </style>
 </head>
 <body>
@@ -286,7 +321,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
 
       <div>
         <div class="card">
-          <div class="row" style="margin-bottom:10px">
+          <div class="row acts2" style="margin-bottom:10px">
             <button class="btn pri" id="newBtn" type="button">🎲 새 악보</button>
             <button class="btn" id="playBtn" type="button">▶ 들어보기</button>
             <!-- 링크 보내기: 2026-09-27 사용자 요청으로 잠시 숨김. 다시 넣을 때 style 을 지운다 -->
@@ -305,17 +340,17 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
         <div class="card" id="recCard">
           <h2>녹음</h2>
           <div class="hint" style="margin:-4px 2px 10px">유선 이어폰을 끼고 <b>● 녹음 시작</b>을 누르세요. 큰 숫자(예비박)가 끝나면 첫 박부터 부세요. 끝나면 저절로 채점합니다. 블루투스 이어폰은 녹음 음질이 떨어지니 없으면 스피커로 하세요.</div>
-          <div class="row muted" style="margin-bottom:8px">
-            <label><input type="checkbox" id="metroOn" checked> 메트로놈 소리</label>
-            <label>예비박
-              <select id="countIn" style="width:auto;min-height:34px;padding:4px 8px">
+          <div class="opts">
+            <label class="opt"><input type="checkbox" id="metroOn" checked> 메트로놈 소리</label>
+            <label class="opt">예비박
+              <select id="countIn">
                 <option value="1">1마디</option><option value="2">2마디</option>
               </select>
             </label>
           </div>
-          <div class="row muted" style="margin-bottom:10px">
-            <label>듣는 방법
-              <select id="listen" style="width:auto;min-height:34px;padding:4px 8px">
+          <div class="opts" style="margin-bottom:10px">
+            <label class="opt">듣는 방법
+              <select id="listen">
                 <option value="ear">이어폰 (유선 권장)</option><option value="spk">스피커</option>
               </select>
             </label>
@@ -350,7 +385,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           </div>
         </div>
         <div id="resParts" style="margin-top:12px"></div>
-        <div class="row" style="margin-top:12px">
+        <div class="row res-actions" style="margin-top:14px">
           <button class="btn pri" id="resPlay" type="button">▶ 내 연주 듣기</button>
           <button class="btn" id="resAgain" type="button">↺ 같은 악보 다시 녹음</button>
           <button class="btn" id="resNew" type="button">🎲 새 악보로 연습</button>
@@ -375,7 +410,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <h2 style="margin:0">보관함</h2>
-        <select id="libSort" style="width:auto" aria-label="정렬">
+        <select id="libSort" style="width:auto;min-width:150px" aria-label="정렬">
           <option value="new">최신순</option><option value="old">오래된순</option><option value="hi">점수 높은순</option><option value="lo">점수 낮은순</option><option value="name">이름순</option>
         </select>
       </div>
@@ -397,6 +432,15 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
   <!-- ===== 설정 ===== -->
   <section id="tab-settings" class="hide">
     <div class="card">
+      <h2>글자 크기</h2>
+      <div class="seg" id="fontSeg" role="group" aria-label="글자 크기">
+        <button type="button" data-v="1">보통</button>
+        <button type="button" data-v="2">크게</button>
+        <button type="button" data-v="3">아주 크게</button>
+      </div>
+      <div class="hint">글자와 악보가 함께 커집니다. 글씨가 작아 보이면 한 단계 올리세요.</div>
+    </div>
+    <div class="card">
       <h2>이어폰을 끼고 연습하세요</h2>
       <p class="muted" style="margin:0">스피커로 메트로놈을 틀면 클릭 소리가 녹음에 섞여 채점이 흔들릴 수 있습니다. <b>유선 이어폰</b>이 가장 좋습니다. 블루투스 이어폰은 소리가 늦게 나오고, 켠 채 녹음하면 음질이 통화 수준으로 떨어질 수 있습니다. 앱이 휴대폰 마이크로 바꿔 녹음을 시도하지만, 그래도 먹먹하면 블루투스를 끄고 "듣는 방법 → 스피커"로 녹음하세요.</p>
     </div>
@@ -404,9 +448,9 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <h2>지연 보정</h2>
       <p class="muted" style="margin-top:0">휴대폰은 소리를 내고 듣는 데 시간이 조금 걸립니다. 이 시간을 재 두면 "늦게 들어갔다"는 잘못된 채점이 없어집니다. 기기나 이어폰을 바꾸면 다시 재세요.</p>
       <div class="hint" style="margin:0 0 8px"><b>어느 쪽을 누를까?</b> 이어폰 없이 쓰면 → 🔊 스피커 · 블루투스 이어폰이면 → 👏 손뼉. 유선 이어폰은 아무 쪽이나 됩니다.</div>
-      <div style="font-size:28px;font-weight:700" id="latNow">0 ms</div>
+      <div class="lat-big" id="latNow">0 ms</div>
       <div class="muted" id="latSrc"></div>
-      <div class="row" style="margin:10px 0">
+      <div class="row cal-row" style="margin:10px 0">
         <button class="btn pri" id="calSpk" type="button">🔊 스피커로 자동 측정</button>
         <button class="btn" id="calClap" type="button">👏 손뼉으로 측정 (이어폰)</button>
       </div>
@@ -435,7 +479,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v2.8 · 2026-09-27</p>
+      <p class="muted" style="margin:8px 0 0">버전 v2.9 · 2026-09-28</p>
     </div>
   </section>
 </main>
@@ -1315,6 +1359,19 @@ $('#themeBtn').onclick = () => {
   if (!$('#tab-result').classList.contains('hide')) renderResult();     // 결과 음표 색을 새 테마 색으로
   drawWave();
 };
+/* ---------- 글자 크기 (1 보통 · 2 크게(기본) · 3 아주 크게) — 악보도 같이 커진다 ---------- */
+const FONT_SCALE = { 1: 1, 2: 1.1, 3: 1.25 };
+let fontSize = store.get('font', 2);
+function applyFont(v) {
+  fontSize = FONT_SCALE[v] ? v : 2;
+  document.documentElement.setAttribute('data-font', String(fontSize));
+  document.querySelectorAll('#fontSeg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.v === fontSize)));
+}
+applyFont(fontSize);
+document.querySelectorAll('#fontSeg button').forEach(b => b.onclick = () => {
+  applyFont(+b.dataset.v); store.set('font', fontSize);
+  try { syncNavH(); draw(); if (!$('#tab-result').classList.contains('hide')) renderResult(); drawWave(); } catch (e) { }
+});
 try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!$('#tab-result').classList.contains('hide')) renderResult(); }); } catch (e) { }
 
 /* ---------- 탭 ---------- */
@@ -1449,8 +1506,6 @@ function renderScore(host, sc, opt) {
   host.innerHTML = '';
   const W = Math.max(200, host.clientWidth);           // 칸보다 넓게 그리면 오른쪽이 잘린다 (320px 폰)
   lastW = W;
-  const scale = W < 480 ? 0.68 : W < 800 ? 0.8 : 0.92;
-  const DW = W / scale;
   const melody = sc.melody;
   const clef = melody ? sc.inst.clef : 'percussion';
   const ks = melody ? Math.abs(sc.writtenKey.fifths) : 0;
@@ -1458,6 +1513,10 @@ function renderScore(host, sc, opt) {
   for (const e of sc.events) byM[e.mi].push(e);
   const minW = byM.map(evs => 26 + evs.reduce((s, e) => s + (e.dur >= 1680 ? 30 : e.dur >= 630 ? 26 : 22) + (e.dots ? 7 : 0) + (melody && e.pitch && e.pitch.alt ? 9 : 0), 0));
   const headW = (first) => 34 + ks * 10 + (first ? 26 : 0);
+  // 글자 크기 설정만큼 악보도 키운다. 가장 넓은 마디 하나는 늘 한 줄에 들어가야 한다 (320px 폰 잘림 방지)
+  const widest = Math.max(...minW.map((w, i) => w + headW(i === 0))) + 16;
+  const scale = Math.min((W < 480 ? 0.68 : W < 800 ? 0.8 : 0.92) * (FONT_SCALE[fontSize] || 1), Math.max(0.68, W / widest), 1.15);
+  const DW = W / scale;
   // 줄 나누기
   const avail = DW - 16;
   const lines = []; let cur = [], sum = 0;
@@ -2611,6 +2670,7 @@ $('#resetAll').onclick = () => {
   store.set('set', set);
   latency = null; store.set('latency', null); showLat();
   theme = 'auto'; store.set('theme', theme); applyTheme(theme);
+  store.set('font', 2); applyFont(2); syncNavH();
   $('#listen').value = 'ear'; store.set('listen', 'ear'); $('#spkNote').classList.add('hide');
   $('#metroOn').checked = true; store.set('metro', true);
   $('#countIn').value = '1'; store.set('countIn', 1);

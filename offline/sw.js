@@ -1,5 +1,5 @@
 // 리듬 연습 오프라인 — 자동 생성 (검사/build-offline.js). 직접 고치지 말 것
-const CACHE = "rp-offline-v2.8-c22b66833a";
+const CACHE = "rp-offline-v2.9-5ae63311d8";
 const FILES = ["./","index.html","vexflow.js","guide.html","manifest.webmanifest","img/sood-192.jpg","img/icon-180.png","img/icon-192.png","img/icon-512.png","LICENSES.txt","sounds/acoustic_grand_piano.js","sounds/alto_sax.js","sounds/baritone_sax.js","sounds/clarinet.js","sounds/flute.js","sounds/french_horn.js","sounds/LICENSE.txt","sounds/oboe.js","sounds/tenor_sax.js","sounds/trombone.js","sounds/trumpet.js","sounds/tuba.js"];
 // 새 버전을 저장할 때는 브라우저 자체 캐시(최대 10분)를 건너뛰고 인터넷에서 새로 받는다 — 옛 파일이 새 저장소에 섞이지 않게
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting())); });
