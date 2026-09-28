@@ -27,6 +27,7 @@
 | `node cdp.js t36-play-bars.js` (`SAMPLES=1` 이면 악기 소리) | 들어보기 마디별 소리 크기 (리듬·선율 × 1~7단계 × 박자표 × 못갖춘마디) | bad [] |
 | `node cdp.js t37-chunked.js` | v3.1 나눠 예약 = 한꺼번 예약, 재생 중 예약 부품 수 | diff 1e-6 아래, 버튼 되돌아옴 |
 | `node cdp.js t38-drums.js` | v3.2 타악기: 소리 크기·악센트 대비·마디별 소리·화면·기호 창·링크·가상 연주 | 악센트 +2.5dB↑, 휴대폰 흉내 -26dB↑, self 100 |
+| `node cdp.js t39-kit.js` (`W=320` 폭) | v3.3 드럼 세트: 박자표·단계별 악보 캡처(kit-lv*.png), 오류·잘림, 들어보기, 가상 연주 | errs [] · over ≤ 0 · self 100 |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의

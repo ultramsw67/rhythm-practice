@@ -84,6 +84,21 @@ for (let i = 0; i < 6000; i++) {
   if (!(tl.total > 0) || tl.notes.some(x => !(x.dur > 0) || !(x.t >= 0))) bad('timeline', set);
   if (sc.melody && sc.writtenKey == null) bad('written key', set);
 }
+// 드럼 세트 (v3.3): 두 성부 마디 길이·이어짐, 시간표가 모든 음을 한 번씩, 너무 빠른 음 없음, 결정적
+{ let kn = 0, kb = 0; const kbad = (m, s) => { kb++; bad('kit ' + m, s); };
+  for (let i = 0; i < 3000; i++) { const r = C.mulberry(50000 + i);
+    const set = { gen: 2, drum: 'kit', mode: 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 7), bars: [1, 2, 4, 8, 16][Math.floor(r() * 5)], key: 'C', inst: 'clarinet', bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][i % 3], artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
+    let sc; try { sc = C.generate(set); } catch (e) { kbad('throw ' + e.message, set); continue; } kn++;
+    if (!sc.kit || sc.pickLen) kbad('not kit / pickup', set);
+    if (JSON.stringify(C.generate(set).events) !== JSON.stringify(sc.events)) kbad('not deterministic', set);
+    for (const ms of sc.measures) for (const v of ['u', 'd']) { const ev = sc.events.filter(e => e.mi === ms.mi && e.voice === v); let t = ms.start; for (const e of ev) { if (e.start !== t) kbad('gap', set); t += e.dur; } if (t - ms.start !== ms.len) kbad('len ' + v, set); }
+    const tl = C.timeline(sc, 1); const ids = tl.notes.flatMap(x => x.ids).sort((a, b) => a - b), nr = sc.events.filter(e => !e.rest).map(e => e.id);
+    if (JSON.stringify(ids) !== JSON.stringify(nr)) kbad('timeline ids', set);
+    if (sc.events.some(e => !e.rest && !e.tup && e.dur * sc.spt < Math.max(0.07, C.levelProfile(set).minSec) - 1e-9)) kbad('too fast', set);
+    if (sc.events.some(e => e.flam) && set.level < 5) kbad('flam below 5', set);
+    if (sc.events.some(e => !e.rest && e.keys.some(k => !C.KIT_KEYS[k]))) kbad('bad key', set);
+  }
+  console.log('kit runs', kn, 'fail', kb); }
 // 같은 설정이면 악기가 달라도 선율(음정 간격)·리듬·기호가 같아야 한다
 let inv = 0, invBad = 0;
 for (let i = 0; i < 400; i++) {
@@ -113,6 +128,7 @@ for (const o of bads) {
 // 못갖춘마디 '빼기' 왕복
 { const s = C.decodeSet(C.encodeSet({ mode: 'rhythm', meter: '4/4', level: 3, bars: 4, key: 'C', inst: 'flute', bpm: 90, pickup: 'off', artic: 'auto', seed: 3, edits: {} }), { inst: 'flute' }); if (s.pickup !== 'off') bad('pickup off lost', s); }
 // 공유 링크 왕복
+{ const k = C.decodeSet(C.encodeSet({ gen: 2, drum: 'kit', mode: 'rhythm', meter: '4/4', level: 5, bars: 4, key: 'C', inst: 'flute', bpm: 90, pickup: 'off', artic: 'auto', seed: 3, edits: {} }), {}); if (k.drum !== 'kit') bad('kit link', k); }
 const s0 = { gen: 2, mode: 'melody', meter: '7/8', level: 6, bars: 8, key: 'F#m', inst: 'horn', bpm: 132, pickup: 'on', artic: 'manual', seed: 123456789, edits: { a: { 3: ['acc'] }, s: [[1, 3]] } };
 const s1 = C.decodeSet(C.encodeSet(s0), { inst: 'horn' });
 for (const k of Object.keys(s0)) if (JSON.stringify(s0[k]) !== JSON.stringify(s1[k])) bad('share ' + k, s1);

@@ -8,7 +8,7 @@ module.exports = async (c) => {
     window.addEventListener('error', e => out.errs.push(String(e.message)));
     const sr = 44100;
     const rms = (x, a, b) => { let s = 0; for (let i = a; i < b; i++) s += x[i]*x[i]; return 10*Math.log10(s/(b-a) + 1e-12); };
-    for (const kind of ['snare','bass','cymbal']) {
+    for (const kind of ['snare','bass','cymbal','hat','tom_h','tom_m','tom_f']) {
       for (const phone of [false, true]) {
         const oc = new OfflineAudioContext(1, sr*3, sr); let dest = oc.destination;
         if (phone) { const h1=oc.createBiquadFilter(); h1.type='highpass'; h1.frequency.value=500; const h2=oc.createBiquadFilter(); h2.type='highpass'; h2.frequency.value=500; h1.connect(h2).connect(oc.destination); dest=h1; }
@@ -23,13 +23,13 @@ module.exports = async (c) => {
       }
     }
     // 실제 악보를 마디마다 (모든 단계)
-    for (const drum of ['snare','bass','cymbal']) for (let lv = 1; lv <= 7; lv += 3) {
+    for (const drum of ['snare','bass','cymbal','kit']) for (let lv = 1; lv <= 7; lv += 3) {
       const S = { gen:2, drum, mode:'rhythm', level:lv, meter:'4/4', bars:4, key:'C', inst:'clarinet', bpm:100, pickup:'off', artic:'auto', seed: 50+lv, edits:{} };
       const sc = Core.generate(S), tl = Core.timeline(sc, 1);
       const oc = new OfflineAudioContext(1, Math.ceil((tl.total+1.6)*22050), 22050); const m = oc.createGain(); m.connect(oc.destination);
       const st = { i: 0 }; for (let u = 0.5; ; u += 0.5) { if (RPX.schedulePlayback(oc, RPX.outChain(oc, m), 0, tl, false, null, { st, until: u, drum }).done) break; }
       const x = (await oc.startRendering()).getChannelData(0);
-      const bars = sc.measures.map(ms => { const ns = tl.notes.filter(n => sc.events[n.ev].mi === ms.mi); if (!ns.length) return 'rest'; let mx = 0; for (let i = Math.floor(ns[0].t*22050); i < Math.floor((ns[ns.length-1].t+0.08)*22050); i++) mx = Math.max(mx, Math.abs(x[i])); return Math.round(20*Math.log10(mx+1e-9)); });
+      const bars = sc.measures.map(ms => { const ns = tl.notes.filter(n => sc.events[n.ev].mi === ms.mi); /* kit 도 같은 방식 */ if (!ns.length) return 'rest'; let mx = 0; for (let i = Math.floor(ns[0].t*22050); i < Math.floor((ns[ns.length-1].t+0.08)*22050); i++) mx = Math.max(mx, Math.abs(x[i])); return Math.round(20*Math.log10(mx+1e-9)); }); let pk = 0; for (const v of x) pk = Math.max(pk, Math.abs(v)); if (drum === 'kit') out.kitPeak = Math.max(out.kitPeak || 0, +pk.toFixed(2));
       const artic = [...new Set(sc.events.flatMap(e => e.artic))];
       out.bars.push(drum + ' lv' + lv + ' ' + JSON.stringify(bars) + ' artic ' + artic.join(','));
     }

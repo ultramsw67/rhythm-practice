@@ -21,6 +21,7 @@ const cases = [];
 const meters = ['2/4', '3/4', '4/4', '6/8', '7/8', '12/8', '2/2', '5/4', '9/8'];
 const insts = ['clarinet', 'flute', 'alto_sax', 'trumpet', 'trombone', 'tuba', 'horn'];
 for (let i = 0; i < 18; i++) cases.push({ mode: i % 2 ? 'melody' : 'rhythm', meter: meters[i % meters.length], gen: 2, level: 1 + (i % 7), bars: 4, key: C.KEYS[(i * 7) % 30].name, inst: insts[i % insts.length], bpm: 60 + (i * 13) % 90, pickup: 'auto', artic: 'auto', seed: 1000 + i, edits: {} });
+for (let i = 0; i < 4; i++) cases.push({ gen: 2, drum: 'kit', mode: 'rhythm', meter: ['4/4', '6/8', '3/4', '12/8'][i], level: [2, 4, 5, 7][i], bars: 4, key: 'C', inst: 'clarinet', bpm: 80 + i * 15, pickup: 'off', artic: 'auto', seed: 2000 + i, edits: {} });   // 드럼 세트
 const agg = {};
 const t0 = Date.now();
 for (const set of cases) {
@@ -36,7 +37,7 @@ for (const set of cases) {
       res.notes.filter(n => n.grade !== 'ok').slice(0, 6).forEach(n => console.log('    note', n.ev, n.grade, n.matched ? `dev ${(n.dev * 1000).toFixed(0)} ratio ${n.ratio?.toFixed(2)} cents ${n.cents?.toFixed(0)} checks ${JSON.stringify(n.checks)}` : 'MISS', n.artic));
     }
   }
-  console.log(`${set.mode[0]} ${set.meter} L${set.level} ${set.bpm}bpm ${set.inst} | ${line.join(' ')}`);
+  console.log(`${set.drum === 'kit' ? 'k' : set.mode[0]} ${set.meter} L${set.level} ${set.bpm}bpm ${set.inst} | ${line.join(' ')}`);
 }
 console.log('\n평균:');
 for (const [k, v] of Object.entries(agg)) console.log(k.padEnd(11), (v.reduce((a, b) => a + b, 0) / v.length).toFixed(1), 'min', Math.min(...v), 'max', Math.max(...v));
