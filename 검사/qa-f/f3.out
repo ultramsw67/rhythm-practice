@@ -1,0 +1,15 @@
+rec-while-playing {"btn":"▶ 들어보기","playing":false,"rec":true,"recBtn":"■ 그만하기","status":"녹음 중 — 예비박을 듣고 시작하세요","bodyRec":true,"playBtnVisible":true,"playDuringRec":false,"after":{"btn":"▶ 들어보기","playing":false,"rec":false,"recBtn":"● 녹음 시작"}}
+rec-while-starting {"t1":"… 준비 중","btn":"▶ 들어보기","playing":false,"rec":true,"recBtn":"■ 그만하기","after":{"btn":"▶ 들어보기","playing":false,"rec":false}}
+full rhythm-click 4/4 {"t1":"… 준비 중","startMs":36,"total":19.92,"wallSec":20.19,"nodes":373,"highlighted":103,"evN":109,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full rhythm-click 12/8 {"t1":"… 준비 중","startMs":34,"total":19.63,"wallSec":19.95,"nodes":409,"highlighted":116,"evN":119,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full snare 4/4 {"t1":"… 준비 중","startMs":33,"total":19.63,"wallSec":19.948,"nodes":263,"highlighted":103,"evN":107,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full snare 12/8 {"t1":"… 준비 중","startMs":41,"total":19.63,"wallSec":19.891,"nodes":269,"highlighted":102,"evN":108,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full cymbal 4/4 {"t1":"… 준비 중","startMs":34,"total":19.63,"wallSec":19.987,"nodes":255,"highlighted":95,"evN":102,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full cymbal 12/8 {"t1":"… 준비 중","startMs":32,"total":19.63,"wallSec":19.946,"nodes":291,"highlighted":112,"evN":117,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"소리가 너무 커서 찌그러집니다. 휴대폰을 악기에서 조금 떨어뜨리세요"}
+full melody-clarinet 4/4 {"t1":"… 준비 중","startMs":45,"total":19.63,"wallSec":19.902,"nodes":361,"highlighted":108,"evN":119,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"악기 소리를 불러오는 중이라 이번에는 기본 소리로 들려 드립니다"}
+full melody-clarinet 12/8 {"t1":"… 준비 중","startMs":36,"total":19.63,"wallSec":19.932,"nodes":180,"highlighted":110,"evN":116,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"악기 소리를 불러오는 중이라 이번에는 기본 소리로 들려 드립니다"}
+full melody-tuba 4/4 {"t1":"… 준비 중","startMs":51,"total":19.92,"wallSec":20.228,"nodes":382,"highlighted":110,"evN":124,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"악기 소리를 불러오는 중이라 이번에는 기본 소리로 들려 드립니다"}
+full melody-tuba 12/8 {"t1":"… 준비 중","startMs":36,"total":19.92,"wallSec":20.254,"nodes":173,"highlighted":104,"evN":111,"btn":"▶ 들어보기","playing":null,"leftover":0,"toast":"악기 소리를 불러오는 중이라 이번에는 기본 소리로 들려 드립니다"}
+errs []
+--- console ---
+

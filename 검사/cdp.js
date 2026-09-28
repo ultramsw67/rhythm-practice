@@ -10,7 +10,9 @@ async function main() {
   const ch = spawn(CHROME, ['--headless=new', `--remote-debugging-port=${port}`, `--user-data-dir=${prof}`, '--no-first-run', '--autoplay-policy=no-user-gesture-required',
     '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', ...(process.env.FAKE_WAV ? ['--use-file-for-fake-audio-capture=' + process.env.FAKE_WAV + '%noloop'] : []), 'about:blank'], { stdio: 'ignore' });
   let targets;
-  for (let i = 0; i < 50; i++) { try { targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); if (targets.length) break; } catch (e) { } await new Promise(r => setTimeout(r, 200)); }
+  // 앞 시험의 크롬이 아직 닫히는 중이면 늦게 뜬다 → 30초까지 기다린다 (2026-09-28)
+  for (let i = 0; i < 150; i++) { try { targets = await (await fetch(`http://127.0.0.1:${port}/json`)).json(); if (targets.some(x => x.type === 'page')) break; } catch (e) { } await new Promise(r => setTimeout(r, 200)); }
+  if (!targets) throw new Error('크롬이 뜨지 않았습니다 (포트 ' + port + ')');
   const t = targets.find(x => x.type === 'page');
   const ws = new WebSocket(t.webSocketDebuggerUrl);
   await new Promise(r => ws.onopen = r);

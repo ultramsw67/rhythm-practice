@@ -1,0 +1,9 @@
+320 font1 {"n":1728,"worst":38,"bad":{"rhythm lv7 5/4":1,"melody lv7 5/4":3},"ex":{"mode":"melody","lv":7,"m":"5/4","seed":11,"pk":"off","over":38}}
+320 font3 {"n":1728,"worst":38,"bad":{"rhythm lv7 5/4":1,"melody lv7 5/4":3},"ex":{"mode":"melody","lv":7,"m":"5/4","seed":11,"pk":"off","over":38}}
+360 font1 {"n":1728,"worst":-2,"bad":{},"ex":null}
+360 font3 {"n":1728,"worst":-2,"bad":{},"ex":null}
+390 font1 {"n":1728,"worst":-5,"bad":{},"ex":null}
+390 font3 {"n":1728,"worst":-5,"bad":{},"ex":null}
+shot {"w":320,"f":"1","mode":"melody","lv":7,"m":"5/4","seed":11,"pk":"off","over":38}
+--- console ---
+
