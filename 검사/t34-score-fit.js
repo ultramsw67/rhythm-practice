@@ -9,7 +9,7 @@ module.exports = async (c) => {
       await c.go(B);
       const r = await c.ev(`(()=>{ let worst=-1e9, bad=[];
         for (const key of [7,-7,0]) for (const mode of ['melody','rhythm']) for (let seed=1; seed<=6; seed++) for (const inst of ['flute','tuba','alto_sax']) {
-          Object.assign(RP.set,{mode,level:3,meter:'4/4',bars:8,inst,key,bpm:100,artic:'auto',pickup:'auto',seed,edits:{}}); RP.rebuild();
+          Object.assign(RP.set,{gen:2,mode,level:7,meter:'4/4',bars:8,inst,key,bpm:100,artic:'auto',pickup:'auto',seed,edits:{}}); RP.rebuild();
           const svg=document.querySelector('#score svg'); const W=+svg.getAttribute('width'); const bb=svg.getBBox(); const sc=svg.getBoundingClientRect().width/W;
           const over = (bb.x+bb.width)*(svg.viewBox.baseVal && svg.viewBox.baseVal.width ? W/svg.viewBox.baseVal.width : 1) - W;
           worst=Math.max(worst,over); if(over>1) bad.push([key,mode,seed,inst,Math.round(over)]);

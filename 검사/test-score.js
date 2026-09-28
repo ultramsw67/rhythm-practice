@@ -20,7 +20,7 @@ const variants = {
 const cases = [];
 const meters = ['2/4', '3/4', '4/4', '6/8', '7/8', '12/8', '2/2', '5/4', '9/8'];
 const insts = ['clarinet', 'flute', 'alto_sax', 'trumpet', 'trombone', 'tuba', 'horn'];
-for (let i = 0; i < 18; i++) cases.push({ mode: i % 2 ? 'melody' : 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 3), bars: 4, key: C.KEYS[(i * 7) % 30].name, inst: insts[i % insts.length], bpm: 60 + (i * 13) % 90, pickup: 'auto', artic: 'auto', seed: 1000 + i, edits: {} });
+for (let i = 0; i < 18; i++) cases.push({ mode: i % 2 ? 'melody' : 'rhythm', meter: meters[i % meters.length], gen: 2, level: 1 + (i % 7), bars: 4, key: C.KEYS[(i * 7) % 30].name, inst: insts[i % insts.length], bpm: 60 + (i * 13) % 90, pickup: 'auto', artic: 'auto', seed: 1000 + i, edits: {} });
 const agg = {};
 const t0 = Date.now();
 for (const set of cases) {

@@ -14,7 +14,7 @@ module.exports = async (c) => {
     const svg=[...document.querySelectorAll('.paper svg')].map(s=>Math.round(s.getBoundingClientRect().right-s.parentNode.getBoundingClientRect().right));
     return { overflowX: document.documentElement.scrollWidth - innerWidth, small, svgOver: svg, font: document.documentElement.dataset.font, fs: getComputedStyle(document.body).fontSize } })()`);
   await c.size(320, 700); await c.go(B);
-  await c.ev(`localStorage.setItem('rp.startSeen','true'); localStorage.setItem('rp.font','3'); localStorage.setItem('rp.set', JSON.stringify(Object.assign({}, window.RP.set, {mode:'melody', key: 7, bars: 8, level: 3})))`);
+  await c.ev(`localStorage.setItem('rp.startSeen','true'); localStorage.setItem('rp.font','3'); localStorage.setItem('rp.set', JSON.stringify(Object.assign({}, window.RP.set, {mode:'melody', key: 7, bars: 8, level: 7, gen: 2})))`);
   await c.go(B);
   console.log('320 xl', JSON.stringify(await check()));
   await shot('ui-320-xl.png', 320);

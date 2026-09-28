@@ -5,7 +5,7 @@ const m = /<script id="core">([\s\S]*?)<\/script>/.exec(html);
 new Function(m[1])();
 const C = globalThis.Core;
 let fail = 0, n = 0;
-const stats = { tup: 0, tie: 0, pickup: 0, dd: 0, t32: 0, artic: 0, slur: 0, acc: 0 };
+const stats = { byLv: {}, tup: 0, tie: 0, pickup: 0, dd: 0, t32: 0, artic: 0, slur: 0, acc: 0 };
 function bad(msg, set) { fail++; if (fail < 15) console.log('FAIL', msg, JSON.stringify(set)); }
 
 // 조각 길이 확인
@@ -17,11 +17,13 @@ const meters = Object.keys(C.METERS), insts = Object.keys(C.INSTS);
 for (let i = 0; i < 6000; i++) {
   const r = C.mulberry(i + 7);
   const set = {
-    mode: r() < 0.5 ? 'rhythm' : 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 3),
+    mode: r() < 0.5 ? 'rhythm' : 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7),
     bars: [2, 4, 8, 12, 16][Math.floor(r() * 5)], key: C.KEYS[Math.floor(r() * 30)].name, inst: insts[Math.floor(r() * insts.length)],
     bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][Math.floor(r() * 3)], artic: ['auto', 'manual', 'none'][Math.floor(r() * 3)],
-    seed: Math.floor(r() * 1e9), edits: {},
+    seed: Math.floor(r() * 1e9), edits: {}, gen: 2,
   };
+  if (i % 5 === 0) { set.gen = 0; set.level = 1 + (set.level % 3); }       // 옛 3단계 악보(저장된 녹음)도 계속 시험
+  const LP = C.levelProfile(set);
   let sc;
   try { sc = C.generate(set); } catch (e) { bad('throw ' + e.stack, set); continue; }
   n++;
@@ -37,7 +39,7 @@ for (let i = 0; i < 6000; i++) {
     // 잇단은 마디 안에서 완결
     const g = {};
     for (const e of evs) if (e.tup) g[e.tup.g] = (g[e.tup.g] || 0) + 1;
-    for (const k in g) { const ev = evs.find(e => e.tup && e.tup.g == k); if (g[k] !== ev.tup.n) bad('tuplet count', set); }
+    for (const k in g) { const gs = evs.filter(e => e.tup && e.tup.g == k), ev = gs[0], tot = gs.reduce((x, e) => x + e.dur, 0); if (!Object.values(C.BASE).includes(tot / ev.tup.occ) || (g[k] !== ev.tup.n && !gs.some(e => e.base !== ev.base))) bad('tuplet count', set); }   // 셔플 [3 q 8] 처럼 음 개수가 달라도 묶음 길이가 맞으면 된다
   }
   const full = sc.measures.filter(x => !x.pickup && !x.last);
   if (full.some(x => x.len !== sc.measLen)) bad('full len', set);
@@ -54,11 +56,20 @@ for (let i = 0; i < 6000; i++) {
     if (e.dots === 2) stats.dd++;
     if (e.base === '32') stats.t32++;
     if (e.artic.length) stats.artic++;
-    if (e.dur * sc.spt < [0.14, 0.1, 0.07][set.level - 1] - 1e-9 && !(set.level === 1 && e.base === 'q')) bad('too fast note ' + e.base, set);
+    if (e.dur * sc.spt < LP.minSec - 1e-9 && !(LP.lv <= 2 && (e.base === 'q' || e.base === 'h' || e.base === 'w'))) bad('too fast note ' + e.base, set);
+    // 새 7단계: 그 단계보다 어려운 리듬이 나오지 않는지
+    if (!LP.legacy) {
+      if (LP.lv <= 6 && (e.base === '32' || e.dots === 2 || (e.tup && e.tup.n >= 4))) bad('lv' + LP.lv + ' has lv7 rhythm', set);
+      if (LP.lv <= 5 && e.tup) bad('lv' + LP.lv + ' has tuplet', set);
+      if (LP.lv <= 2 && (e.base === '16' || e.dots && e.base === '8')) bad('lv' + LP.lv + ' has 16th', set);
+      if (LP.lv === 1 && e.base === '8' && !(sc.M.den === 8)) bad('lv1 has 8th', set);
+      if (LP.lv <= 2 && e.tie) bad('lv' + LP.lv + ' has tie', set);
+      (stats.byLv[LP.lv] = stats.byLv[LP.lv] || {})[e.base + '.'.repeat(e.dots) + (e.tup ? '/' + e.tup.n : '')] = 1;
+    }
     if (sc.melody && !e.rest) {
       const [lo, hi] = sc.inst.r[2];                         // 낼 수 있는 전체 음역(반드시)
       if (e.midi < lo - 1 || e.midi > hi + 1) bad(`range ${e.midi} not in ${lo}-${hi}`, set);
-      const [clo, chi] = sc.inst.r[set.level - 1];           // 편한 음역(조금 넘는 것은 허용)
+      const [clo, chi] = sc.inst.r[LP.tier];           // 편한 음역(조금 넘는 것은 허용)
       const over = Math.max(0, clo - e.midi, e.midi - chi);
       stats.comfortOver = Math.max(stats.comfortOver || 0, over);
       if (over > 0) stats.overNotes = (stats.overNotes || 0) + 1;
@@ -77,7 +88,7 @@ for (let i = 0; i < 6000; i++) {
 let inv = 0, invBad = 0;
 for (let i = 0; i < 400; i++) {
   const r = C.mulberry(9000 + i);
-  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 3), bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
+  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7), gen: i % 4 ? 2 : 0, bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
   const sig = inst => {
     const sc = C.generate({ ...base, inst });
     const ns = sc.events.filter(e => !e.rest);
@@ -102,9 +113,13 @@ for (const o of bads) {
 // 못갖춘마디 '빼기' 왕복
 { const s = C.decodeSet(C.encodeSet({ mode: 'rhythm', meter: '4/4', level: 3, bars: 4, key: 'C', inst: 'flute', bpm: 90, pickup: 'off', artic: 'auto', seed: 3, edits: {} }), { inst: 'flute' }); if (s.pickup !== 'off') bad('pickup off lost', s); }
 // 공유 링크 왕복
-const s0 = { mode: 'melody', meter: '7/8', level: 3, bars: 8, key: 'F#m', inst: 'horn', bpm: 132, pickup: 'on', artic: 'manual', seed: 123456789, edits: { a: { 3: ['acc'] }, s: [[1, 3]] } };
+const s0 = { gen: 2, mode: 'melody', meter: '7/8', level: 6, bars: 8, key: 'F#m', inst: 'horn', bpm: 132, pickup: 'on', artic: 'manual', seed: 123456789, edits: { a: { 3: ['acc'] }, s: [[1, 3]] } };
 const s1 = C.decodeSet(C.encodeSet(s0), { inst: 'horn' });
 for (const k of Object.keys(s0)) if (JSON.stringify(s0[k]) !== JSON.stringify(s1[k])) bad('share ' + k, s1);
+// 옛 링크(g 없음)는 옛 3단계 그대로, 새 링크는 7단계
+{ const a = C.decodeSet(JSON.stringify({ m: 'r', t: '4/4', l: 3, b: 4, k: 'C', s: 9, v: 90 }), { gen: 2, level: 5 }); if (a.gen !== 0 || a.level !== 3 || !C.levelProfile(a).legacy) bad('old link', a);
+  const b = C.decodeSet(JSON.stringify({ m: 'r', t: '4/4', l: 7, g: 2, b: 4, k: 'C', s: 9, v: 90 }), { gen: 0, level: 1 }); if (b.gen !== 2 || b.level !== 7) bad('new link', b);
+  const u = C.upgradeSet({ level: 2 }); if (u.level !== 4 || u.gen !== 2) bad('upgrade', u); }
 // 이조 조표
 const wk = (k, i) => C.writtenKey(k, C.INSTS[i]).name;
 const checks = [['Bb', 'clarinet', 'C'], ['Eb', 'alto_sax', 'C'], ['F', 'horn', 'C'], ['Bb', 'horn', 'F'], ['E', 'clarinet', 'F#'], ['Cm', 'clarinet', 'Dm'], ['Ab', 'alto_sax', 'F'], ['E', 'alto_sax', 'Db'], ['C', 'trumpet', 'D']];
