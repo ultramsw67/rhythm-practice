@@ -17,6 +17,9 @@
   "c_treble": "acoustic_grand_piano",
   "c_bass": "acoustic_grand_piano"
  },
+ "alt": {
+  "acoustic_bass": "contrabass"
+ },
  "sounds": {
   "flute": {
    "lo": 58,
@@ -271,6 +274,25 @@
     84
    ],
    "kb": 548
+  },
+  "acoustic_bass": {
+   "lo": 26,
+   "hi": 57,
+   "notes": [
+    26,
+    29,
+    32,
+    35,
+    38,
+    41,
+    44,
+    47,
+    50,
+    53,
+    56,
+    59
+   ],
+   "kb": 243
   }
  }
 }

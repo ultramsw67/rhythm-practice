@@ -256,6 +256,7 @@ playing range were kept, one note every 3 semitones (notes in between are
 produced by changing the playback speed). The audio itself was not edited.
 Euphonium uses the tuba sound; C-instrument parts use the acoustic grand piano.
 Soprano saxophone and double bass (contrabass) were added on 2026-09-29.
+The acoustic bass sound is used for double bass pizzicato (plucked strings), added on 2026-09-29.
 
 
 ========================================================================

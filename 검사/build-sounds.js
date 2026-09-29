@@ -25,6 +25,9 @@ const get = url => new Promise((res, rej) => https.get(url, r => { if (r.statusC
     const lo = inst.r[2][0] + inst.t - 2, hi = inst.r[2][1] + inst.t + 2;
     need[gm] = need[gm] ? [Math.min(need[gm][0], lo), Math.max(need[gm][1], hi)] : [lo, hi];
   }
+  // 같은 악기의 다른 주법 (v3.5): 더블베이스 피치카토 = GM Acoustic Bass (현을 손가락으로 튕기는 콘트라베이스)
+  const ALT = { acoustic_bass: 'contrabass' };
+  for (const [gm, k] of Object.entries(ALT)) { const inst = INSTS[k]; need[gm] = [inst.r[2][0] + inst.t - 2, inst.r[2][1] + inst.t + 2]; }
   const index = {};
   let total = 0;
   for (const [gm, [lo, hi]] of Object.entries(need)) {
@@ -49,6 +52,6 @@ const get = url => new Promise((res, rej) => https.get(url, r => { if (r.statusC
     'The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.',
     'THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.',
   ].join('\n') + '\n');
-  fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify({ step: STEP, map: MAP, sounds: index }, null, 1));
+  fs.writeFileSync(path.join(OUT, 'index.json'), JSON.stringify({ step: STEP, map: MAP, alt: ALT, sounds: index }, null, 1));
   console.log('total', Math.round(total / 1024) + 'KB');
 })().catch(e => { console.error(e); process.exit(1); });
