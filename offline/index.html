@@ -485,9 +485,9 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <h2>이 앱에 대해</h2>
       <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
-      <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
+      <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.5 (오프라인 앱) · 2026-09-29</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.6 (오프라인 앱) · 2026-09-29</p>
     </div>
   </section>
 </main>
@@ -2199,7 +2199,9 @@ const SOUND_LOOP = { acoustic_grand_piano: false, acoustic_bass: false };   // �
 const PIZZ_OF = { contrabass: 'acoustic_bass' };             // v3.5 현을 손가락으로 튕기는 소리 (FluidR3 GM Acoustic Bass = 튕기는 콘트라베이스)
 // v3.5 (2026-09-29 "더블베이스 선율이 어색"): 더블베이스 녹음은 ① 음마다 크기가 최대 10dB 달라 들쭉날쭉하고 ② 활을 천천히 그어 소리가 피는 데 0.5초 넘게 걸린다
 // → flat: 녹음마다 크기를 따로 맞춤, bowIn: 소리가 거의 다 핀 곳부터 틀기(짧은 음도 몸통 소리가 남)
-const SOUND_OPT = { contrabass: { flat: true, bowIn: true }, acoustic_bass: { flat: true, trim: 0.72 } };   // 튕긴 소리는 첫 순간이 커서 활 소리와 크기를 맞춰 조금 낮춤
+const SOUND_OPT = { contrabass: { flat: true, bowIn: true }, acoustic_bass: { flat: true, trim: 0.72 }, acoustic_grand_piano: { piano: true, trim: 0.8 } };
+// v3.6 (2026-09-29 "C 악기가 피아노처럼 안 들림"): 피아노는 관악기처럼 다루면 안 된다 → piano: 슬러여도 음마다 건반 치는 소리를 살리고,
+// 손을 뗀 뒤 잠깐 울리게(댐퍼), 악센트는 세게 친 한 음으로(세게 시작했다 되돌리지 않음). trim: 압축기가 치는 순간을 뭉개지 않게 조금 낮춤   // 튕긴 소리는 첫 순간이 커서 활 소리와 크기를 맞춰 조금 낮춤
 const smp = {};
 let decodeCtx = null;
 function loadScript(src) { return new Promise((res, rej) => { const el = document.createElement('script'); el.src = src; el.onload = () => res(); el.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(el); }); }
@@ -2258,7 +2260,7 @@ function loadGm(gm) {
     e.fix = {}; e.bowIn = opt.bowIn ? {} : null;
     for (const m of e.notes) { e.fix[m] = 1; if (e.bowIn) e.bowIn[m] = each[m].bow; }
     if (opt.flat) try { await flatten(e); } catch (er) { console.warn(er); }
-    e.loop = SOUND_LOOP[gm] !== false;
+    e.loop = SOUND_LOOP[gm] !== false; e.piano = !!opt.piano;
     e.state = 'ready'; delete window.RP_SOUNDS[gm];
     return e;
   })().catch(err => { console.warn(err); e.state = 'fail'; e.promise = null; return null; }).finally(syncSoundInfo);
@@ -2296,21 +2298,24 @@ function sampleNote(c, dest, snd, p, t, hz) {
   const src = c.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate;
   // 슬러로 이어지는 음은 첫 '톡' 소리를 건너뛴다. 활을 천천히 긋는 녹음(더블베이스)은 소리가 거의 다 핀 곳 조금 앞부터 튼다
   const bowIn = (snd.bowIn && snd.bowIn[s]) || 0;
-  const off = p.cont ? Math.max(Math.min(0.06, buf.duration * 0.1), bowIn * 0.85) : bowIn * 0.7;
-  const len = p.len, room = (buf.duration - off) / rate;
+  const off = p.cont && !snd.piano ? Math.max(Math.min(0.06, buf.duration * 0.1), bowIn * 0.85) : bowIn * 0.7;
+  let len = p.len;
+  if (snd.piano && p.decay && !p.n.pizz) len = Math.max(len, Math.min(p.len / 0.8 * 0.94, p.len + 0.25));   // 피아노 보통 음: 박 끝 가까이까지 울림 (스타카토는 그대로 짧게)
+  const room = (buf.duration - off) / rate;
   if (snd.loop && len > room - 0.12) { src.loop = true; src.loopStart = buf.duration * 0.45; src.loopEnd = buf.duration * 0.85; }
   const g = c.createGain(), lvl = snd.gain * 0.9 * ((snd.fix && snd.fix[s]) || 1);
   g.gain.setValueAtTime(0, t);
-  g.gain.linearRampToValueAtTime(lvl * p.peak, t + (p.cont ? 0.025 : off > 0.02 ? 0.018 : 0.004));   // 소리 중간부터 틀 땐 톡 튀지 않게 조금 부드럽게
-  if (p.peak > 1) g.gain.setTargetAtTime(lvl, t + 0.09, 0.07);          // 악센트: 세게 시작해 곧 원래 크기로 (천천히 피는 악기도 들리게 조금 길게)
+  const pk = snd.piano ? Math.min(1.7, 1 + (p.peak - 1) * 0.6) : p.peak;   // 피아노 악센트: 세게 친 음은 그 음 전체가 큼 (끝까지 저절로 줄어듦)
+  g.gain.linearRampToValueAtTime(lvl * pk, t + (snd.piano ? 0.003 : p.cont ? 0.025 : off > 0.02 ? 0.018 : 0.004));   // 소리 중간부터 틀 땐 톡 튀지 않게 조금 부드럽게
+  if (p.peak > 1 && !snd.piano) g.gain.setTargetAtTime(lvl, t + 0.09, 0.07);          // 악센트: 세게 시작해 곧 원래 크기로 (천천히 피는 악기도 들리게 조금 길게)
   const end = t + len, joined = p.n.legato || !p.decay;               // 슬러·테누토는 부드럽게, 보통·스타카토는 또렷하게 끊는다
-  const rel = joined ? 0.03 : 0.012;
-  g.gain.setTargetAtTime(0, end - (joined ? rel * 0.5 : 0.004), rel);
+  const rel = snd.piano ? (joined ? 0.09 : p.len < 0.2 ? 0.035 : 0.06) : joined ? 0.03 : 0.012;   // 피아노: 건반에서 손을 떼면 댐퍼가 잠깐 뒤에 멈춤
+  g.gain.setTargetAtTime(0, end - (snd.piano ? 0 : joined ? rel * 0.5 : 0.004), rel);
   // 낮은 음은 휴대폰 스피커가 잘 내는 1.5kHz 쪽을 조금 살린다
   const pres = c.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 1500; pres.Q.value = 0.7;
-  pres.gain.value = Math.max(0, Math.min(15, 20 * Math.log10(466 / hz) * 1.0));
+  pres.gain.value = Math.max(0, Math.min(15, 20 * Math.log10(466 / hz) * (snd.piano ? 0.5 : 1.0)));   // 피아노는 음색이 얇아지지 않게 절반만
   const shelf = c.createBiquadFilter(); shelf.type = 'lowshelf'; shelf.frequency.value = Math.min(300, hz * 2.5);   // 기음(휴대폰은 못 냄)을 줄여 여유
-  shelf.gain.value = -Math.min(12, pres.gain.value * 0.8);
+  shelf.gain.value = -Math.min(12, pres.gain.value * (snd.piano ? 0.5 : 0.8));
   src.connect(g).connect(pres).connect(shelf).connect(dest);
   src.start(t, off); src.stop(end + rel * 8);
   // 아주 낮은 음(110Hz 아래)은 같은 소리를 한 옥타브 위로 작게 겹쳐 휴대폰 스피커에서도 들리게 (들리는 음높이는 그대로)
