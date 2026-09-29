@@ -22,6 +22,7 @@ const meters = ['2/4', '3/4', '4/4', '6/8', '7/8', '12/8', '2/2', '5/4', '9/8'];
 const insts = ['clarinet', 'flute', 'alto_sax', 'trumpet', 'trombone', 'tuba', 'horn'];
 for (let i = 0; i < 18; i++) cases.push({ mode: i % 2 ? 'melody' : 'rhythm', meter: meters[i % meters.length], gen: 2, level: 1 + (i % 7), bars: 4, key: C.KEYS[(i * 7) % 30].name, inst: insts[i % insts.length], bpm: 60 + (i * 13) % 90, pickup: 'auto', artic: 'auto', seed: 1000 + i, edits: {} });
 for (let i = 0; i < 4; i++) cases.push({ gen: 2, drum: 'kit', mode: 'rhythm', meter: ['4/4', '6/8', '3/4', '12/8'][i], level: [2, 4, 5, 7][i], bars: 4, key: 'C', inst: 'clarinet', bpm: 80 + i * 15, pickup: 'off', artic: 'auto', seed: 2000 + i, edits: {} });   // 드럼 세트
+for (let i = 0; i < 6; i++) cases.push({ gen: 2, mode: 'melody', meter: ['4/4', '3/4', '6/8'][i % 3], level: [1, 3, 5, 7, 2, 6][i], bars: 4, key: ['Bb', 'Eb', 'F', 'C', 'G', 'Bbm'][i], inst: i % 2 ? 'contrabass' : 'soprano_sax', bpm: 70 + i * 12, pickup: 'auto', artic: 'auto', seed: 3000 + i, edits: {} });   // v3.4 소프라노 색소폰·더블베이스
 const agg = {};
 const t0 = Date.now();
 for (const set of cases) {

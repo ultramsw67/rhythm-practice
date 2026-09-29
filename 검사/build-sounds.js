@@ -8,7 +8,7 @@ const CACHE = path.join(__dirname, '.soundcache');
 const SRC = 'https://gleitz.github.io/midi-js-soundfonts/FluidR3_GM/';
 const STEP = 3;
 // 앱 악기 → 사운드폰트 악기 (유포니움은 GM 에 없어 튜바, C 악기는 피아노)
-const MAP = { flute: 'flute', oboe: 'oboe', clarinet: 'clarinet', alto_sax: 'alto_sax', tenor_sax: 'tenor_sax', bari_sax: 'baritone_sax',
+const MAP = { flute: 'flute', oboe: 'oboe', clarinet: 'clarinet', soprano_sax: 'soprano_sax', contrabass: 'contrabass', alto_sax: 'alto_sax', tenor_sax: 'tenor_sax', bari_sax: 'baritone_sax',
   trumpet: 'trumpet', horn: 'french_horn', trombone: 'trombone', euphonium: 'tuba', tuba: 'tuba', c_treble: 'acoustic_grand_piano', c_bass: 'acoustic_grand_piano' };
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 new Function(/<script id="core">([\s\S]*?)<\/script>/.exec(html)[1])();

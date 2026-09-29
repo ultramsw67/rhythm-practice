@@ -251,10 +251,11 @@ License of the pre-rendered sounds: Creative Commons Attribution 3.0
 (https://creativecommons.org/licenses/by/3.0/us/)
 License of the original SoundFont: MIT (full text below)
 
-Changes made for this app: only the notes inside each wind instrument's
+Changes made for this app: only the notes inside each instrument's
 playing range were kept, one note every 3 semitones (notes in between are
 produced by changing the playback speed). The audio itself was not edited.
 Euphonium uses the tuba sound; C-instrument parts use the acoustic grand piano.
+Soprano saxophone and double bass (contrabass) were added on 2026-09-29.
 
 
 ========================================================================

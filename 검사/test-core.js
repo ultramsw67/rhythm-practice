@@ -110,7 +110,7 @@ for (let i = 0; i < 400; i++) {
     return JSON.stringify({ rh: sc.events.map(e => [e.start, e.dur, e.rest, e.tie, e.artic]), sl: sc.slurs, iv: ns.slice(1).map((e, k) => (e.midi - ns[k].midi + 120) % 12) });
   };
   const ref = sig('c_treble');
-  for (const inst of ['clarinet', 'alto_sax', 'horn', 'trombone', 'tuba', 'flute']) { inv++; if (sig(inst) !== ref) invBad++; }
+  for (const inst of ['clarinet', 'alto_sax', 'horn', 'trombone', 'tuba', 'flute', 'soprano_sax', 'contrabass']) { inv++; if (sig(inst) !== ref) invBad++; }
 }
 console.log('instrument invariance', inv - invBad, '/', inv);
 if (invBad > inv * 0.02) bad('invariance ' + invBad, {});

@@ -9,7 +9,7 @@ module.exports = async (c) => {
     const out = [];
     document.querySelector('#startClose') && document.querySelector('#startClose').click();
     document.querySelector('#modeSeg [data-v=melody]').click(); await new Promise(r=>setTimeout(r,200));
-    for (const inst of ['clarinet','flute','alto_sax','trumpet','trombone','tuba']) {
+    for (const inst of ['clarinet','flute','alto_sax','trumpet','trombone','tuba','soprano_sax','contrabass']) {
       const s = document.querySelector('#inst'); s.value = inst; s.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,150));
       const errs = []; const h = e => errs.push(String(e.message||e.reason)); window.addEventListener('error', h); window.addEventListener('unhandledrejection', h);
       document.querySelector('#playBtn').click(); await new Promise(r=>setTimeout(r,900));
@@ -23,7 +23,7 @@ module.exports = async (c) => {
   // ② 소리를 만들어 휴대폰 스피커 흉내(500Hz 아래는 거의 안 나옴)를 거쳐 크기 재기
   const r2 = await c.ev(`(async()=>{
     const res = {};
-    const cases = { rhythm: {melody:false, midi:70}, clarinet: {melody:true, midi:62}, flute: {melody:true, midi:72}, alto_sax: {melody:true, midi:56}, trumpet: {melody:true, midi:60}, trombone: {melody:true, midi:48}, tuba: {melody:true, midi:36} };
+    const cases = { rhythm: {melody:false, midi:70}, clarinet: {melody:true, midi:62}, flute: {melody:true, midi:72}, alto_sax: {melody:true, midi:56}, trumpet: {melody:true, midi:60}, trombone: {melody:true, midi:48}, tuba: {melody:true, midi:36}, soprano_sax: {melody:true, midi:68}, contrabass: {melody:true, midi:31} };
     for (const [k, v] of Object.entries(cases)) {
       const q = 0.5, lead = 0.3;
       const notes = [0,1,2,3].map(i => ({ ev:i, ids:[i], t: lead + i*q, written: q, nominal: q, artic: [], legato: false, concert: v.midi + (i%2), midi: v.midi }));

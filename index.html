@@ -483,7 +483,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.3 · 2026-09-28</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.4 · 2026-09-29</p>
     </div>
   </section>
 </main>
@@ -656,6 +656,7 @@ const INSTS = {
   flute:     { name: '플루트',               t: 0,   fifths: 0, clef: 'treble', r: [[62, 74], [62, 79], [60, 86]] },
   oboe:      { name: '오보에',               t: 0,   fifths: 0, clef: 'treble', r: [[62, 72], [60, 76], [58, 81]] },
   clarinet:  { name: 'B♭ 클라리넷',          t: -2,  fifths: 2, clef: 'treble', r: [[55, 70], [55, 76], [52, 84]] },
+  soprano_sax: { name: 'B♭ 소프라노 색소폰', t: -2, fifths: 2, clef: 'treble', r: [[62, 72], [60, 77], [58, 86]] },   // v3.4: 적힌 음보다 온음 낮게 남
   alto_sax:  { name: 'E♭ 알토 색소폰',       t: -9,  fifths: 3, clef: 'treble', r: [[62, 72], [60, 77], [58, 86]] },
   tenor_sax: { name: 'B♭ 테너 색소폰',       t: -14, fifths: 2, clef: 'treble', r: [[62, 72], [60, 77], [58, 86]] },
   bari_sax:  { name: 'E♭ 바리톤 색소폰',     t: -21, fifths: 3, clef: 'treble', r: [[62, 72], [60, 77], [58, 86]] },
@@ -664,6 +665,7 @@ const INSTS = {
   trombone:  { name: '트롬본',               t: 0,   fifths: 0, clef: 'bass',   r: [[46, 58], [43, 62], [40, 65]] },
   euphonium: { name: '유포니움',             t: 0,   fifths: 0, clef: 'bass',   r: [[46, 58], [43, 62], [40, 65]] },
   tuba:      { name: '튜바',                 t: 0,   fifths: 0, clef: 'bass',   r: [[34, 46], [31, 50], [28, 53]] },
+  contrabass: { name: '더블베이스',          t: -12, fifths: 0, clef: 'bass',   r: [[43, 55], [40, 60], [40, 67]] },   // v3.4: 적힌 음보다 한 옥타브 낮게 남 (E1~G3)
   c_bass:    { name: 'C 악기 (낮은음자리표)', t: 0,  fifths: 0, clef: 'bass',   r: [[43, 55], [41, 60], [38, 62]] },
 };
 // 타악기 (v3.2, 리듬 모드 전용). 소리는 앱이 직접 만든다(외부 파일 없음). 기호는 악센트·마르카토만(두드리는 악기는 길이를 못 바꿈)
@@ -1711,7 +1713,7 @@ function rebuild() {
   if (score.drum) info += ` · ${C.DRUMS[score.drum].name}`;
   if (score.melody) {
     info += ` · ${score.inst.name}`;
-    info += score.inst.t ? ` · 실음 ${k.ko} → 악보 ${w.ko}` : ` · ${k.ko}`;
+    info += score.inst.t % 12 === 0 && score.inst.t ? ` · ${k.ko} (적힌 음보다 한 옥타브 낮게 남)` : score.inst.t ? ` · 실음 ${k.ko} → 악보 ${w.ko}` : ` · ${k.ko}`;   // 더블베이스는 조가 그대로
   }
   $('#scoreInfo').textContent = info;
   $('#editHint').textContent = set.artic === 'none' ? '' : '음표를 누르면 아티큘레이션 기호를 붙이거나 뗄 수 있습니다.';
@@ -2151,7 +2153,7 @@ function outChain(c, dest) {
 }
 /* ---------- 악기 소리(샘플): 선율 모드에서 고른 악기의 실제 소리로 들어보기 ----------
    FluidR3 GM (Frank Wen, MIT) · midi-js-soundfonts (CC BY 3.0). 악기마다 3반음 간격 음만 담고 사이 음은 재생 속도로 맞춘다 */
-const SOUND_OF = { flute: 'flute', oboe: 'oboe', clarinet: 'clarinet', alto_sax: 'alto_sax', tenor_sax: 'tenor_sax', bari_sax: 'baritone_sax', trumpet: 'trumpet', horn: 'french_horn', trombone: 'trombone', euphonium: 'tuba', tuba: 'tuba', c_treble: 'acoustic_grand_piano', c_bass: 'acoustic_grand_piano' };
+const SOUND_OF = { flute: 'flute', oboe: 'oboe', clarinet: 'clarinet', soprano_sax: 'soprano_sax', contrabass: 'contrabass', alto_sax: 'alto_sax', tenor_sax: 'tenor_sax', bari_sax: 'baritone_sax', trumpet: 'trumpet', horn: 'french_horn', trombone: 'trombone', euphonium: 'tuba', tuba: 'tuba', c_treble: 'acoustic_grand_piano', c_bass: 'acoustic_grand_piano' };
 const SOUND_LOOP = { acoustic_grand_piano: false };          // 피아노는 저절로 사라지는 소리라 되풀이하지 않음
 const smp = {};
 let decodeCtx = null;
@@ -2266,7 +2268,7 @@ function schedulePlayback(c, dest, t0, tl, melody, snd, opts) {
     const lowHz = Math.min(...plan.slice(i, j + 1).map(p => hz(p.n)));
     const pres = c.createBiquadFilter(); pres.type = 'peaking'; pres.frequency.value = 1500; pres.Q.value = 0.6;
     const T = (window.RPX && window.RPX.tune) || {};
-    pres.gain.value = Math.max(0, Math.min(T.presMax ?? 15, 20 * Math.log10(466 / lowHz) * (T.presMul ?? 1.1)));
+    pres.gain.value = Math.max(0, Math.min(T.presMax ?? (lowHz < 80 ? 18 : 15), 20 * Math.log10(466 / lowHz) * (T.presMul ?? 1.1)));   // 80Hz 아래(더블베이스·튜바 맨 아래)는 +18dB 까지
     const lowTrim = Math.pow(10, -pres.gain.value * (T.trim ?? 0.5) / 20);      // 배음을 키운 만큼 전체를 조금 낮춰 악센트 여유
     mix2.gain.value = lowHz < 300 ? 0.35 : 0.9;                 // 삼각파(기음 위주)는 휴대폰에서 안 들리니 줄임
     // 낮은 음의 기음(휴대폰 스피커는 어차피 못 냄)을 조금 깎아 여유를 만든다 → 악센트가 눌리지 않고 세게 들림

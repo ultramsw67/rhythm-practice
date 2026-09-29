@@ -4,6 +4,8 @@
   "flute": "flute",
   "oboe": "oboe",
   "clarinet": "clarinet",
+  "soprano_sax": "soprano_sax",
+  "contrabass": "contrabass",
   "alto_sax": "alto_sax",
   "tenor_sax": "tenor_sax",
   "bari_sax": "baritone_sax",
@@ -73,6 +75,44 @@
     87
    ],
    "kb": 467
+  },
+  "soprano_sax": {
+   "lo": 54,
+   "hi": 86,
+   "notes": [
+    54,
+    57,
+    60,
+    63,
+    66,
+    69,
+    72,
+    75,
+    78,
+    81,
+    84,
+    87
+   ],
+   "kb": 400
+  },
+  "contrabass": {
+   "lo": 26,
+   "hi": 57,
+   "notes": [
+    26,
+    29,
+    32,
+    35,
+    38,
+    41,
+    44,
+    47,
+    50,
+    53,
+    56,
+    59
+   ],
+   "kb": 384
   },
   "alto_sax": {
    "lo": 47,
