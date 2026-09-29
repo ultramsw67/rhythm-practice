@@ -30,6 +30,9 @@
 | `node cdp.js t39-kit.js` (`W=320` 폭) | v3.3 드럼 세트: 박자표·단계별 악보 캡처(kit-lv*.png), 오류·잘림, 들어보기, 가상 연주 | errs [] · over ≤ 0 · self 100 |
 | `node cdp.js t40-newinst.js` | v3.4 소프라노 색소폰·더블베이스: 악기 목록, 악보(음자리표·이조 안내), 음역 | 오류 없음, 더블베이스 "한 옥타브 낮게" 안내 |
 | `node cdp.js t41-bow.js` | v3.5 더블베이스 주법: 주법 칸(더블베이스만)·pizz./arco 글자·기호 창·링크·튕기는 소리·가상 연주 | 칸은 더블베이스만, 섞기 marks pizz.,arco…, bad 0, self 100 |
+| `node scale-quick.js ../index.html` | v3.7 음계 6,300가지(마디 길이·음 간격·단음계 3종·조표 기준 두 가지·링크 왕복)·악기 불변 | `bad 0`, invariance 525 / 525 |
+| `node cdp.js t43-scale.js` (`W=320` 폭) | v3.7 음계·조표 기준 칸(보이기/숨기기·조 옮김)·12가지 악보(scale-*.png)·가상 연주·들어보기 | over 0, self 100, errs [] |
+| `node cdp.js t43b-scale-fit.js` | 음계 잘림 전수 320px × 글자 3 × 박자표 9 × 4~7단계 × 조표 ±7 | nbad 0 |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의

@@ -278,15 +278,21 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           <summary>악보 설정 <span class="muted" id="setSum" style="font-weight:400"></span></summary>
           <div style="height:10px"></div>
           <div class="grid">
+            <label class="f melo">연습 종류
+              <select id="prac"><option value="">선율 (새 선율 만들기)</option><option value="scale">음계 (스케일)</option></select>
+            </label>
+            <label class="f melo minf">단음계 종류
+              <select id="minor"><option value="h">화성단음계 (7음 올림)</option><option value="n">자연단음계</option><option value="m">가락단음계 (올라갈 때 6·7음 올림)</option></select>
+            </label>
             <label class="f">박자표
               <select id="meter"></select>
             </label>
-            <label class="f">마디 수
+            <label class="f barsf">마디 수
               <select id="bars">
                 <option>2</option><option selected>4</option><option>8</option><option>12</option><option>16</option>
               </select>
             </label>
-            <label class="f">못갖춘마디
+            <label class="f barsf">못갖춘마디
               <select id="pickup">
                 <option value="auto">난이도에 따라</option><option value="on">넣기</option><option value="off">빼기</option>
               </select>
@@ -305,7 +311,10 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
             <label class="f rhy">악기 (리듬 모드)
               <select id="drum"><option value="">박자 소리 (기본)</option><option value="kit">드럼 세트</option><option value="snare">스네어 드럼</option><option value="bass">베이스 드럼</option><option value="cymbal">심벌즈</option></select>
             </label>
-            <label class="f melo">조표 (합주 실음 기준)
+            <label class="f melo kreff">조표 기준
+              <select id="kref"><option value="">합주 실음 (지휘자가 말한 조)</option><option value="w">내 악보에 적힌 조 (혼자 연습)</option></select>
+            </label>
+            <label class="f melo"><span id="keyLbl">조표 (합주 실음 기준)</span>
               <select id="key"></select>
             </label>
           </div>
@@ -323,7 +332,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
           </div>
           <div style="height:8px"></div>
           <select id="tempoName" aria-label="빠르기말"></select>
-          <div class="hint">설정을 바꾸면 악보가 바로 새로 만들어집니다. 조표는 지휘자가 말한 조(실음)를 고르면 내 악기 조로 바뀌어 나옵니다.</div>
+          <div class="hint" id="keyHint">설정을 바꾸면 악보가 바로 새로 만들어집니다. 조표는 지휘자가 말한 조(실음)를 고르면 내 악기 조로 바뀌어 나옵니다.</div>
         </details>
       </div>
 
@@ -487,7 +496,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.6 (오프라인 앱) · 2026-09-29</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.7 (오프라인 앱) · 2026-09-29</p>
     </div>
   </section>
 </main>
@@ -690,6 +699,17 @@ function writtenKey(concertName, inst) {
   if (Math.abs(f) > 6) { const g = f - 12 * Math.sign(f); if (Math.abs(g) < Math.abs(f)) f = g; }
   return keyFor(f, k.minor);
 }
+// v3.7 조표 '내 악보 기준': 악보에 적힌 조 → 실제로 나는 조 (writtenKey 의 반대. writtenKey 를 되돌려 쓰면 C♯↔D♭ 처럼 이름이 바뀔 수 있어 따로 계산)
+function concertFromWritten(writtenName, inst) {
+  const k = KEY_BY[writtenName] || KEY_BY.C;
+  if (!inst.fifths) return k;
+  let f = k.fifths - inst.fifths;
+  if (f > 7) f -= 12; if (f < -7) f += 12;
+  if (Math.abs(f) > 6) { const g = f - 12 * Math.sign(f); if (Math.abs(g) < Math.abs(f)) f = g; }
+  return keyFor(f, k.minor);
+}
+// 조표 기준을 고를 수 있는 악기인가 (C 악기·더블베이스처럼 조가 그대로인 악기는 두 기준이 같아 고를 필요가 없다)
+function krefUsable(inst) { return !!inst && inst.t % 12 !== 0; }
 
 const STEP = [0, 2, 4, 5, 7, 9, 11];
 const LETTERS = 'cdefgab';
@@ -881,8 +901,11 @@ function generate(set) {
   const melody = set.mode === 'melody';
   const drum = !melody && DRUMS[set.drum] ? set.drum : '';
   const inst = INSTS[set.inst] || INSTS.c_treble;
-  const concert = KEY_BY[set.key] || KEY_BY.C;
-  const wkey = melody ? writtenKey(concert.name, inst) : KEY_BY.C;
+  // 조표 기준 (v3.7): 기본은 합주 실음(set.key = 지휘자가 말한 조). 'w' 는 개별 연습용 — set.key 가 내 악보에 적힌 조
+  const kref = melody && set.kref === 'w' && krefUsable(inst);
+  const concert = kref ? concertFromWritten(set.key, inst) : KEY_BY[set.key] || KEY_BY.C;
+  const wkey = melody ? (kref ? KEY_BY[set.key] || KEY_BY.C : writtenKey(concert.name, inst)) : KEY_BY.C;
+  if (melody && PRACS[set.prac]) return generateScale(set, LP, { r, M, units, measLen, spt, inst, concert, wkey, kref });   // 음계 연습 (v3.7)
 
   const hasPickup = set.pickup === 'on' || (set.pickup === 'auto' && LP.pickup > 0 && r() < LP.pickup);
   const plan = [];
@@ -1068,6 +1091,15 @@ function generate(set) {
     });
     if (LP.ferm && !drum && r() < 0.5) { const ln = notes[notes.length - 1]; if (ln && !ln.artic.includes('ferm')) ln.artic = ln.artic.filter(a => a !== 'stac' && a !== 'stacc').concat('ferm'); }
   }
+  const fin = finishScore(set, events, measures, slurs, melody, inst, drum);
+  return {
+    set, M, measures, events, slurs: fin.slurs, end, pickLen, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
+    tempoName: tempoName(set.bpm), melody, drum, bow: fin.bow, kref,
+  };
+}
+
+// 직접 고친 기호 + 현악기 주법 (선율·음계가 함께 쓴다)
+function finishScore(set, events, measures, slurs, melody, inst, drum) {
   // 직접 고친 기호
   // (공유 링크로 들어온 값일 수 있으니 모양을 확인하고 쓴다. 페르마타는 마지막 음에만)
   const ed = set.edits && typeof set.edits === 'object' ? set.edits : {};
@@ -1099,10 +1131,130 @@ function generate(set) {
     for (const e of events) if (e.pizz) e.artic = e.artic.filter(a => a !== 'stac' && a !== 'stacc' && a !== 'ten');   // 튕긴 소리는 저절로 사라져 길이 기호는 뺀다
     slurs = slurs.filter(([a, b]) => !events.slice(a, b + 1).some(e => e.pizz));                                         // 튕기는 곳엔 슬러 없음
   }
+  return { slurs, bow };
+}
 
+/* ---------- 음계 연습 (v3.7, 2026-09-29 "악보 설정에서 스케일 연습을 추가") ----------
+   고른 조의 음계를 으뜸음에서 올라갔다 내려와 으뜸음으로 끝낸다. 장조 = 장음계, 단조 = 화성·자연·가락단음계(set.minor).
+   난이도는 리듬(1 4분 · 2 8분 · 3 점8분+16분 · 4 16분 · 5 당김 · 6 셋잇단 · 7 여섯잇단)과 옥타브 수(5단계부터 음역이 되면 두 옥타브).
+   으뜸음 기준으로 만들어 합주 실음 기준이면 모든 악기가 같은 음계를 받는다. 마디 수는 음계 길이로 정해진다(마디 수·못갖춘마디 설정은 쓰지 않음) */
+const PRACS = { scale: { name: '음계' } };
+const MINORS = { h: '화성단음계', n: '자연단음계', m: '가락단음계' };
+const SCALE_RHY = {
+  s: ['q', '8 8', '8. 16', '16 16 16 16', '16 8 16', '[3 8 8 8]', '[6 16 16 16 16 16 16]'],
+  c: ['q.', '8 8 8', '8. 16 8', '16 16 16 16 16 16', '8 q', '[2 8 8]', '[4 8 8 8 8]'],
+};
+// 음계가 한 박 도중에 끝날 때 남은 음 수에 맞는 한 박 리듬 (느린 쪽)
+const SCALE_FILL = {
+  s: { 1: 'q', 2: '8 8', 3: '8 16 16', 4: '16 16 16 16', 5: '[5 16 16 16 16 16]', 6: '[6 16 16 16 16 16 16]' },
+  c: { 1: 'q.', 2: 'q 8', 3: '8 8 8', 4: '8 16 16 8', 5: '16 16 16 16 8', 6: '16 16 16 16 16 16' },
+};
+const SCALE_END = [[3360, 'w', 0], [2520, 'h', 1], [1680, 'h', 0], [1260, 'q', 1], [840, 'q', 0], [630, '8', 1], [420, '8', 0]];
+function scaleName(wkey, set) { return wkey.minor ? (MINORS[set.minor] || MINORS.h) : '장음계'; }
+function generateScale(set, LP, g) {
+  const { r, M, units, measLen, spt, inst, concert, wkey, kref } = g;
+  const lv = LP.lv, tier = LP.tier;
+  const minor = wkey.minor ? (MINORS[set.minor] ? set.minor : 'h') : '';
+  // 박마다 리듬: 그 단계 리듬이 이 빠르기에서 너무 빠르거나, 한 마디에 음이 18개를 넘으면(320px 휴대폰에서 한 줄에 안 들어감) 한 단계씩 느린 리듬으로
+  let rhy = {};
+  for (let i = lv - 1; i >= 0; i--) {
+    const cand = { s: parseCell(SCALE_RHY.s[i]), c: parseCell(SCALE_RHY.c[i]) };
+    const fast = units.some(u => Math.min(...cand[u.type].map(x => x.dur)) * spt < LP.minSec);
+    const per = units.reduce((a, u) => a + cand[u.type].length, 0);
+    rhy = cand;
+    if (!fast && per <= 18) break;
+  }
+  // 음 이름: 으뜸음에서 몇 도 + 반음 올림 (단조: 화성 = 7음 올림, 가락 = 올라갈 때 6·7음 올림)
+  const alts = keyAlts(wkey.fifths), tl = tonicLetter(wkey);
+  const raise = (d, up) => !minor ? 0 : minor === 'h' ? (((d % 7) + 7) % 7 === 6 ? 1 : 0) : minor === 'm' && up ? ([5, 6].includes(((d % 7) + 7) % 7) ? 1 : 0) : 0;
+  const midiOf = (b, d, c) => dMidi(b + d, alts[(((b + d) % 7) + 7) % 7] + c);
+  const seqFor = n => { const s = []; for (let d = 0; d <= 7 * n; d++) s.push([d, raise(d, true)]); for (let d = 7 * n - 1; d >= 0; d--) s.push([d, raise(d, false)]); return s; };
+  // 옥타브 자리: 악기 음역을 가장 적게 벗어나고 가운데에 가까운 곳 (선율 모드와 같은 방법)
+  const place = (seq, [lo, hi]) => {
+    let best = null;
+    for (let oc = 0; oc <= 8; oc++) {
+      const b = tl + oc * 7;
+      let mn = Infinity, mx = -Infinity;
+      for (const [d, c] of seq) { const m = midiOf(b, d, c); if (m < mn) mn = m; if (m > mx) mx = m; }
+      const out = Math.max(0, lo - mn) + Math.max(0, mx - hi);
+      const cost = out + 0.01 * Math.abs((mn + mx) / 2 - (lo + hi) / 2);
+      if (!best || cost < best.cost) best = { b, cost, out };
+    }
+    return best;
+  };
+  let oct = 1, seq = seqFor(1), pl = place(seq, inst.r[tier]);
+  if (lv >= 5) { const s2 = seqFor(2), p2 = place(s2, inst.r[tier]); if (p2.out === 0) { oct = 2; seq = s2; pl = p2; } }
+  const base = pl.b;
+  // 리듬 채우기: 마지막 으뜸음 앞까지 박마다 리듬 조각, 남은 음이 적으면 느린 조각
+  const body = seq.slice(0, -1), last = seq[seq.length - 1];
+  const events = [], measures = [];
+  let tick = 0, uid = 0, gid = 0, k = 0, mi = 0, done = false;
+  const mkEv = (mIdx, no, start, it, unit) => {
+    const ev = { id: events.length, mi: mIdx, m: no, start, dur: it.dur, base: it.base, dots: it.dots, rest: !!it.rest, unit, tie: false, artic: [], pitch: null };
+    if (it.tup) ev.tup = { n: it.tup.n, occ: it.tup.occ, g: it.tup.g };
+    events.push(ev); return ev;
+  };
+  const setPitch = (ev, [d, c]) => { const dd = base + d; ev.pitch = { d: dd, alt: alts[((dd % 7) + 7) % 7] + c }; ev.rp = d * 4 + c; ev.midi = dMidi(ev.pitch.d, ev.pitch.alt); };
+  while (!done) {
+    const meas = { no: mi + 1, mi, start: tick, len: measLen, units: [], pickup: false, last: false };
+    let pos = 0;
+    for (const u of units) {
+      const unitId = uid++;
+      meas.units.push({ start: tick + pos, len: u.len, type: u.type, id: unitId });
+      if (k < body.length) {
+        const left = body.length - k;
+        let items = rhy[u.type];
+        if (items.length > left) items = parseCell(SCALE_FILL[u.type][left]);
+        const gmap = {};
+        let p2 = pos;
+        for (const it of items) {
+          const it2 = Object.assign({}, it);
+          if (it.tup) { if (!gmap[it.tup.g]) gmap[it.tup.g] = ++gid; it2.tup = { n: it.tup.n, occ: it.tup.occ, g: gmap[it.tup.g] }; }
+          setPitch(mkEv(mi, mi + 1, tick + p2, it2, unitId), body[k++]); p2 += it.dur;
+        }
+      } else if (!done) {
+        // 마지막 으뜸음: 이 마디 끝까지 가장 긴 음표, 남으면 쉼표
+        let room = measLen - pos, p2 = pos;
+        const v = SCALE_END.find(([t]) => t <= room);
+        const ev = mkEv(mi, mi + 1, tick + p2, { dur: v[0], base: v[1], dots: v[2] }, unitId); setPitch(ev, last);
+        p2 += v[0]; room -= v[0];
+        for (const [t, b2, dots] of kitPieces(room)) { const uu = meas.units.find(x => tick + p2 >= x.start && tick + p2 < x.start + x.len); mkEv(mi, mi + 1, tick + p2, { dur: t, base: b2, dots, rest: true }, uu ? uu.id : unitId); p2 += t; }
+        done = true;
+        // 남은 박 칸도 마디에 적어 둔다 (빔 묶음·표시용)
+        let q = pos + u.len;
+        for (const u2 of units.slice(units.indexOf(u) + 1)) { meas.units.push({ start: tick + q, len: u2.len, type: u2.type, id: uid++ }); q += u2.len; }
+        break;
+      }
+      pos += u.len;
+    }
+    if (done) meas.last = true;
+    measures.push(meas); tick += measLen; mi++;
+    if (mi > 64) break;                                            // 안전장치
+  }
+  // 쉼표의 박 칸 번호를 실제 칸으로 (마지막 마디 뒤쪽 칸이 뒤늦게 만들어졌으므로)
+  const lm = measures[measures.length - 1];
+  for (const e of events) if (e.mi === lm.mi && e.rest) { const uu = lm.units.find(x => e.start >= x.start && e.start < x.start + x.len); if (uu) e.unit = uu.id; }
+  lm.last = true;
+  const end = tick;
+  // 기호 (자동): 1~2단계는 없음. 3단계부터 박 묶음 슬러 또는 "두 음 슬러 + 두 음 텅잉" 중 하나를 악보 전체에 같게, 끝음 페르마타 가끔
+  let slurs = [];
+  const notes = events.filter(e => !e.rest);
+  if (set.artic === 'auto' && tier >= 1) {
+    const style = wpick(r, [{ v: 'tongue', w: 1 }, { v: 'beat', w: 2 }, { v: 'two', w: 1 }], o => o.w).v;
+    const byUnit = {};
+    for (const e of notes.slice(0, -1)) (byUnit[e.unit] = byUnit[e.unit] || []).push(e);
+    for (const grp of Object.values(byUnit)) {
+      if (grp.length < 2) continue;
+      if (style === 'beat') slurs.push([grp[0].id, grp[grp.length - 1].id]);
+      else if (style === 'two' && grp.length >= 4) for (let i = 0; i + 1 < grp.length; i += 4) slurs.push([grp[i].id, grp[i + 1].id]);
+    }
+    if (style === 'tongue' && tier >= 2) for (const e of notes) if (e.unit !== notes[0].unit && events[e.id - 1] && events[e.id - 1].unit !== e.unit && r() < 0.5) e.artic.push('acc');   // 박 첫 음 악센트
+    if (LP.ferm && r() < 0.5) notes[notes.length - 1].artic.push('ferm');
+  }
+  const fin = finishScore(set, events, measures, slurs, true, inst, '');
   return {
-    set, M, measures, events, slurs, end, pickLen, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
-    tempoName: tempoName(set.bpm), melody, drum, bow,
+    set, M, measures, events, slurs: fin.slurs, end, pickLen: 0, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
+    tempoName: tempoName(set.bpm), melody: true, drum: '', bow: fin.bow, kref, scale: { name: scaleName(wkey, set), oct, minor },
   };
 }
 
@@ -1170,6 +1322,8 @@ function encodeSet(set) {
   if (set.gen >= 2) o.g = 2;
   if (set.drum && DRUMS[set.drum]) o.d = set.drum;
   if (set.bow && BOWS[set.bow]) o.w = set.bow[0];
+  if (set.kref === 'w') o.r = 'w';                                   // v3.7 조표 내 악보 기준 (받는 사람도 같은 '적힌 조' → 악기가 다르면 실음은 다름)
+  if (PRACS[set.prac]) { o.x = 's'; if (MINORS[set.minor] && set.minor !== 'h') o.n = set.minor; }   // v3.7 음계 연습
   if (set.edits && (set.edits.a || set.edits.s)) o.e = set.edits;
   return JSON.stringify(o);
 }
@@ -1187,6 +1341,9 @@ function decodeSet(str, base) {
   if (P[o.p]) s.pickup = P[o.p];
   s.drum = DRUMS[o.d] ? o.d : '';
   s.bow = { p: 'pizz', m: 'mix' }[o.w] || '';
+  s.kref = o.r === 'w' ? 'w' : '';
+  s.prac = o.x === 's' ? 'scale' : '';
+  s.minor = MINORS[o.n] ? o.n : 'h';
   if (A[o.a]) s.artic = A[o.a];
   if (Number.isFinite(o.s)) s.seed = o.s >>> 0;
   if (Number.isFinite(o.v) && o.v >= 40 && o.v <= 208) s.bpm = Math.round(o.v);
@@ -1579,7 +1736,7 @@ function synth(score, tl, sr, o = {}) {
   return x;
 }
 
-root.Core = { TPW, BASE, METERS, CELLDB, DRUMS, BOWS, PIZZ_ARTIC, KIT_KEYS, KIT_KO, generateKit, DRUM_ARTIC, LEVELS, levelProfile, upgradeSet, KEYS, KEY_BY, INSTS, ARTIC, EXCL, TEMPI, generate, timeline, tempoName, vfKey, writtenKey, encodeSet, decodeSet, mulberry, dMidi,
+root.Core = { TPW, BASE, METERS, CELLDB, DRUMS, BOWS, keyAlts, PRACS, MINORS, concertFromWritten, krefUsable, generateScale, PIZZ_ARTIC, KIT_KEYS, KIT_KO, generateKit, DRUM_ARTIC, LEVELS, levelProfile, upgradeSet, KEYS, KEY_BY, INSTS, ARTIC, EXCL, TEMPI, generate, timeline, tempoName, vfKey, writtenKey, encodeSet, decodeSet, mulberry, dMidi,
   analyze, synth, envelope, detectOnsets, median, decimate };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
@@ -1637,7 +1794,7 @@ function showTab(name) {
 }
 
 /* ---------- 설정 ---------- */
-const DEFAULT = { gen: 2, drum: '', bow: '', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
+const DEFAULT = { gen: 2, drum: '', bow: '', kref: '', prac: '', minor: 'h', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
 // v2.9 까지 저장된 설정(gen 없음)은 새 7단계로 옮긴다. gen 0 = 옛 기록·옛 링크로 일부러 연 옛 악보라 그대로 둔다
 const savedSet = store.get('set', {}) || {};
 let set = Object.assign({}, DEFAULT, savedSet);
@@ -1684,8 +1841,25 @@ function syncForm() {
   document.querySelectorAll('.bowf').forEach(el => el.classList.toggle('hide', set.mode !== 'melody' || !(C.INSTS[set.inst] || {}).strings));   // 현악기(더블베이스)만
   $('#bow').value = C.BOWS[set.bow] ? set.bow : '';
   $('#drum').value = C.DRUMS[set.drum] ? set.drum : '';
+  // v3.7 연습 종류(음계)·조표 기준
+  const mel = set.mode === 'melody', isScale = mel && !!C.PRACS[set.prac], I = C.INSTS[set.inst] || {};
+  const krefOn = mel && set.kref === 'w' && C.krefUsable(I);
+  $('#prac').value = C.PRACS[set.prac] ? set.prac : '';
+  $('#minor').value = C.MINORS[set.minor] ? set.minor : 'h';
+  $('#kref').value = set.kref === 'w' ? 'w' : '';
+  document.querySelectorAll('.minf').forEach(el => el.classList.toggle('hide', !isScale || !(C.KEY_BY[set.key] || {}).minor));
+  document.querySelectorAll('.kreff').forEach(el => el.classList.toggle('hide', !mel || !C.krefUsable(I)));
+  document.querySelectorAll('.barsf').forEach(el => el.classList.toggle('hide', isScale));      // 음계는 길이가 정해져 있어 마디 수·못갖춘마디를 쓰지 않음
+  $('#keyLbl').textContent = krefOn ? '조표 (내 악보 기준)' : '조표 (합주 실음 기준)';
+  $('#keyHint').textContent = '설정을 바꾸면 악보가 바로 새로 만들어집니다. ' + (krefOn
+    ? '지금은 내 악보에 적힌 조를 고릅니다. 혼자 연습할 때 쓰세요. 합주 연습은 조표 기준을 합주 실음으로 두세요.'
+    : '조표는 지휘자가 말한 조(실음)를 고르면 내 악기 조로 바뀌어 나옵니다.') + (isScale ? ' 음계는 고른 조의 으뜸음에서 올라갔다 내려옵니다(5단계부터 음역이 되면 두 옥타브).' : '');
   if (typeof syncModeHint === 'function') try { syncModeHint(); } catch (e) { }
-  $('#setSum').textContent = `· ${set.meter} · ${set.bars}마디 · ${C.levelProfile(set).label} · BPM ${set.bpm}`;
+  $('#setSum').textContent = setSummary();
+}
+function setSummary() {
+  const isScale = set.mode === 'melody' && C.PRACS[set.prac];
+  return isScale ? `· 음계 · ${set.meter} · ${C.levelProfile(set).label} · BPM ${set.bpm}` : `· ${set.meter} · ${set.bars}마디 · ${C.levelProfile(set).label} · BPM ${set.bpm}`;
 }
 function busyRec() {
   if (!rec && !micBusy) return false;
@@ -1710,6 +1884,14 @@ $('#inst').onchange = e => { set.inst = e.target.value; changed({ structural: tr
 $('#key').onchange = e => { set.key = e.target.value; changed({ structural: true }); };
 $('#drum').onchange = e => { set.drum = e.target.value; changed({ structural: true }); };
 $('#bow').onchange = e => { set.bow = e.target.value; changed({ structural: true }); };
+$('#prac').onchange = e => { set.prac = e.target.value; changed({ structural: true }); };
+$('#minor').onchange = e => { set.minor = e.target.value; changed({ structural: true }); };
+// 조표 기준을 바꾸면 조 칸도 같은 악보가 되도록 옮긴다 (예: 클라리넷 실음 내림나장조 ↔ 악보 다장조)
+$('#kref').onchange = e => {
+  const I = C.INSTS[set.inst], v = e.target.value === 'w' ? 'w' : '';
+  if (I && C.krefUsable(I) && v !== (set.kref === 'w' ? 'w' : '')) set.key = v === 'w' ? C.writtenKey(set.key, I).name : C.concertFromWritten(set.key, I).name;
+  set.kref = v; changed({ structural: true });
+};
 let bpmTimer;
 function setBpm(v) {
   if (String(v).trim() === '' || !Number.isFinite(+v)) { syncForm(); return; }   // 칸을 비우거나 글자를 넣으면 지금 값 유지
@@ -1736,15 +1918,17 @@ function rebuild() {
   try { score = C.generate(set); }
   catch (e) { console.error(e); toast('악보를 만들지 못했습니다. 새 악보를 누르세요'); return; }
   colors = null;
-  $('#setSum').textContent = `· ${set.meter} · ${set.bars}마디 · ${C.levelProfile(set).label} · BPM ${set.bpm}`;
+  $('#setSum').textContent = setSummary();
   draw();
   const k = score.concertKey, w = score.writtenKey;
-  let info = `악보 번호 ${set.seed} · ${set.meter} · ${set.bars}마디${score.pickLen ? ' + 못갖춘마디' : ''} · ${C.levelProfile(set).label}`;
+  let info = score.scale
+    ? `악보 번호 ${set.seed} · ${w.ko} ${score.scale.name}${score.scale.oct > 1 ? ' 두 옥타브' : ''} · ${set.meter} · ${score.measures.length}마디 · ${C.levelProfile(set).label}`
+    : `악보 번호 ${set.seed} · ${set.meter} · ${set.bars}마디${score.pickLen ? ' + 못갖춘마디' : ''} · ${C.levelProfile(set).label}`;
   if (score.drum) info += ` · ${C.DRUMS[score.drum].name}`;
   if (score.melody) {
     info += ` · ${score.inst.name}`;
     if (score.bow) info += ' · ' + C.BOWS[score.bow].name;
-    info += score.inst.t % 12 === 0 && score.inst.t ? ` · ${k.ko} (적힌 음보다 한 옥타브 낮게 남)` : score.inst.t ? ` · 실음 ${k.ko} → 악보 ${w.ko}` : ` · ${k.ko}`;   // 더블베이스는 조가 그대로
+    info += score.inst.t % 12 === 0 && score.inst.t ? ` · ${k.ko} (적힌 음보다 한 옥타브 낮게 남)` : score.kref ? ` · 악보 ${w.ko} (실음 ${k.ko}, 내 악보 기준)` : score.inst.t ? ` · 실음 ${k.ko} → 악보 ${w.ko}` : ` · ${k.ko}`;   // 더블베이스는 조가 그대로
   }
   $('#scoreInfo').textContent = info;
   $('#editHint').textContent = set.artic === 'none' ? '' : '음표를 누르면 아티큘레이션 기호를 붙이거나 뗄 수 있습니다.';
@@ -1765,6 +1949,13 @@ function draw() {
 let lastW = 0;
 window.addEventListener('resize', () => { const w = $('#score').clientWidth; if (Math.abs(w - lastW) > 20) { lastW = w; draw(); if (!$('#tab-result').classList.contains('hide')) renderResult(); } });
 
+// 음계 악보: 조표와 다른 음(올림·제자리표)마다 임시표 폭을 더 잡는다 (가락단음계 내려올 때 제자리표 등)
+function natW(evs, sc) {
+  const ka = C.keyAlts(sc.writtenKey.fifths), cur = {};
+  let n = 0;
+  for (const e of evs) { if (e.rest || !e.pitch) continue; const d = e.pitch.d, l = ((d % 7) + 7) % 7, was = d in cur ? cur[d] : ka[l]; if (e.pitch.alt !== was) { if (!e.pitch.alt) n++; cur[d] = e.pitch.alt; } }
+  return n * 9 + 12;                                                 // + 여유 (슬러·끝 페르마타)
+}
 function renderScore(host, sc, opt) {
   if (sc.kit) return renderKit(host, sc, opt);
   const VF = VFC();
@@ -1776,7 +1967,7 @@ function renderScore(host, sc, opt) {
   const ks = melody ? Math.abs(sc.writtenKey.fifths) : 0;
   const byM = sc.measures.map(() => []);
   for (const e of sc.events) byM[e.mi].push(e);
-  const minW = byM.map(evs => 26 + evs.reduce((s, e) => s + (e.dur >= 1680 ? 30 : e.dur >= 630 ? 26 : 22) + (e.dots ? 7 : 0) + (melody && e.pitch && e.pitch.alt ? 9 : 0), 0));
+  const minW = byM.map(evs => 26 + evs.reduce((s, e) => s + (e.dur >= 1680 ? 30 : e.dur >= 630 ? 26 : 22) + (e.dots ? 7 : 0) + (melody && e.pitch && e.pitch.alt ? 9 : 0), 0) + (sc.scale ? natW(evs, sc) : 0));
   const headW = (first) => 34 + ks * 10 + (first ? 26 : 0);
   // 글자 크기 설정만큼 악보도 키운다. 가장 넓은 마디 하나는 늘 한 줄에 들어가야 한다 (320px 폰 잘림 방지)
   const widest = Math.max(...minW.map((w, i) => w + headW(i === 0))) + 16;
@@ -2842,7 +3033,7 @@ function slim(res) {
 function makeTake(tset, sc, res, audioBlob, dur, extra) {
   const d = new Date();
   const p2 = v => String(v).padStart(2, '0');
-  const name = `${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())} ${tset.mode === 'melody' ? sc.inst.name : '리듬'} ${tset.meter}`;
+  const name = `${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())} ${tset.mode === 'melody' ? sc.inst.name + (sc.scale ? ' 음계' : '') : '리듬'} ${tset.meter}`;
   return Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, created: Date.now(), set: tset, result: slim(res), dur, audio: audioBlob, audioType: 'audio/wav' }, extra || {});
 }
 let curTake = null;
@@ -3053,7 +3244,7 @@ async function renderLibrary() {
   if (!list.length) { box.innerHTML = '<div class="card"><div class="placeholder">아직 저장된 녹음이 없습니다.<br>연습 탭에서 녹음하면 여기에 모입니다.<br><br><button class="btn pri go-practice" type="button">연습하러 가기</button></div></div>'; return; }
   box.innerHTML = list.map(t => {
     const S = t.set;
-    const inst = S.mode === 'melody' ? (C.INSTS[S.inst] || {}).name : '리듬';
+    const inst = S.mode === 'melody' ? (C.INSTS[S.inst] || {}).name + (C.PRACS[S.prac] ? ' 음계' : '') : '리듬';
     return `<div class="card take" data-id="${esc(t.id)}">
       <div class="sc">${t.result.total}</div>
       <div style="min-width:0">
