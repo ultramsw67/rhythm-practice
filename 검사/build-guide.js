@@ -1,7 +1,7 @@
 // 볼트의 사용 설명서(md) → 앱 안 guide.html
 // 사용: node build-guide.js
 const fs = require('fs'), path = require('path');
-const SRC = 'C:/Obsidian/tomwiki/40_프로젝트/리듬 연습 앱/리듬 연습 앱 사용 설명서.md';
+const SRC = 'C:/Obsidian/tomwiki/40_프로젝트/수드 리듬 연습/수드 리듬 연습 사용 설명서.md';
 const OUT = path.join(__dirname, '..', 'guide.html');
 let md = fs.readFileSync(SRC, 'utf8').replace(/^---[\s\S]*?---\s*/, '');
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
