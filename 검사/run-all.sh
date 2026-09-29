@@ -6,6 +6,7 @@ W="$1"; cd "$(dirname "$0")"; LOG=run-all.log; : > $LOG
 run() { local name="$1"; shift; sleep 2; rm -rf chrome-prof; echo "=== $name" >> $LOG; env "$@" timeout 300 node cdp.js $name >> $LOG 2>&1; echo "exit $?" >> $LOG; }
 echo "=== test-core" >> $LOG; node test-core.js ../index.html 2>&1 | tail -3 | cut -c1-300 >> $LOG
 echo "=== scale-quick" >> $LOG; node scale-quick.js ../index.html >> $LOG 2>&1
+echo "=== range-scan" >> $LOG; node range-scan.js ../index.html | tail -1 >> $LOG 2>&1
 echo "=== test-score" >> $LOG; node test-score.js ../index.html 2>&1 | grep -E "LOW|^perfect|^jitter|^drop|^wrong|^fast" >> $LOG
 run t4.js FAKE_WAV="$W/fake.wav" SET='{"gen":2,"mode":"melody","meter":"4/4","level":2,"bars":4,"key":"Bb","inst":"clarinet","bpm":96,"pickup":"off","artic":"auto","seed":777,"edits":{}}'
 run t4.js FAKE_WAV="$W/drum.wav" SET='{"gen":2,"drum":"snare","mode":"rhythm","meter":"4/4","level":5,"bars":4,"key":"C","inst":"clarinet","bpm":100,"pickup":"off","artic":"auto","seed":91,"edits":{}}'

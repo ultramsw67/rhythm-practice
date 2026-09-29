@@ -495,7 +495,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.7 · 2026-09-29</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.7.1 · 2026-09-30</p>
     </div>
   </section>
 </main>
@@ -1168,14 +1168,17 @@ function generateScale(set, LP, g) {
   const raise = (d, up) => !minor ? 0 : minor === 'h' ? (((d % 7) + 7) % 7 === 6 ? 1 : 0) : minor === 'm' && up ? ([5, 6].includes(((d % 7) + 7) % 7) ? 1 : 0) : 0;
   const midiOf = (b, d, c) => dMidi(b + d, alts[(((b + d) % 7) + 7) % 7] + c);
   const seqFor = n => { const s = []; for (let d = 0; d <= 7 * n; d++) s.push([d, raise(d, true)]); for (let d = 7 * n - 1; d >= 0; d--) s.push([d, raise(d, false)]); return s; };
-  // 옥타브 자리: 악기 음역을 가장 적게 벗어나고 가운데에 가까운 곳 (선율 모드와 같은 방법)
+  // 옥타브 자리: ① 악기가 낼 수 있는 음역(inst.r[2])을 절대 벗어나지 않게(v3.7.1, 2026-09-30 "연주 가능한 음역을 벗어남")
+  // ② 그 안에서 단계별 편한 음역을 가장 적게 벗어나고 ③ 가운데에 가까운 곳
+  const [flo, fhi] = inst.r[2];
   const place = (seq, [lo, hi]) => {
     let best = null;
     for (let oc = 0; oc <= 8; oc++) {
       const b = tl + oc * 7;
       let mn = Infinity, mx = -Infinity;
       for (const [d, c] of seq) { const m = midiOf(b, d, c); if (m < mn) mn = m; if (m > mx) mx = m; }
-      const out = Math.max(0, lo - mn) + Math.max(0, mx - hi);
+      const full = Math.max(0, flo - mn) + Math.max(0, mx - fhi);
+      const out = Math.max(0, lo - mn) + Math.max(0, mx - hi) + 100 * full;
       const cost = out + 0.01 * Math.abs((mn + mx) / 2 - (lo + hi) / 2);
       if (!best || cost < best.cost) best = { b, cost, out };
     }
