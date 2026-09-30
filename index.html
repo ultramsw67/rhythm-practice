@@ -109,7 +109,7 @@
     --rec:#e0775d; --rec-ink:#1a0d08;
     --paper:#e9e6de; --paper-ink:#111111;
     --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
-    --shadow:none;
+    --shadow:none; --ic-chip:#e9e6de;
   }
 }
 :root[data-theme="dark"]{
@@ -118,7 +118,7 @@
   --rec:#e0775d; --rec-ink:#1a0d08;
   --paper:#e9e6de; --paper-ink:#111111;
   --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
-  --shadow:none;
+  --shadow:none; --ic-chip:#e9e6de;
 }
 /* 글자 크기 (설정 → 글자 크기) */
 :root[data-font="1"]{ --fs:15px; --fs-s:13.5px; --fs-xs:12.5px; --fs-h1:18px; --fs-h2:16px; }
@@ -232,6 +232,9 @@ details summary{padding-right:80px}
 .badge{border:1px solid var(--line);border-radius:12px;padding:10px;font-size:var(--fs-s);background:var(--field)}
 .badge b{display:block;font-size:var(--fs)}
 .badge.off{opacity:.45;filter:grayscale(1)}
+.g-item b .g-ic{display:inline;font-size:inherit;color:inherit;margin:0}   /* .g-item span(작은 설명 글자) 규칙이 아이콘에 붙지 않게 */
+.g-ic.off{opacity:.4;filter:grayscale(1)}
+.g-ic.g-chip{background:var(--ic-chip,transparent);border-radius:8px;padding:0 3px}   /* v3.8.2: 어두운 화면에서 🎼·🎙️ 같은 검은 아이콘이 묻히지 않게 밝은 받침 (아이패드 확인) */   /* v3.8.2: 아직 못 얻은 것(연속 0일·배지 0개)은 불 꺼진 아이콘 */
 .reward{border:2px solid var(--accent);background:var(--soft);position:relative;overflow:hidden}
 .reward ul{margin:0;padding:0;list-style:none}
 .reward li{margin:8px 0;font-size:var(--fs);line-height:1.5}
@@ -295,15 +298,15 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
     </div>
     <div class="card game-card" id="gameCard">
       <div class="game-row">
-        <div class="g-item"><b id="gStreak">🔥 0일</b><span>연속 연습</span></div>
+        <div class="g-item"><b id="gStreak"><span class="g-ic off">🔥</span> 0일</b><span>연속 연습</span></div>
         <div class="g-item"><b id="gToday" class="g-dots">○○○</b><span>오늘 목표 3번</span></div>
-        <div class="g-item"><b id="gTitle">새내기</b><span id="gXp">음표 0점</span></div>
+        <div class="g-item"><b id="gTitle"><span class="g-ic g-chip">🌱</span> 새내기</b><span id="gXp">음표 0점</span></div>
       </div>
       <div class="g-bar" aria-hidden="true"><i id="gBar" style="width:0"></i></div>
       <div class="hint" id="gHint"></div>
       <div class="row">
         <button class="btn" id="dailyBtn" type="button">📅 오늘의 악보</button>
-        <button class="btn" id="badgeBtn" type="button" aria-expanded="false">🏅 배지 0/10</button>
+        <button class="btn" id="badgeBtn" type="button" aria-expanded="false"><span class="g-ic off">🏅</span> 배지 0/10</button>
       </div>
       <div class="hint" id="dailyHint"></div>
       <div id="badgeList" class="badges hide"></div>
@@ -545,7 +548,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.8.1 · 2026-09-30</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.8.2 · 2026-09-30</p>
     </div>
   </section>
 </main>
@@ -1192,26 +1195,47 @@ const MINORS = { h: '화성단음계', n: '자연단음계', m: '가락단음계
 const SCALE_RHY = {
   s: ['q', '8 8', '8. 16', '16 16 16 16', '16 8 16', '[3 8 8 8]', '[6 16 16 16 16 16 16]'],
   c: ['q.', '8 8 8', '8. 16 8', '16 16 16 16 16 16', '8 q', '[2 8 8]', '[4 8 8 8 8]'],
+  // v3.8.2: 2/2 는 2분음표 박으로 (4분음표 박이면 BPM 88 이 4분음표 176 이라 2~7단계가 거의 같은 악보였다)
+  h: ['h', 'q q', 'q. 8', '8 8 8 8', '8 q 8', '[3 q q q]', '[6 8 8 8 8 8 8]'],
 };
 // 음계가 한 박 도중에 끝날 때 남은 음 수에 맞는 한 박 리듬 (느린 쪽)
 const SCALE_FILL = {
   s: { 1: 'q', 2: '8 8', 3: '8 16 16', 4: '16 16 16 16', 5: '[5 16 16 16 16 16]', 6: '[6 16 16 16 16 16 16]' },
   c: { 1: 'q.', 2: 'q 8', 3: '8 8 8', 4: '8 16 16 8', 5: '16 16 16 16 8', 6: '16 16 16 16 16 16' },
+  h: { 1: 'h', 2: 'q q', 3: 'q 8 8', 4: '8 8 8 8', 5: '[5 8 8 8 8 8]', 6: '[6 8 8 8 8 8 8]' },
+};
+// v3.8.2 (2026-09-30 "음계 6·7단계가 같은 악보"): 그 단계 리듬이 안 맞을 때 바로 아래 단계로 내려가기 전에 쓰는 같은 단계의 다른 리듬.
+// 한 칸 = 박마다 돌아가며 쓰는 리듬 목록 (예: 여섯잇단·셋잇단 번갈아 → 4/4 한 마디 18음). set.sv 가 2 이상일 때만 (옛 녹음·링크는 옛 악보 그대로)
+const SCALE_ALT = {
+  s: { 4: [['16 16 8'], ['8 16 16']],
+       7: [['[6 16 16 16 16 16 16]', '[3 8 8 8]'], ['[5 16 16 16 16 16]'], ['[5 16 16 16 16 16]', '[3 8 8 8]'], ['8.. 32'], ['[5 16 16 16 16 16]', '8 8']] },
+  c: { 4: [['16 16 8 8'], ['8 16 16 8']] },
+  h: { 4: [['q 8 8'], ['8 8 q']], 7: [['[5 8 8 8 8 8]'], ['q.. 16'], ['[6 8 8 8 8 8 8]', '[3 q q q]']] },
 };
 const SCALE_END = [[3360, 'w', 0], [2520, 'h', 1], [1680, 'h', 0], [1260, 'q', 1], [840, 'q', 0], [630, '8', 1], [420, '8', 0]];
 function scaleName(wkey, set) { return wkey.minor ? (MINORS[set.minor] || MINORS.h) : '장음계'; }
 function generateScale(set, LP, g) {
-  const { r, M, units, measLen, spt, inst, concert, wkey, kref } = g;
+  const { r, M, measLen, spt, inst, concert, wkey, kref } = g;
+  const units = set.sv >= 2 && set.meter === '2/2' ? [{ type: 'h', len: 1680 }, { type: 'h', len: 1680 }] : g.units;
   const lv = LP.lv, tier = LP.tier;
   const minor = wkey.minor ? (MINORS[set.minor] ? set.minor : 'h') : '';
   // 박마다 리듬: 그 단계 리듬이 이 빠르기에서 너무 빠르거나, 한 마디에 음이 18개를 넘으면(320px 휴대폰에서 한 줄에 안 들어감) 한 단계씩 느린 리듬으로
-  let rhy = {};
-  for (let i = lv - 1; i >= 0; i--) {
-    const cand = { s: parseCell(SCALE_RHY.s[i]), c: parseCell(SCALE_RHY.c[i]) };
-    const fast = units.some(u => Math.min(...cand[u.type].map(x => x.dur)) * spt < LP.minSec);
-    const per = units.reduce((a, u) => a + cand[u.type].length, 0);
-    rhy = cand;
-    if (!fast && per <= 18) break;
+  // rhy[type] = 박마다 돌아가며 쓰는 리듬 목록. 같은 단계의 다른 리듬(SCALE_ALT)을 먼저 써 보고, 안 되면 한 단계 느린 리듬
+  let rhy = {}, rlv = lv;
+  // 음계는 한 칸씩 오르내려 무작위 선율보다 쉬우므로 너무 빠른지 기준을 80%로 (v3.8.2, 6/8 BPM 88 의 16분음표가 3·4단계에서 빠지던 문제)
+  const minSec = set.sv >= 2 ? Math.max(0.06, LP.minSec * 0.8) : LP.minSec;
+  const optsOf = (t, i) => [[SCALE_RHY[t][i]], ...((set.sv >= 2 && SCALE_ALT[t][i + 1]) || [])];
+  search: for (let i = lv - 1; i >= 0; i--) {
+    const os = optsOf('s', i), oc = optsOf('c', i), oh = optsOf('h', i);
+    for (let j = 0; j < Math.max(os.length, oc.length, oh.length); j++) {
+      const pick = o => o[Math.min(j, o.length - 1)].map(parseCell);
+      const cand = { s: pick(os), c: pick(oc), h: pick(oh) };
+      const cells = units.map((u, ui) => cand[u.type][ui % cand[u.type].length]);
+      const fast = cells.some(cl => Math.min(...cl.map(x => x.dur)) * spt < minSec);
+      const per = cells.reduce((a, cl) => a + cl.length, 0);
+      rhy = cand; rlv = i + 1;
+      if (!fast && per <= 18) break search;
+    }
   }
   // 음 이름: 으뜸음에서 몇 도 + 반음 올림 (단조: 화성 = 7음 올림, 가락 = 올라갈 때 6·7음 올림)
   const alts = keyAlts(wkey.fifths), tl = tonicLetter(wkey);
@@ -1250,12 +1274,12 @@ function generateScale(set, LP, g) {
   while (!done) {
     const meas = { no: mi + 1, mi, start: tick, len: measLen, units: [], pickup: false, last: false };
     let pos = 0;
-    for (const u of units) {
+    for (const [ui, u] of units.entries()) {
       const unitId = uid++;
       meas.units.push({ start: tick + pos, len: u.len, type: u.type, id: unitId });
       if (k < body.length) {
         const left = body.length - k;
-        let items = rhy[u.type];
+        let items = rhy[u.type][ui % rhy[u.type].length];
         if (items.length > left) items = parseCell(SCALE_FILL[u.type][left]);
         const gmap = {};
         let p2 = pos;
@@ -1306,7 +1330,7 @@ function generateScale(set, LP, g) {
   const fin = finishScore(set, events, measures, slurs, true, inst, '');
   return {
     set, M, measures, events, slurs: fin.slurs, end, pickLen: 0, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
-    tempoName: tempoName(set.bpm), melody: true, drum: '', bow: fin.bow, kref, scale: { name: scaleName(wkey, set), oct, minor },
+    tempoName: tempoName(set.bpm), melody: true, drum: '', bow: fin.bow, kref, scale: { name: scaleName(wkey, set), oct, minor, rlv },
   };
 }
 
@@ -1375,7 +1399,7 @@ function encodeSet(set) {
   if (set.drum && DRUMS[set.drum]) o.d = set.drum;
   if (set.bow && BOWS[set.bow]) o.w = set.bow[0];
   if (set.kref === 'w') o.r = 'w';                                   // v3.7 조표 내 악보 기준 (받는 사람도 같은 '적힌 조' → 악기가 다르면 실음은 다름)
-  if (PRACS[set.prac]) { o.x = 's'; if (MINORS[set.minor] && set.minor !== 'h') o.n = set.minor; }   // v3.7 음계 연습
+  if (PRACS[set.prac]) { o.x = 's'; if (MINORS[set.minor] && set.minor !== 'h') o.n = set.minor; if (set.sv >= 2) o.q = 2; }   // v3.7 음계 연습 · v3.8.2 음계 판 q
   if (set.edits && (set.edits.a || set.edits.s)) o.e = set.edits;
   return JSON.stringify(o);
 }
@@ -1395,6 +1419,7 @@ function decodeSet(str, base) {
   s.bow = { p: 'pizz', m: 'mix' }[o.w] || '';
   s.kref = o.r === 'w' ? 'w' : '';
   s.prac = o.x === 's' ? 'scale' : '';
+  s.sv = o.x === 's' ? (o.q === 2 ? 2 : 0) : 2;                    // q 없는 음계 링크 = v3.8.1 까지 → 보낸 사람과 같은 옛 음계
   s.minor = MINORS[o.n] ? o.n : 'h';
   if (A[o.a]) s.artic = A[o.a];
   if (Number.isFinite(o.s)) s.seed = o.s >>> 0;
@@ -1846,7 +1871,7 @@ function showTab(name) {
 }
 
 /* ---------- 설정 ---------- */
-const DEFAULT = { gen: 2, drum: '', bow: '', kref: '', prac: '', minor: 'h', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
+const DEFAULT = { gen: 2, sv: 2, drum: '', bow: '', kref: '', prac: '', minor: 'h', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
 // v2.9 까지 저장된 설정(gen 없음)은 새 7단계로 옮긴다. gen 0 = 옛 기록·옛 링크로 일부러 연 옛 악보라 그대로 둔다
 const savedSet = store.get('set', {}) || {};
 let set = Object.assign({}, DEFAULT, savedSet);
@@ -1922,7 +1947,7 @@ let lockedSet = null;             // 녹음 중 바뀐 폼을 되돌릴 때 쓰�
 function changed(opts = {}) {
   if (busyRec()) { if (lockedSet) set = lockedSet; syncForm(); return; }
   if (opts.reseed) set.seed = newSeed();
-  if (opts.reseed || opts.structural) { set.edits = {}; C.upgradeSet(set); }
+  if (opts.reseed || opts.structural) { set.edits = {}; C.upgradeSet(set); set.sv = 2; }   // 새 악보가 되면 새 음계 방식(v3.8.2)
   store.set('set', set);
   syncForm(); rebuild();
   if (typeof renderGame === 'function') try { renderGame(); } catch (e) { }
@@ -1974,6 +1999,8 @@ function rebuild() {
   let info = score.scale
     ? `악보 번호 ${set.seed} · ${w.ko} ${score.scale.name}${score.scale.oct > 1 ? ' 두 옥타브' : ''} · ${set.meter} · ${score.measures.length}마디 · ${C.levelProfile(set).label}`
     : `악보 번호 ${set.seed} · ${set.meter} · ${set.bars}마디${score.pickLen ? ' + 못갖춘마디' : ''} · ${C.levelProfile(set).label}`;
+  // v3.8.2: 그 단계 리듬이 너무 빨라 아래 단계 리듬이 나오면 알려 준다 (같은 악보가 나오는 까닭)
+  if (score.scale && set.sv >= 2 && score.scale.rlv < set.level) info += ` (이 박자·빠르기에서는 ${score.scale.rlv}단계 리듬 — 빠르기를 낮추면 ${set.level}단계 리듬)`;
   if (score.drum) info += ` · ${C.DRUMS[score.drum].name}`;
   if (score.melody) {
     info += ` · ${score.inst.name}`;
@@ -2005,6 +2032,15 @@ function natW(evs, sc) {
   let n = 0;
   for (const e of evs) { if (e.rest || !e.pitch) continue; const d = e.pitch.d, l = ((d % 7) + 7) % 7, was = d in cur ? cur[d] : ka[l]; if (e.pitch.alt !== was) { if (!e.pitch.alt) n++; cur[d] = e.pitch.alt; } }
   return n * 9 + 12;                                                 // + 여유 (슬러·끝 페르마타)
+}
+// 빠르기 표시 (v3.8.2): 원래 자리(박자표 뒤)에 그리고, 첫 줄이 좁아 오른쪽 끝을 넘으면(조표 7개·아주 크게 등) 넘친 만큼 왼쪽(음자리표 위)으로 옮긴다
+function drawTempo(ctx, st, sc, dy, right) {
+  const t = { name: sc.tempoName + ' ', duration: sc.M.beatName, dots: sc.M.beatDots, bpm: sc.set.bpm };
+  const VF = VFC(), one = sh => { const g = ctx.openGroup('rp-tempo'); new VF.StaveTempo(t, st.getX(), dy).draw(st, sh); ctx.closeGroup(); return g; };
+  const sh0 = st.getNoteStartX() - st.getX();
+  const g = one(sh0);
+  let over = 0; try { const b = g.getBBox(); over = b.x + b.width - right; } catch (e) { }
+  if (over > 0) { g.remove(); one(Math.max(0, sh0 - over)); }
 }
 function renderScore(host, sc, opt) {
   if (sc.kit) return renderKit(host, sc, opt);
@@ -2058,10 +2094,10 @@ function renderScore(host, sc, opt) {
       if (k === 0) { st.addClef(clef); if (melody) st.addKeySignature(sc.writtenKey.name); }
       if (mi === 0) {
         st.addTimeSignature(sc.set.meter);
-        st.setTempo({ name: sc.tempoName + ' ', duration: sc.M.beatName, dots: sc.M.beatDots, bpm: sc.set.bpm }, melody ? -22 : -34);
       }
       if (meas.last) st.setEndBarType(VF.Barline.type.END);
       st.setContext(ctx).draw();
+      if (mi === 0) drawTempo(ctx, st, sc, melody ? -22 : -34, DW - 4);
       // 음표
       const evs = byM[mi];
       const notes = evs.map(e => {
@@ -2220,10 +2256,10 @@ function renderKit(host, sc, opt) {
       if (k === 0) st.addClef('percussion');
       if (mi === 0) {
         st.addTimeSignature(sc.set.meter);
-        st.setTempo({ name: sc.tempoName + ' ', duration: sc.M.beatName, dots: sc.M.beatDots, bpm: sc.set.bpm }, -48);   // 빔보다 위에
       }
       if (meas.last) st.setEndBarType(VF.Barline.type.END);
       st.setContext(ctx).draw();
+      if (mi === 0) drawTempo(ctx, st, sc, -48, DW - 4);   // 빔보다 위에
       const voices = [], beams = [], tuplets = [], all = [];
       for (const v of ['u', 'd']) {
         const evs = byM[mi][v], up = v === 'u';
@@ -3194,7 +3230,7 @@ $('#resPlay').onclick = e => { if (curTake && curTake.audio) playBlob(asBlob(cur
 // 녹음 기록의 설정을 깊게 복사해 쓴다 (고쳐도 기록은 그대로, 옛 기록은 기본값으로 채움)
 function useTakeSet(ts) {
   const inst = set.inst;
-  set = Object.assign({}, DEFAULT, { gen: 0 }, JSON.parse(JSON.stringify(ts || {})));   // gen 없는 옛 기록은 옛 3단계 악보 그대로
+  set = Object.assign({}, DEFAULT, { gen: 0, sv: 0 }, JSON.parse(JSON.stringify(ts || {})));   // gen 없는 옛 기록은 옛 3단계 악보 그대로, sv 없는 옛 음계 기록은 v3.8.1 음계 그대로
   if (!C.INSTS[set.inst]) set.inst = inst;
   set.edits = set.edits && typeof set.edits === 'object' ? set.edits : {};
   store.set('set', set); syncForm(); rebuild();
@@ -3418,10 +3454,10 @@ function renderGame() {
   const on = store.get('gameOn', true);
   $('#gameCard').classList.toggle('hide', !on); $('#gameOn').checked = on;
   const today = dayNum(Date.now()), s = curStreak(game, today), c = game.last === today ? game.cnt : 0;
-  $('#gStreak').textContent = `🔥 ${s}일`;
+  $('#gStreak').innerHTML = `<span class="g-ic${s > 0 ? '' : ' off'}">🔥</span> ${s}일`;   // 0일이면 불 꺼진 불꽃
   $('#gToday').textContent = '●'.repeat(Math.min(c, G_GOAL)) + '○'.repeat(Math.max(0, G_GOAL - c));
   const tt = titleOf(game.xp);
-  $('#gTitle').textContent = `${tt.icon} ${tt.name}`;
+  $('#gTitle').innerHTML = `<span class="g-ic g-chip">${tt.icon}</span> ${tt.name}`;
   $('#gXp').textContent = `음표 ${game.xp}점`;
   $('#gBar').style.width = (tt.next ? Math.round((game.xp - tt.base) / (tt.next - tt.base) * 100) : 100) + '%';
   let h;
@@ -3433,8 +3469,8 @@ function renderGame() {
   if (tt.next) h += ` ${tt.nextName}까지 음표 ${tt.next - game.xp}점 남았습니다.`;
   $('#gHint').textContent = h;
   const got = G_BADGES.filter(b => game.badges[b[0]]).length;
-  $('#badgeBtn').textContent = `🏅 배지 ${got}/${G_BADGES.length}`;
-  $('#badgeList').innerHTML = G_BADGES.map(([id, ic, nm, ds]) => `<div class="badge${game.badges[id] ? '' : ' off'}"><b>${ic} ${nm}</b>${ds}</div>`).join('');
+  $('#badgeBtn').innerHTML = `<span class="g-ic${got > 0 ? '' : ' off'}">🏅</span> 배지 ${got}/${G_BADGES.length}`;
+  $('#badgeList').innerHTML = G_BADGES.map(([id, ic, nm, ds]) => `<div class="badge${game.badges[id] ? '' : ' off'}"><b><span class="g-ic g-chip">${ic}</span> ${nm}</b>${ds}</div>`).join('');
   const isDaily = set.seed === daySeed(today);
   const db = game.daily && game.daily.d === today ? game.daily.b : null;
   $('#dailyHint').textContent = isDaily
@@ -3456,7 +3492,7 @@ function rewardHtml(r) {
   L.push(r.goal ? '🎯 오늘 목표 3번 달성! 음표 +20점' : r.cnt < G_GOAL ? `오늘 ${r.cnt}/${G_GOAL}번. ${G_GOAL - r.cnt}번 더 하면 오늘 목표 달성입니다.` : `오늘 ${r.cnt}번째 녹음입니다. 목표를 넘겼습니다.`);
   const tt = titleOf(r.xpAfter);
   L.push(`🎵 음표 점수 +${r.xp} (모두 ${r.xpAfter}점)${tt.next ? ` · ${tt.nextName}까지 ${tt.next - r.xpAfter}점` : ''}`);
-  if (r.titleUp) L.push(`<span class="big pop">${r.titleUp.icon} 칭호가 올랐습니다: ${r.titleUp.name}</span>`);
+  if (r.titleUp) L.push(`<span class="big pop"><span class="g-ic g-chip">${r.titleUp.icon}</span> 칭호가 올랐습니다: ${r.titleUp.name}</span>`);
   let chips = '';
   if (r.badges.length) chips = '<li>새 배지<div class="chips">' + r.badges.map(id => { const b = G_BADGES.find(x => x[0] === id); return `<span>${b[1]} ${b[2]}</span>`; }).join('') + '</div></li>';
   return '<ul>' + L.map(x => `<li>${x}</li>`).join('') + chips + '</ul>';

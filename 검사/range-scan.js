@@ -9,8 +9,8 @@ const out = {}; let total = 0, badScores = 0, n = 0;
 for (const inst of insts) {
   const I = C.INSTS[inst], [lo, hi] = I.r[2];
   const o = out[inst] = { lo, hi, min: 999, max: -999, bad: 0, scores: 0, ex: null };
-  for (const prac of (process.env.PRAC!=null ? [process.env.PRAC] : ["", "scale"])) for (const kref of ['', 'w']) for (const key of keys) for (let level = 1; level <= 7; level++) for (let s = 0; s < (prac ? 2 : 6); s++) {
-    const set = { gen: 2, mode: 'melody', prac, minor: ['h', 'n', 'm'][s % 3], kref, meter: meters[(n++) % meters.length], level, bars: 8, key, inst, bpm: 60 + (s * 17) % 100, pickup: 'auto', artic: 'auto', seed: 1000 + s * 7 + level, edits: {} };
+  for (const prac of (process.env.PRAC!=null ? [process.env.PRAC] : ["", "scale"])) for (const kref of ['', 'w']) for (const key of keys) for (let level = 1; level <= 7; level++) for (let s = 0; s < (prac ? 4 : 6); s++) {
+    const set = { gen: 2, mode: 'melody', prac, minor: ['h', 'n', 'm'][s % 3], kref, meter: meters[(n++) % meters.length], level, bars: 8, key, inst, sv: s < 2 ? 0 : 2, bpm: 60 + (s * 17) % 100, pickup: 'auto', artic: 'auto', seed: 1000 + s * 7 + level, edits: {} };
     const sc = C.generate(set); o.scores++;
     let b = 0;
     for (const e of sc.events) if (!e.rest) { o.min = Math.min(o.min, e.midi); o.max = Math.max(o.max, e.midi); if (e.midi < lo || e.midi > hi) b++; }

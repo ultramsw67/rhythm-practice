@@ -41,8 +41,9 @@ module.exports = async (c) => {
   ok('titles', calc.t0 === '새내기' && calc.t100 === '보면대 지킴이' && calc.t99 === 100 && calc.tMax === null, calc);
 
   // 2) 빈 상태 화면
-  const empty = await c.ev(`({ vis: !document.querySelector('#gameCard').classList.contains('hide'), streak: document.querySelector('#gStreak').textContent, today: document.querySelector('#gToday').textContent, hint: document.querySelector('#gHint').textContent, badge: document.querySelector('#badgeBtn').textContent, v: RP && JSON.parse(localStorage.getItem('rp.game')||'{}').v })`);
+  const empty = await c.ev(`({ vis: !document.querySelector('#gameCard').classList.contains('hide'), streak: document.querySelector('#gStreak').textContent, today: document.querySelector('#gToday').textContent, hint: document.querySelector('#gHint').textContent, badge: document.querySelector('#badgeBtn').textContent, fireOff: !!document.querySelector('#gStreak .g-ic.off'), medalOff: !!document.querySelector('#badgeBtn .g-ic.off'), v: RP && JSON.parse(localStorage.getItem('rp.game')||'{}').v })`);
   ok('emptyCard', empty.vis && empty.streak === '🔥 0일' && empty.today === '○○○' && /0\/10/.test(empty.badge) && empty.v === 1, empty);
+  ok('emptyIconsOff', empty.fireOff && empty.medalOff, empty);   // v3.8.2: 처음(0일·배지 0개)엔 불 꺼진 아이콘
 
   // 3) 가상 연주는 세지 않는다
   await c.ev(`document.querySelector('#selfPerfect').click()`);
@@ -78,7 +79,8 @@ module.exports = async (c) => {
     ok('libraryNoReward', lib.tab && lib.rw, lib);
     // 연습 화면 카드
     await c.ev(`document.querySelector('nav.tabs button[data-tab=practice]').click()`); await c.sleep(500);
-    const card = await c.ev(`({ streak: document.querySelector('#gStreak').textContent, today: document.querySelector('#gToday').textContent, hint: document.querySelector('#gHint').textContent, xp: document.querySelector('#gXp').textContent })`);
+    const card = await c.ev(`({ streak: document.querySelector('#gStreak').textContent, today: document.querySelector('#gToday').textContent, hint: document.querySelector('#gHint').textContent, xp: document.querySelector('#gXp').textContent, fireOn: !!document.querySelector('#gStreak .g-ic:not(.off)'), medalOn: !!document.querySelector('#badgeBtn .g-ic:not(.off)') })`);
+    ok('iconsOnAfterRec', card.fireOn && card.medalOn, card);
     ok('cardAfterRec', card.streak === '🔥 1일' && card.today === '●●○' && /1번 더/.test(card.hint), card);
     // 5) 기록을 지우고 다시 열면 보관함 녹음으로 채움 (가상 연주 저장분은 빼고)
     await c.ev(`localStorage.removeItem('rp.game')`);

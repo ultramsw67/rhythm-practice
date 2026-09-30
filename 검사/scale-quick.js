@@ -10,7 +10,7 @@ const insts = Object.keys(C.INSTS), meters = Object.keys(C.METERS);
 for (const inst of insts) for (const key of C.KEYS.map(k => k.name)) for (let level = 1; level <= 7; level++) for (const minor of ['h', 'n', 'm']) {
   if (!key.endsWith('m') && minor !== 'h') continue;
   const meter = meters[(n * 7 + level) % meters.length], bpm = [60, 88, 120, 160, 208][n % 5];
-  const set = { gen: 2, mode: 'melody', prac: 'scale', minor, kref: n % 3 === 0 ? 'w' : '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: n + 1, edits: {}, bow: inst === 'contrabass' ? ['', 'pizz', 'mix'][n % 3] : '' };
+  const set = { gen: 2, mode: 'melody', prac: 'scale', sv: n % 2 ? 2 : 0, minor, kref: n % 3 === 0 ? 'w' : '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: n + 1, edits: {}, bow: inst === 'contrabass' ? ['', 'pizz', 'mix'][n % 3] : '' };
   n++;
   let sc; try { sc = C.generate(set); C.timeline(sc, 1); } catch (e) { B('crash ' + e.message, set); continue; }
   for (const m of sc.measures) { const t = sc.events.filter(e => e.mi === m.mi).reduce((a, e) => a + e.dur, 0); if (Math.abs(t - sc.measLen) > 1e-6) B('meas len ' + t + ' vs ' + sc.measLen, { set, mi: m.mi }); }
@@ -33,13 +33,13 @@ for (const inst of insts) for (const key of C.KEYS.map(k => k.name)) for (let le
   const tl = C.timeline(sc, 1); if (tl.notes.some(x => x.concert !== x.midi + I.t)) B('concert midi', set);
   // 링크 왕복
   const s2 = C.decodeSet(C.encodeSet(set), { inst });
-  for (const k of ['prac', 'minor', 'kref']) if ((s2[k] || '') !== (k === 'minor' && !set.prac ? 'h' : set[k] || '')) B('link ' + k + ' ' + s2[k], set);
+  for (const k of ['prac', 'minor', 'kref', 'sv']) if ((s2[k] || '') !== (k === 'minor' && !set.prac ? 'h' : set[k] || '')) B('link ' + k + ' ' + s2[k], set);
   if (JSON.stringify(C.generate(s2).events.map(e => [e.dur, e.midi])) !== JSON.stringify(sc.events.map(e => [e.dur, e.midi]))) B('link regen', set);
 }
 // 합주 실음 기준이면 악기가 달라도 음계(으뜸음 기준)가 같다
 let inv = 0, invBad = 0;
-for (const key of ['Bb', 'Eb', 'F', 'Cm', 'Gm']) for (let level = 1; level <= 7; level++) {
-  const ref = C.generate({ gen: 2, mode: 'melody', prac: 'scale', minor: 'h', meter: '4/4', level, bars: 4, key, inst: 'clarinet', bpm: 90, pickup: 'auto', artic: 'auto', seed: 5, edits: {} });
+for (const sv of [0, 2]) for (const meter of ['4/4', '6/8', '2/2']) for (const key of ['Bb', 'Eb', 'F', 'Cm', 'Gm']) for (let level = 1; level <= 7; level++) {
+  const ref = C.generate({ gen: 2, mode: 'melody', prac: 'scale', sv, minor: 'h', meter, level, bars: 4, key, inst: 'clarinet', bpm: 90, pickup: 'auto', artic: 'auto', seed: 5, edits: {} });
   for (const inst of insts) { inv++; const sc = C.generate(Object.assign({}, ref.set, { inst })); const a = sc.events.filter(e => !e.rest).map(e => (e.midi + C.INSTS[inst].t) % 12).slice(0, 8).join(), b = ref.events.filter(e => !e.rest).map(e => (e.midi - 2) % 12).slice(0, 8).join(); if (a !== b) { invBad++; if (invBad < 4) console.log('inv', key, level, inst, a, b); } }
 }
 // 옛 링크·설정(필드 없음)은 음계가 아님
