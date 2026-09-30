@@ -495,7 +495,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.7.1 · 2026-09-30</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.7.2 · 2026-09-30</p>
     </div>
   </section>
 </main>
@@ -1888,12 +1888,9 @@ $('#drum').onchange = e => { set.drum = e.target.value; changed({ structural: tr
 $('#bow').onchange = e => { set.bow = e.target.value; changed({ structural: true }); };
 $('#prac').onchange = e => { set.prac = e.target.value; changed({ structural: true }); };
 $('#minor').onchange = e => { set.minor = e.target.value; changed({ structural: true }); };
-// 조표 기준을 바꾸면 조 칸도 같은 악보가 되도록 옮긴다 (예: 클라리넷 실음 내림나장조 ↔ 악보 다장조)
-$('#kref').onchange = e => {
-  const I = C.INSTS[set.inst], v = e.target.value === 'w' ? 'w' : '';
-  if (I && C.krefUsable(I) && v !== (set.kref === 'w' ? 'w' : '')) set.key = v === 'w' ? C.writtenKey(set.key, I).name : C.concertFromWritten(set.key, I).name;
-  set.kref = v; changed({ structural: true });
-};
+// 조표 기준을 바꾸면 고른 조는 그대로 두고 뜻만 바뀐다 (v3.7.2, 2026-09-30 "합주와 혼자 연주 조표가 악보·소리가 같게 나옴")
+// 예: 클라리넷 내림나장조 — 합주 실음이면 악보 다장조·소리 내림나장조, 내 악보면 악보 내림나장조·소리 내림가장조
+$('#kref').onchange = e => { set.kref = e.target.value === 'w' ? 'w' : ''; changed({ structural: true }); };
 let bpmTimer;
 function setBpm(v) {
   if (String(v).trim() === '' || !Number.isFinite(+v)) { syncForm(); return; }   // 칸을 비우거나 글자를 넣으면 지금 값 유지

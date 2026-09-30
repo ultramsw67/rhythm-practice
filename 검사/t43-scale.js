@@ -16,10 +16,12 @@ module.exports = async (c) => {
     const cm = { minor: vis('#minor'), info: document.querySelector('#scoreInfo').textContent };
     const i = document.querySelector('#inst'); i.value='clarinet'; i.dispatchEvent(new Event('change'));
     k.value='Bb'; k.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,300));
+    const snap = () => ({ written: RP.score.writtenKey.ko, concert: RP.score.concertKey.ko, first: Core.timeline(RP.score,1).notes[0].concert, notes: RP.score.events.filter(e=>!e.rest).slice(0,3).map(e=>e.midi).join(' ') });
+    const before = snap();
     const kr = document.querySelector('#kref'); kr.value='w'; kr.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,300));
-    const w = { key: RP.set.key, lbl: document.querySelector('#keyLbl').textContent, info: document.querySelector('#scoreInfo').textContent, hint: document.querySelector('#keyHint').textContent.slice(0,60), link: Core.encodeSet(RP.set) };
+    const w = { key: RP.set.key, lbl: document.querySelector('#keyLbl').textContent, info: document.querySelector('#scoreInfo').textContent, hint: document.querySelector('#keyHint').textContent.slice(0,60), link: Core.encodeSet(RP.set), before, after: snap() }; w.changed = w.before.written !== w.after.written && w.before.first !== w.after.first;
     kr.value=''; kr.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,300));
-    const back = { key: RP.set.key, lbl: document.querySelector('#keyLbl').textContent };
+    const back = { key: RP.set.key, lbl: document.querySelector('#keyLbl').textContent, same: JSON.stringify(snap()) === JSON.stringify(before) };
     i.value='flute'; i.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,300));
     const fl = { kref: vis('#kref') };
     p.value=''; p.dispatchEvent(new Event('change')); await new Promise(r=>setTimeout(r,300));
