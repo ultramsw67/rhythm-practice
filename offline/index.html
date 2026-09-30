@@ -546,7 +546,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.8 (오프라인 앱) · 2026-09-30</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.8.1 (오프라인 앱) · 2026-09-30</p>
     </div>
   </section>
 </main>
@@ -2129,27 +2129,46 @@ function renderScore(host, sc, opt) {
       x += w;
     });
   });
+  // v3.8.1: 곡선은 앞 음 오른쪽 끝 → 뒤 음 왼쪽 끝에 그려져, 빔으로 바짝 붙은 두 음·줄 끝 음이면 폭이 2px 까지 줄어 세로줄처럼 보였다.
+  // 폭이 CURVE_MIN 보다 좁으면 양 끝을 음표 머리 안쪽으로(머리 폭의 60%까지) 당긴다 → [앞 끝 왼쪽으로, 뒤 끝 오른쪽으로]
+  const CURVE_MIN = 16;
+  const curvePull = (a, b) => {
+    const ax = a ? a.getTieRightX() : b.checkStave().getTieStartX(), bx = b ? b.getTieLeftX() : a.checkStave().getTieEndX();
+    const dy = a && b ? Math.abs(a.getYs()[0] - b.getYs()[0]) : 0;   // 높이 차이가 크면 더 넓게 (비스듬한 선처럼 보이지 않게)
+    const need = Math.max(CURVE_MIN, dy * 0.9) - (bx - ax);
+    if (need <= 0) return [0, 0, bx - ax];
+    const ca = a ? a.getGlyphWidth() * 0.6 : 0, cb = b ? b.getGlyphWidth() * 0.6 : 0;
+    let pa = Math.min(ca, need / 2), pb = Math.min(cb, need / 2);
+    pa = Math.min(ca, need - pb); pb = Math.min(cb, need - pa);
+    return [pa, pb, bx - ax + pa + pb];
+  };
+  const tie = (a, b) => {
+    const t = new VF.StaveTie({ first_note: a, last_note: b, first_indices: [0], last_indices: [0] });
+    const [pa, pb] = curvePull(a, b);
+    t.render_options.first_x_shift = -pa; t.render_options.last_x_shift = pb;
+    t.setContext(ctx).draw();
+  };
+  const slur = (a, b) => {
+    const [pa, pb, span] = curvePull(a, b), h = span < 30 ? Math.max(6, span * 0.45) : 14;   // 짧은 슬러는 낮게
+    const opts = { cps: [{ x: 0, y: h }, { x: 0, y: h }], invert: false, position: VF.Curve.Position.NEAR_HEAD, x_shift: -(pa + pb) / 2 };
+    new VF.Curve(a, b, opts).setContext(ctx).draw();
+  };
   // 붙임줄
   sc.events.forEach((e, i) => {
     if (!e.tie) return;
     const a = noteOf[e.id], b = noteOf[e.id + 1];
     if (!a || !b) return;
-    if (lineOf[e.id] === lineOf[e.id + 1]) new VF.StaveTie({ first_note: a, last_note: b, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
-    else {
-      new VF.StaveTie({ first_note: a, last_note: null, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
-      new VF.StaveTie({ first_note: null, last_note: b, first_indices: [0], last_indices: [0] }).setContext(ctx).draw();
-    }
+    if (lineOf[e.id] === lineOf[e.id + 1]) tie(a, b);
+    else { tie(a, null); tie(null, b); }
   });
   // 이음줄(슬러)
   for (const [aId, bId] of sc.slurs) {
     const a = noteOf[aId], b = noteOf[bId];
     if (!a || !b) continue;
-    const up = a.getStemDirection() === 1;
-    const opts = { cps: [{ x: 0, y: 14 }, { x: 0, y: 14 }], invert: false, position: up ? VF.Curve.Position.NEAR_HEAD : VF.Curve.Position.NEAR_HEAD };
-    if (lineOf[aId] === lineOf[bId]) new VF.Curve(a, b, opts).setContext(ctx).draw();
+    if (lineOf[aId] === lineOf[bId]) slur(a, b);
     else {
-      new VF.Curve(a, null, opts).setContext(ctx).draw();     // 줄 끝까지
-      new VF.Curve(null, b, opts).setContext(ctx).draw();     // 다음 줄 처음부터
+      slur(a, null);     // 줄 끝까지
+      slur(null, b);     // 다음 줄 처음부터
     }
   }
   host._hits = hits; host._scale = scale; host._beams = beamList;
