@@ -34,6 +34,7 @@
 | `node range-scan.js ../index.html` | v3.7.1 선율·음계 50,400개가 악기가 낼 수 있는 음역(INSTS r[2], 적힌 음)을 벗어나는지 | `badScores 0` |
 | `node cdp.js t43-scale.js` (`W=320` 폭) | v3.7 음계·조표 기준 칸(보이기/숨기기·조 옮김)·12가지 악보(scale-*.png)·가상 연주·들어보기 | over 0, self 100, errs [] |
 | `node cdp.js t43b-scale-fit.js` | 음계 잘림 전수 320px × 글자 3 × 박자표 9 × 4~7단계 × 조표 ±7 | nbad 0 |
+| `FAKE_WAV=<영문 경로 fake.wav> node cdp.js t44-game.js` | v3.8 연습 기록 게임: 연속일·쉬는 날 방패·오늘 목표·최고 기록·배지 계산, 가상 연주 제외, 녹음 뒤 격려 카드(보관함에서 열면 없음), 기존 녹음으로 기록 채우기, 오늘의 악보, 끄기, 320·390·어두운 화면(game-*.png) | `bad []` |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의

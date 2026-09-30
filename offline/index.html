@@ -215,6 +215,35 @@ details summary{padding-right:80px}
 .opts{display:flex;flex-wrap:wrap;gap:4px 18px;align-items:center;margin-bottom:8px}
 .lat-big{font-size:32px;font-weight:800;color:var(--accent)}
 .card a{color:var(--accent);font-weight:600}
+/* 연습 기록 게임 (v3.8) */
+.game-card{border:2px solid color-mix(in srgb,var(--accent) 35%,var(--line))}
+.game-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.g-item{background:var(--soft);border-radius:12px;padding:10px 4px;min-width:0}
+.g-item b{display:block;font-size:calc(var(--fs) + 3px);font-weight:800;color:var(--accent);line-height:1.25;word-break:keep-all;overflow-wrap:anywhere}
+#gTitle{font-size:var(--fs)}
+.g-item span{display:block;font-size:var(--fs-xs);color:var(--sub);margin-top:2px}
+.g-item b.g-dots{letter-spacing:1px;white-space:nowrap;overflow-wrap:normal}
+@media (max-width:360px){.g-item b.g-dots{font-size:var(--fs);letter-spacing:0}#gameCard .row .btn{flex:1 1 100%}}
+.g-bar{height:12px;background:var(--field);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-top:12px}
+.g-bar i{display:block;height:100%;background:var(--accent);border-radius:8px;transition:width .6s}
+.game-card .row{margin-top:10px}
+.game-card .row .btn{flex:1 1 calc(50% - 5px)}
+.badges{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:10px}
+.badge{border:1px solid var(--line);border-radius:12px;padding:10px;font-size:var(--fs-s);background:var(--field)}
+.badge b{display:block;font-size:var(--fs)}
+.badge.off{opacity:.45;filter:grayscale(1)}
+.reward{border:2px solid var(--accent);background:var(--soft);position:relative;overflow:hidden}
+.reward ul{margin:0;padding:0;list-style:none}
+.reward li{margin:8px 0;font-size:var(--fs);line-height:1.5}
+.reward .big{font-size:calc(var(--fs) + 4px);font-weight:800;color:var(--accent)}
+.reward .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.reward .chips span{background:var(--card);border:1px solid var(--accent);border-radius:999px;padding:4px 12px;font-weight:700;font-size:var(--fs-s)}
+.confetti{position:absolute;inset:0;pointer-events:none}
+.confetti i{position:absolute;top:-20px;font-style:normal;font-size:22px;animation:rp-fall 1.6s ease-in forwards}
+@keyframes rp-fall{to{transform:translateY(260px) rotate(360deg);opacity:0}}
+@keyframes rp-pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pop{animation:rp-pop .5s ease-out}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}.pop{animation:none}.g-bar i{transition:none}}
 body.recording #setBox, body.recording #modeSeg, body.recording #newBtn, body.recording #playBtn, body.recording #shareBtn,
 body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, body.recording #listen, body.recording nav.tabs button:not([aria-selected="true"]){opacity:.4;pointer-events:none}
 .off-badge{display:inline-block;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#2f855a;border-radius:999px;padding:2px 8px;margin-left:4px}
@@ -264,6 +293,21 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
         <button class="btn" id="startClose" type="button">알겠습니다</button>
       </div>
       <div class="hint">지연 보정은 처음 한 번만 하면 됩니다. 안 하면 정확히 불어도 "늦다"고 나올 수 있습니다.</div>
+    </div>
+    <div class="card game-card" id="gameCard">
+      <div class="game-row">
+        <div class="g-item"><b id="gStreak">🔥 0일</b><span>연속 연습</span></div>
+        <div class="g-item"><b id="gToday" class="g-dots">○○○</b><span>오늘 목표 3번</span></div>
+        <div class="g-item"><b id="gTitle">새내기</b><span id="gXp">음표 0점</span></div>
+      </div>
+      <div class="g-bar" aria-hidden="true"><i id="gBar" style="width:0"></i></div>
+      <div class="hint" id="gHint"></div>
+      <div class="row">
+        <button class="btn" id="dailyBtn" type="button">📅 오늘의 악보</button>
+        <button class="btn" id="badgeBtn" type="button" aria-expanded="false">🏅 배지 0/10</button>
+      </div>
+      <div class="hint" id="dailyHint"></div>
+      <div id="badgeList" class="badges hide"></div>
     </div>
     <div class="cols">
       <div>
@@ -393,6 +437,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
   <section id="tab-result" class="hide">
     <div class="card" id="resEmpty"><div class="placeholder">아직 채점한 연주가 없습니다.<br>연습 탭에서 녹음하면 여기에 점수가 나옵니다.<br><br><button class="btn pri go-practice" type="button">연습하러 가기</button></div></div>
     <div id="resBox" class="hide">
+      <div class="card reward hide" id="resReward"></div>
       <div class="card">
         <div class="res-head">
           <div class="big-score" id="resTotal">-</div>
@@ -458,6 +503,11 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <div class="hint">글자와 악보가 함께 커집니다. 글씨가 작아 보이면 한 단계 올리세요.</div>
     </div>
     <div class="card">
+      <h2>연습 기록 (연속일·배지)</h2>
+      <label class="opt"><input type="checkbox" id="gameOn"> 연습 화면에 연속일·오늘 목표·배지 보이기</label>
+      <div class="hint">녹음할 때마다 음표 점수가 쌓이고 칭호가 오릅니다. 기록은 이 기기 안에만 남습니다. 꺼도 기록은 그대로 쌓이고, 다시 켜면 보입니다.</div>
+    </div>
+    <div class="card">
       <h2>이어폰을 끼고 연습하세요</h2>
       <p class="muted" style="margin:0">스피커로 메트로놈을 틀면 클릭 소리가 녹음에 섞여 채점이 흔들릴 수 있습니다. <b>유선 이어폰</b>이 가장 좋습니다. 블루투스 이어폰은 소리가 늦게 나오고, 켠 채 녹음하면 음질이 통화 수준으로 떨어질 수 있습니다. 앱이 휴대폰 마이크로 바꿔 녹음을 시도하지만, 그래도 먹먹하면 블루투스를 끄고 "듣는 방법 → 스피커"로 녹음하세요.</p>
     </div>
@@ -494,9 +544,9 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <h2>이 앱에 대해</h2>
       <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
-      <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
+      <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.7.2 (오프라인 앱) · 2026-09-30</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.8 (오프라인 앱) · 2026-09-30</p>
     </div>
   </section>
 </main>
@@ -1876,6 +1926,7 @@ function changed(opts = {}) {
   if (opts.reseed || opts.structural) { set.edits = {}; C.upgradeSet(set); }
   store.set('set', set);
   syncForm(); rebuild();
+  if (typeof renderGame === 'function') try { renderGame(); } catch (e) { }
 }
 document.querySelectorAll('#modeSeg button').forEach(b => b.onclick = () => { set.mode = b.dataset.v; changed({ structural: true }); });
 document.querySelectorAll('#levelSeg button').forEach(b => b.onclick = () => { set.gen = 2; set.level = +b.dataset.v; changed({ structural: true }); });
@@ -2936,7 +2987,8 @@ async function finishRec(aborted, why) {
   } catch (e) { console.error(e); $('#recStatus').textContent = '채점 중 오류가 났습니다. 다시 녹음하세요.'; return; }
   const ok = await DB.put(take);
   $('#recStatus').textContent = ok ? `${take.result.total}점 — 보관함에 저장했습니다` : `${take.result.total}점 — 저장은 못 했습니다`;
-  showResult(take, !ok);
+  let reward = null; try { reward = await gameRecord(take); } catch (e) { console.error(e); }   // 저장을 못 해도 연습한 것은 센다
+  showResult(take, !ok, reward);
 }
 $('#recBtn').onclick = startRec;
 
@@ -3037,8 +3089,9 @@ function makeTake(tset, sc, res, audioBlob, dur, extra) {
   return Object.assign({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), name, created: Date.now(), set: tset, result: slim(res), dur, audio: audioBlob, audioType: 'audio/wav' }, extra || {});
 }
 let curTake = null;
-function showResult(take, unsaved) {
+function showResult(take, unsaved, reward) {
   curTake = take;
+  curReward = reward || null;              // 보관함에서 연 옛 녹음·가상 연주에는 보상 카드를 안 띄운다
   $('#resSave').classList.toggle('hide', !unsaved);
   showTab('result');
 }
@@ -3048,6 +3101,7 @@ function renderResult() {
   $('#resBox').classList.toggle('hide', !take);
   if (!take) return;
   const R = take.result, S = take.set;
+  renderReward(take);
   $('#resNote').textContent = '음표를 누르면 무엇이 어긋났는지 보여줍니다.';
   let sc; try { sc = C.generate(S); } catch (e) { return; }
   $('#resTotal').textContent = R.total;
@@ -3234,6 +3288,191 @@ function takeInfo(t) {
   return new Blob([JSON.stringify(rest, null, 1)], { type: 'application/json' });
 }
 const validTake = t => t && typeof t.id === 'string' && t.result && Number.isFinite(t.result.total) && t.set && C.METERS[t.set.meter];
+
+/* ============================================================
+   연습 기록 게임 (v3.8, 2026-09-30 "승부욕·중독성, 꾸준히 연습하고 중간에 포기하지 않게")
+   녹음한 연주만 센다(가상 연주 제외). 기록은 localStorage rp.game — 기기 안에만, 어디에도 올리지 않는다
+   ① 연속 연습일(한 주에 하루는 쉬어도 이어지는 방패) ② 오늘 목표 3번 ③ 같은 악보 최고 기록 ④ 음표 점수·칭호·배지 ⑤ 오늘의 악보(날짜로 정한 악보 번호 → 단원끼리 같은 악보로 겨루기)
+   ============================================================ */
+const G_DAY = 864e5, G_GOAL = 3;
+const dayNum = ts => Math.floor((ts - new Date(ts).getTimezoneOffset() * 60000) / G_DAY);   // 이 기기 시간대의 날짜(한국 밤 연습도 그날)
+const weekNum = n => Math.floor((n + 3) / 7);                                                 // 월요일에 시작하는 주
+const daySeed = n => (Math.imul(n, 2654435761) ^ 0x5eed1) >>> 0;
+const G_TITLES = [[0, '새내기', '🌱'], [100, '보면대 지킴이', '🎼'], [300, '파트 단원', '🎷'], [700, '부수석', '🎺'], [1500, '수석', '🥇'], [3000, '악장', '🎻'], [6000, '마에스트로', '👑']];
+const G_BADGES = [
+  ['first', '🎙️', '첫 녹음', '처음으로 녹음했습니다'],
+  ['goal', '🎯', '오늘 목표', '하루에 3번 녹음했습니다'],
+  ['s3', '🔥', '3일 연속', '3일 이어서 연습했습니다'],
+  ['s7', '🔥', '7일 연속', '일주일 이어서 연습했습니다'],
+  ['s30', '🏆', '30일 연속', '한 달 이어서 연습했습니다'],
+  ['p100', '💯', '첫 100점', '100점을 받았습니다'],
+  ['up30', '📈', '역전의 명수', '같은 악보를 다시 해서 30점 넘게 올렸습니다'],
+  ['lv5', '⛰️', '도전자', '5단계 이상에서 80점을 넘었습니다'],
+  ['daily', '📅', '오늘의 악보', '오늘의 악보에 도전했습니다'],
+  ['r50', '🏅', '꾸준상', '녹음 50번을 채웠습니다'],
+];
+const newGame = () => ({ v: 1, xp: 0, n: 0, streak: 0, maxStreak: 0, last: null, cnt: 0, shieldWk: null, best: {}, badges: {}, daily: null });
+const G_SAVED = store.get('game', null);
+let game = Object.assign(newGame(), G_SAVED || {});
+const saveGame = () => store.set('game', game);
+function reloadGame() { const sv = store.get('game', null); if (sv && sv.v) game = Object.assign(newGame(), sv); }
+function titleOf(xp) {
+  let i = 0; while (i + 1 < G_TITLES.length && xp >= G_TITLES[i + 1][0]) i++;
+  const nx = G_TITLES[i + 1];
+  return { i, base: G_TITLES[i][0], name: G_TITLES[i][1], icon: G_TITLES[i][2], next: nx ? nx[0] : null, nextName: nx ? nx[1] : null };
+}
+// 오늘 기준 연속일: 어제까지 했으면 그대로, 어제 하루 쉬었고 그 주 방패가 남았으면 오늘 하면 이어짐
+function curStreak(g, today) {
+  if (g.last == null) return 0;
+  const gap = today - g.last;
+  if (gap <= 1) return g.streak;
+  if (gap === 2 && g.shieldWk !== weekNum(today - 1)) return g.streak;
+  return 0;
+}
+// 같은 악보 = 악기만 다른 것도 같은 악보로 본다 (선율은 악기가 달라도 같은 선율)
+const gameKey = s => { try { const o = JSON.parse(C.encodeSet(s)); delete o.i; return JSON.stringify(o); } catch (e) { return String(s.seed); } };
+function gameAdd(g, t) {
+  const T = t.result.total, d = dayNum(t.created), lv = t.set.level || 1;
+  const r = { total: T, xp: 0, badges: [] };
+  const back = g.last != null && d < g.last;        // 기기 시계가 거꾸로 간 기록: 연속일·오늘 횟수는 건드리지 않는다
+  if (g.last == null || d > g.last) {                // 오늘 첫 녹음
+    const gap = g.last == null ? 99 : d - g.last;
+    if (gap === 1) g.streak++;
+    else if (gap === 2 && g.shieldWk !== weekNum(d - 1)) { g.streak++; g.shieldWk = weekNum(d - 1); r.shield = true; }
+    else g.streak = 1;
+    g.last = d; g.cnt = 0; r.newDay = true;
+    r.xp += Math.min(g.streak, 7) * 2;               // 이어갈수록 조금 더 (최대 +14)
+  }
+  g.maxStreak = Math.max(g.maxStreak, g.streak);
+  if (!back) g.cnt++;
+  g.n++;
+  r.streak = g.streak; r.cnt = g.cnt;
+  r.xp += 10 + Math.round(T / 10) + Math.min(lv, 7);  // 점수가 낮아도 녹음하면 쌓인다
+  if (!back && g.cnt === G_GOAL) { r.xp += 20; r.goal = true; }
+  const k = gameKey(t.set), prev = g.best[k];
+  r.prevBest = prev ? prev.b : null; r.prevLast = prev ? prev.l : null;
+  if (prev && T > prev.b) { r.xp += 10; r.newBest = true; }
+  g.best[k] = { b: Math.max(prev ? prev.b : 0, T), l: T, at: t.created };
+  const keys = Object.keys(g.best);
+  if (keys.length > 400) keys.sort((a, b) => g.best[a].at - g.best[b].at).slice(0, keys.length - 400).forEach(x => delete g.best[x]);
+  const dd = t.set.seed === daySeed(d) ? d : t.set.seed === daySeed(d - 1) ? d - 1 : null;   // 자정 직전에 연 오늘의 악보도 센다
+  if (dd != null) {
+    if (!g.daily || g.daily.d !== dd) g.daily = { d: dd, b: 0, n: 0 };
+    r.daily = true; r.dailyPrev = g.daily.n ? g.daily.b : null;
+    g.daily.n++; g.daily.b = Math.max(g.daily.b, T); r.dailyBest = g.daily.b;
+  }
+  const before = titleOf(g.xp).i;
+  g.xp += r.xp; r.xpAfter = g.xp;
+  const tt = titleOf(g.xp); if (tt.i > before) r.titleUp = tt;
+  const give = id => { if (!g.badges[id]) { g.badges[id] = t.created; r.badges.push(id); } };
+  give('first');
+  if (r.goal) give('goal');
+  if (g.streak >= 3) give('s3');
+  if (g.streak >= 7) give('s7');
+  if (g.streak >= 30) give('s30');
+  if (T >= 100) give('p100');
+  if (prev && T - prev.l >= 30) give('up30');
+  if (lv >= 5 && (t.set.gen || 0) >= 2 && T >= 80) give('lv5');
+  if (r.daily) give('daily');
+  if (g.n >= 50) give('r50');
+  return r;
+}
+// 처음 한 번: 보관함에 있던 녹음으로 기록을 채운다 (이미 연습한 단원이 0부터 시작하지 않게)
+const gameReady = (async () => {
+  if (G_SAVED && G_SAVED.v) return;
+  const g = newGame();
+  try {
+    // DB.all() 은 오류를 [] 로 삼키므로 직접 읽는다 — 못 읽으면 채우기를 끝난 것으로 표시하지 않고 다음에 다시
+    const all = DB.memOnly ? [] : (await DB.tx('readonly', st => st.getAll())) || [];
+    const list = all.filter(t => validTake(t) && Number.isFinite(t.created) && (t.kind === 'rec' || (!t.kind && !/가상 연주/.test(t.name || '')))).sort((a, b) => a.created - b.created);
+    for (const t of list) gameAdd(g, t);
+  } catch (e) { console.error(e); g.v = 0; game = g; return; }
+  game = g; saveGame();
+})().then(() => renderGame(), e => console.error(e));
+async function gameRecord(take) {
+  if (!take || take.kind === 'self') return null;
+  try { await Promise.race([gameReady, new Promise(res => setTimeout(res, 2000))]); } catch (e) { }   // 채우기가 늦어도 결과 화면은 바로
+  reloadGame();                                     // 다른 탭에서 쌓은 기록을 덮어쓰지 않게
+  const r = gameAdd(game, take); saveGame(); renderGame();
+  return Object.assign(r, { id: take.id, fresh: true });
+}
+function renderGame() {
+  const on = store.get('gameOn', true);
+  $('#gameCard').classList.toggle('hide', !on); $('#gameOn').checked = on;
+  const today = dayNum(Date.now()), s = curStreak(game, today), c = game.last === today ? game.cnt : 0;
+  $('#gStreak').textContent = `🔥 ${s}일`;
+  $('#gToday').textContent = '●'.repeat(Math.min(c, G_GOAL)) + '○'.repeat(Math.max(0, G_GOAL - c));
+  const tt = titleOf(game.xp);
+  $('#gTitle').textContent = `${tt.icon} ${tt.name}`;
+  $('#gXp').textContent = `음표 ${game.xp}점`;
+  $('#gBar').style.width = (tt.next ? Math.round((game.xp - tt.base) / (tt.next - tt.base) * 100) : 100) + '%';
+  let h;
+  if (c >= G_GOAL) h = `오늘 목표를 채웠습니다. 내일도 한 번 녹음하면 연속 ${s + 1}일째입니다.`;
+  else if (c > 0) h = `오늘 ${G_GOAL - c}번 더 녹음하면 목표 달성입니다.`;
+  else if (s > 0) h = `오늘 녹음하면 연속 ${s + 1}일째입니다. 한 번이면 됩니다.` + (today - game.last === 2 ? ' 어제 쉬었지만 쉬는 날 방패로 이어집니다.' : '');
+  else if (game.n > 0) h = '다시 시작해도 괜찮습니다. 오늘 한 번 녹음하면 연속 1일째입니다.';
+  else h = '녹음을 한 번 하면 연속 1일이 시작됩니다. 하루 3번이 목표입니다.';
+  if (tt.next) h += ` ${tt.nextName}까지 음표 ${tt.next - game.xp}점 남았습니다.`;
+  $('#gHint').textContent = h;
+  const got = G_BADGES.filter(b => game.badges[b[0]]).length;
+  $('#badgeBtn').textContent = `🏅 배지 ${got}/${G_BADGES.length}`;
+  $('#badgeList').innerHTML = G_BADGES.map(([id, ic, nm, ds]) => `<div class="badge${game.badges[id] ? '' : ' off'}"><b>${ic} ${nm}</b>${ds}</div>`).join('');
+  const isDaily = set.seed === daySeed(today);
+  const db = game.daily && game.daily.d === today ? game.daily.b : null;
+  $('#dailyHint').textContent = isDaily
+    ? `지금 연습하는 악보가 오늘의 악보입니다.${db != null ? ` 오늘 최고 ${db}점.` : ''} 같은 모드·단계인 단원과 점수를 겨뤄 보세요.`
+    : '오늘의 악보는 모든 단원이 같은 날 같은 악보로 연습합니다. 같은 모드·단계인 단원과 점수를 겨뤄 보세요.';
+}
+function rewardHtml(r) {
+  const T = r.total, L = [];
+  if (r.newBest) L.push(`<span class="big pop">🎉 새 기록! ${r.prevBest}점 → ${T}점</span>`);
+  else if (r.prevBest == null) L.push(`<span class="big">${T >= 90 ? '👏' : '🎵'} 이 악보 첫 기록 ${T}점</span>`);
+  else if (T === r.prevBest) L.push(T >= 100 ? '이 악보 최고 기록 100점을 또 받았습니다.' : `이 악보 최고 기록 ${T}점과 같습니다. 한 번 더 하면 넘을 수 있습니다.`);
+  else L.push(`이 악보 최고 기록은 ${r.prevBest}점, ${r.prevBest - T}점 차이입니다. 「같은 악보 다시 녹음」으로 도전하세요.`);
+  if (!r.newBest && r.prevLast != null && T > r.prevLast) L.push(`📈 지난번보다 ${T - r.prevLast}점 올랐습니다.`);
+  if (T >= 100) L.push('💯 만점입니다. BPM을 5 올리거나 한 단계 위에 도전하세요.');
+  else if (T === 90) L.push('100점까지 딱 한 칸 남았습니다.');
+  else if (T <= 50) L.push('💪 점수가 낮아도 녹음한 만큼 실력이 붙습니다. BPM을 10 낮추면 점수가 쉽게 오릅니다.');
+  if (r.daily) L.push(`📅 오늘의 악보 ${r.dailyPrev != null && r.dailyBest > r.dailyPrev ? `오늘 최고 기록 경신 ${r.dailyBest}점` : `오늘 최고 ${r.dailyBest}점`}. 단원들에게 점수를 알려 겨뤄 보세요.`);
+  if (r.newDay) L.push(r.shield ? `🛡 쉬는 날 방패로 연속 ${r.streak}일째를 이었습니다.` : r.streak > 1 ? `🔥 연속 ${r.streak}일째 연습입니다.` : '🔥 연속 연습 1일째를 시작했습니다.');
+  L.push(r.goal ? '🎯 오늘 목표 3번 달성! 음표 +20점' : r.cnt < G_GOAL ? `오늘 ${r.cnt}/${G_GOAL}번. ${G_GOAL - r.cnt}번 더 하면 오늘 목표 달성입니다.` : `오늘 ${r.cnt}번째 녹음입니다. 목표를 넘겼습니다.`);
+  const tt = titleOf(r.xpAfter);
+  L.push(`🎵 음표 점수 +${r.xp} (모두 ${r.xpAfter}점)${tt.next ? ` · ${tt.nextName}까지 ${tt.next - r.xpAfter}점` : ''}`);
+  if (r.titleUp) L.push(`<span class="big pop">${r.titleUp.icon} 칭호가 올랐습니다: ${r.titleUp.name}</span>`);
+  let chips = '';
+  if (r.badges.length) chips = '<li>새 배지<div class="chips">' + r.badges.map(id => { const b = G_BADGES.find(x => x[0] === id); return `<span>${b[1]} ${b[2]}</span>`; }).join('') + '</div></li>';
+  return '<ul>' + L.map(x => `<li>${x}</li>`).join('') + chips + '</ul>';
+}
+let curReward = null;
+function renderReward(take) {
+  const box = $('#resReward'), r = curReward;
+  const show = !!(r && take && r.id === take.id && store.get('gameOn', true));
+  box.classList.toggle('hide', !show);
+  if (!show) { box.innerHTML = ''; if (r) r.fresh = false; return; }
+  box.innerHTML = rewardHtml(r);
+  if (r.fresh) {
+    r.fresh = false;                                 // 축하는 녹음 직후 한 번만 (보관함에서 열거나 화면을 다시 그릴 때는 없음)
+    if (r.newBest || r.total >= 100 || r.titleUp || r.goal || r.badges.length) {
+      const cf = document.createElement('div'); cf.className = 'confetti'; cf.setAttribute('aria-hidden', 'true');
+      const em = ['🎉', '✨', '🎵', '⭐', '🎶'];
+      for (let i = 0; i < 16; i++) { const e = document.createElement('i'); e.textContent = em[i % em.length]; e.style.left = (4 + Math.random() * 90) + '%'; e.style.animationDelay = (Math.random() * 0.5).toFixed(2) + 's'; cf.appendChild(e); }
+      box.appendChild(cf); setTimeout(() => cf.remove(), 2600);
+    }
+  }
+}
+$('#gameOn').onchange = e => { store.set('gameOn', e.target.checked); renderGame(); };
+$('#badgeBtn').onclick = () => { const l = $('#badgeList'); l.classList.toggle('hide'); $('#badgeBtn').setAttribute('aria-expanded', String(!l.classList.contains('hide'))); };
+// 오늘의 악보: 악보 번호뿐 아니라 박자표·마디 수·빠르기·조(합주 실음)도 모두 같게 → 같은 모드·단계면 단원 누구나 같은 악보 (선율은 악기가 달라도 같은 선율)
+const DAILY = { meter: '4/4', bars: 4, bpm: 88, key: 'Bb', kref: '', prac: '', pickup: 'auto', artic: 'auto' };
+$('#dailyBtn').onclick = () => {
+  if (busyRec()) return; stopPlay();
+  Object.assign(set, DAILY, { gen: 2, seed: daySeed(dayNum(Date.now())) });
+  changed({ structural: true });
+  toast('오늘의 악보를 열었습니다 (4/4박자 · 4마디 · BPM 88)');
+};
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { reloadGame(); renderGame(); } });   // 자정을 넘겨 돌아와도 오늘 기준으로
+window.addEventListener('storage', e => { if (e.key === 'rp.game') { reloadGame(); renderGame(); } });   // 다른 탭에서 녹음하면 이 탭도 갱신
+window.__game = { gameAdd, newGame, dayNum, daySeed, curStreak, titleOf, get: () => game, render: renderGame };
 async function renderLibrary() {
   const list = (await DB.all()).filter(validTake);
   const sort = $('#libSort').value;

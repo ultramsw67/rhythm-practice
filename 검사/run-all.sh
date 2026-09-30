@@ -24,5 +24,6 @@ run qa-f/f1b-clip.js X=1
 run qa-f/f3b-slowmic.js X=1
 run qa-f/f3c-micbusy-set.js X=1
 run t3.js FAKE_WAV="$W/fake.wav" SET='{"gen":2,"mode":"melody","meter":"4/4","level":2,"bars":4,"key":"Bb","inst":"clarinet","bpm":96,"pickup":"off","artic":"auto","seed":777,"edits":{}}'
+run t44-game.js FAKE_WAV="$W/fake.wav"
 run t21-offline.js MODE=file FAKE_WAV="$W/fake.wav"
 echo ALLDONE >> $LOG
