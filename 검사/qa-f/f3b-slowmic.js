@@ -24,7 +24,7 @@ module.exports = async (c) => {
     if (RPX.rec) document.querySelector('#recBtn').click(); await __w(300); if (RPX.playing) b.click(); await __w(100);
     return JSON.stringify(log)+' | end '+(RPX.playing?'P':'-')+(RPX.rec?'R':'-')+' '+__btn(); })()`));
   // D: 마이크 대기 중 설정 바꾸기(단계)
-  console.log('D rec pending, change level', await c.ev(`(async()=>{ document.querySelector('#recBtn').click(); await __w(300); document.querySelector('#setBox').open=true; document.querySelectorAll('#levelSeg button')[6].click(); const lvNow=RP.set.level;
+  console.log('D rec pending, change level', await c.ev(`(async()=>{ document.querySelector('#recBtn').click(); await __w(300); document.querySelector('#setBox').open=true; document.querySelectorAll('#levelSeg button')[4].click(); const lvNow=RP.set.level;
     await __w(4000); const r=(RPX.rec?'R':'-')+' level '+lvNow+' recScoreLevel '+(RPX.rec&&RPX.rec.set&&RPX.rec.set.level)+' shown '+RP.set.level;
     if (RPX.rec) document.querySelector('#recBtn').click(); await __w(300); return r; })()`));
 };

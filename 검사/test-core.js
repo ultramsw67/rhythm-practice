@@ -22,6 +22,7 @@ for (let i = 0; i < 6000; i++) {
     bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][Math.floor(r() * 3)], artic: ['auto', 'manual', 'none'][Math.floor(r() * 3)],
     seed: Math.floor(r() * 1e9), edits: {}, gen: 2, rv: i % 2 ? 2 : 0,   // v3.8.3 새 난이도 규칙(rv 2)과 옛 규칙 둘 다
   };
+  if (i % 3 === 1) { set.gen = 3; set.level = 1 + (set.level - 1) % 5; }   // v3.9 5단계 판
   if (i % 5 === 0) { set.gen = 0; set.level = 1 + (set.level % 3); }       // 옛 3단계 악보(저장된 녹음)도 계속 시험
   const LP = C.levelProfile(set);
   let sc;
@@ -56,7 +57,7 @@ for (let i = 0; i < 6000; i++) {
     if (e.dots === 2) stats.dd++;
     if (e.base === '32') stats.t32++;
     if (e.artic.length) stats.artic++;
-    if (e.dur * sc.spt < (set.rv >= 2 && !LP.legacy ? Math.max(0.06, LP.minSec * 0.75) : LP.minSec) - 1e-9 && !(LP.lv <= 2 && (e.base === 'q' || e.base === 'h' || e.base === 'w'))) bad('too fast note ' + e.base, set);
+    if (e.dur * sc.spt < ((set.rv >= 2 || set.gen >= 3) && !LP.legacy ? Math.max(0.06, LP.minSec * 0.75) : LP.minSec) - 1e-9 && !(LP.lv <= 2 && (e.base === 'q' || e.base === 'h' || e.base === 'w'))) bad('too fast note ' + e.base, set);
     // 새 7단계: 그 단계보다 어려운 리듬이 나오지 않는지
     if (!LP.legacy) {
       if (LP.lv <= 6 && (e.base === '32' || e.dots === 2 || (e.tup && e.tup.n >= 4))) bad('lv' + LP.lv + ' has lv7 rhythm', set);
@@ -87,15 +88,15 @@ for (let i = 0; i < 6000; i++) {
 // 드럼 세트 (v3.3): 두 성부 마디 길이·이어짐, 시간표가 모든 음을 한 번씩, 너무 빠른 음 없음, 결정적
 { let kn = 0, kb = 0; const kbad = (m, s) => { kb++; bad('kit ' + m, s); };
   for (let i = 0; i < 3000; i++) { const r = C.mulberry(50000 + i);
-    const set = { gen: 2, drum: 'kit', mode: 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 7), bars: [1, 2, 4, 8, 16][Math.floor(r() * 5)], key: 'C', inst: 'clarinet', bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][i % 3], artic: 'auto', seed: Math.floor(r() * 1e9), edits: {}, rv: (i >> 1) % 2 ? 2 : 0 };
+    const set = { gen: 2, drum: 'kit', mode: 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 7), bars: [1, 2, 4, 8, 16][Math.floor(r() * 5)], key: 'C', inst: 'clarinet', bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][i % 3], artic: 'auto', seed: Math.floor(r() * 1e9), edits: {}, rv: (i >> 1) % 2 ? 2 : 0 }; if (i % 3 === 2) { set.gen = 3; set.level = 1 + (set.level - 1) % 5; }
     let sc; try { sc = C.generate(set); } catch (e) { kbad('throw ' + e.message, set); continue; } kn++;
     if (!sc.kit || sc.pickLen) kbad('not kit / pickup', set);
     if (JSON.stringify(C.generate(set).events) !== JSON.stringify(sc.events)) kbad('not deterministic', set);
     for (const ms of sc.measures) for (const v of ['u', 'd']) { const ev = sc.events.filter(e => e.mi === ms.mi && e.voice === v); let t = ms.start; for (const e of ev) { if (e.start !== t) kbad('gap', set); t += e.dur; } if (t - ms.start !== ms.len) kbad('len ' + v, set); }
     const tl = C.timeline(sc, 1); const ids = tl.notes.flatMap(x => x.ids).sort((a, b) => a - b), nr = sc.events.filter(e => !e.rest).map(e => e.id);
     if (JSON.stringify(ids) !== JSON.stringify(nr)) kbad('timeline ids', set);
-    if (sc.events.some(e => !e.rest && !e.tup && e.dur * sc.spt < (set.rv >= 2 ? Math.max(0.06, C.levelProfile(set).minSec * 0.75) : Math.max(0.07, C.levelProfile(set).minSec)) - 1e-9)) kbad('too fast', set);
-    if (sc.events.some(e => e.flam) && set.level < 5) kbad('flam below 5', set);
+    if (sc.events.some(e => !e.rest && !e.tup && e.dur * sc.spt < (set.rv >= 2 || set.gen >= 3 ? Math.max(0.06, C.levelProfile(set).minSec * 0.75) : Math.max(0.07, C.levelProfile(set).minSec)) - 1e-9)) kbad('too fast', set);
+    if (sc.events.some(e => e.flam) && C.levelProfile(set).lv < 5) kbad('flam below 5', set);
     if (sc.events.some(e => !e.rest && e.keys.some(k => !C.KIT_KEYS[k]))) kbad('bad key', set);
   }
   console.log('kit runs', kn, 'fail', kb); }
@@ -103,7 +104,7 @@ for (let i = 0; i < 6000; i++) {
 let inv = 0, invBad = 0;
 for (let i = 0; i < 400; i++) {
   const r = C.mulberry(9000 + i);
-  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7), gen: i % 4 ? 2 : 0, rv: i % 3 ? 2 : 0, bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
+  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7), gen: i % 4 ? (i % 2 ? 3 : 2) : 0, rv: i % 3 ? 2 : 0, bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
   const sig = inst => {
     const sc = C.generate({ ...base, inst });
     const ns = sc.events.filter(e => !e.rest);
@@ -135,7 +136,9 @@ for (const k of Object.keys(s0)) if (JSON.stringify(s0[k]) !== JSON.stringify(s1
 // 옛 링크(g 없음)는 옛 3단계 그대로, 새 링크는 7단계
 { const a = C.decodeSet(JSON.stringify({ m: 'r', t: '4/4', l: 3, b: 4, k: 'C', s: 9, v: 90 }), { gen: 2, level: 5 }); if (a.gen !== 0 || a.level !== 3 || !C.levelProfile(a).legacy) bad('old link', a);
   const b = C.decodeSet(JSON.stringify({ m: 'r', t: '4/4', l: 7, g: 2, b: 4, k: 'C', s: 9, v: 90 }), { gen: 0, level: 1 }); if (b.gen !== 2 || b.level !== 7) bad('new link', b);
-  const u = C.upgradeSet({ level: 2 }); if (u.level !== 4 || u.gen !== 2) bad('upgrade', u); }
+  const u = C.upgradeSet({ level: 2 }); if (u.level !== 3 || u.gen !== 3) bad('upgrade', u);   // v3.9: 옛 보통 → 7단계 4 → 5단계 3
+  for (const [a, b] of [[1, 1], [2, 1], [3, 2], [4, 3], [5, 4], [6, 5], [7, 5]]) { const v = C.upgradeSet({ gen: 2, level: a }); if (v.level !== b || v.gen !== 3) bad('upgrade7', [a, v]); }
+  { const k = C.decodeSet(C.encodeSet({ gen: 3, rv: 2, mode: 'rhythm', meter: '4/4', level: 5, bars: 4, key: 'C', inst: 'flute', bpm: 90, pickup: 'off', artic: 'auto', seed: 3, edits: {} }), {}); if (k.gen !== 3 || k.level !== 5 || k.rv !== 2) bad('gen3 link', k); } }
 // 이조 조표
 const wk = (k, i) => C.writtenKey(k, C.INSTS[i]).name;
 const checks = [['Bb', 'clarinet', 'C'], ['Eb', 'alto_sax', 'C'], ['F', 'horn', 'C'], ['Bb', 'horn', 'F'], ['E', 'clarinet', 'F#'], ['Cm', 'clarinet', 'Dm'], ['Ab', 'alto_sax', 'F'], ['E', 'alto_sax', 'Db'], ['C', 'trumpet', 'D']];

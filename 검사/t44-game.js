@@ -1,7 +1,7 @@
 // v3.8 연습 기록 게임: 연속일·방패·오늘 목표·최고 기록·배지 계산, 가상 연주 제외, 보관함에서 연 녹음엔 보상 카드 없음,
 // 기존 녹음으로 처음 한 번 기록 채우기, 오늘의 악보, 끄기, 화면(320·390·어두운 화면) 넘침
 // 사용: FAKE_WAV=<영문 경로 fake.wav(seed777 선율)> node cdp.js t44-game.js
-const SET = { gen: 2, mode: 'melody', meter: '4/4', level: 2, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 96, pickup: 'off', artic: 'auto', seed: 777, edits: {} };
+const SET = { gen: 3, rv: 2, mode: 'melody', meter: '4/4', level: 2, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 96, pickup: 'off', artic: 'auto', seed: 777, edits: {} };
 module.exports = async (c) => {
   const out = {}, bad = [];
   const ok = (name, cond, info) => { out[name] = cond ? 'ok' : ('FAIL ' + JSON.stringify(info)); if (!cond) bad.push(name); };

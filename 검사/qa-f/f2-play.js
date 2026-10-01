@@ -57,7 +57,7 @@ module.exports = async (c) => {
   await J('mash', `(async()=>{ const b=document.querySelector('#playBtn'); for(let i=0;i<10;i++){ b.click(); await __w(37);} await __w(3000); const t=__btn(), p=!!RPX.playing; if(p) b.click(); await __w(50); return {t,p,after:__btn(),pl:RPX.playing}; })()`);
   // 재생 중 설정 바꾸기
   const acts = [
-    ['level', `document.querySelectorAll('#levelSeg button')[6].click()`],
+    ['level', `document.querySelectorAll('#levelSeg button')[4].click()`],
     ['meter', `(()=>{const s=document.querySelector('#meter'); s.value='6/8'; s.dispatchEvent(new Event('change'));})()`],
     ['drum', `(()=>{const s=document.querySelector('#drum'); s.value='cymbal'; s.dispatchEvent(new Event('change'));})()`],
     ['bpm', `(()=>{const s=document.querySelector('#bpmRange'); s.value='150'; s.dispatchEvent(new Event('input'));})()`],

@@ -9,6 +9,6 @@ module.exports = async (c) => {
   console.log('v2.9 saved', await c.ev(`RP.set.gen+' '+RP.set.level+' | '+document.querySelector('#levelHint').textContent`));
   await c.go('http://127.0.0.1:8765/#' + encodeURIComponent(JSON.stringify({ m: 'r', t: '4/4', l: 2, b: 4, k: 'C', s: 77, v: 90 })));
   console.log('old link', await c.ev(`RP.set.gen+' '+RP.set.level+' | '+document.querySelector('#levelHint').textContent`));
-  await c.ev(`document.querySelectorAll('#levelSeg button')[6].click()`);
+  await c.ev(`document.querySelectorAll('#levelSeg button')[4].click()`);
   console.log('after click', await c.ev(`RP.set.gen+' '+RP.set.level+' | '+document.querySelector('#setSum').textContent`));
 };

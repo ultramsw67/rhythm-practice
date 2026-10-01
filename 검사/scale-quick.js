@@ -10,7 +10,7 @@ const insts = Object.keys(C.INSTS), meters = Object.keys(C.METERS);
 for (const inst of insts) for (const key of C.KEYS.map(k => k.name)) for (let level = 1; level <= 7; level++) for (const minor of ['h', 'n', 'm']) {
   if (!key.endsWith('m') && minor !== 'h') continue;
   const meter = meters[(n * 7 + level) % meters.length], bpm = [60, 88, 120, 160, 208][n % 5];
-  const set = { gen: 2, mode: 'melody', prac: 'scale', sv: n % 2 ? 2 : 0, minor, kref: n % 3 === 0 ? 'w' : '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: n + 1, edits: {}, bow: inst === 'contrabass' ? ['', 'pizz', 'mix'][n % 3] : '' };
+  const set = { gen: level <= 5 && (n >> 1) % 2 ? 3 : 2, mode: 'melody', prac: 'scale', sv: n % 2 ? 2 : 0, minor, kref: n % 3 === 0 ? 'w' : '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: n + 1, edits: {}, bow: inst === 'contrabass' ? ['', 'pizz', 'mix'][n % 3] : '' };
   n++;
   let sc; try { sc = C.generate(set); C.timeline(sc, 1); } catch (e) { B('crash ' + e.message, set); continue; }
   for (const m of sc.measures) { const t = sc.events.filter(e => e.mi === m.mi).reduce((a, e) => a + e.dur, 0); if (Math.abs(t - sc.measLen) > 1e-6) B('meas len ' + t + ' vs ' + sc.measLen, { set, mi: m.mi }); }

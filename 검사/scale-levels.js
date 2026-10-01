@@ -5,26 +5,27 @@ const fs = require('fs');
 const load = f => { const html = fs.readFileSync(f, 'utf8'); const core = html.match(/<script id="core">([\s\S]*?)<\/script>/)[1]; const root = {}; new Function('window', 'self', core)(root, root); return root.Core; };
 const C = load(process.argv[2] || '../index.html');
 const OLD = process.env.OLD ? load(process.env.OLD) : null;
+const GEN = +(process.env.GEN || 3), NL = GEN >= 3 ? 5 : 7;   // v3.9 기본 5단계 판
 const insts = Object.keys(C.INSTS), meters = Object.keys(C.METERS);
 const rhy = sc => sc.events.map(e => (e.rest ? 'r' : '') + e.base + '.'.repeat(e.dots) + (e.tup ? '/' + e.tup.n : '')).join(' ');
 const full = sc => JSON.stringify(sc.events.map(e => [e.start, e.dur, e.base, e.dots, e.rest, e.midi, e.artic, e.tup && e.tup.n, e.unit])) + JSON.stringify(sc.slurs) + JSON.stringify(sc.measures.map(m => m.units.map(u => [u.start, u.len])));
 const pairs = {}; let n = 0, maxPer = 0, maxPerAt = null, slowSame = [], unexplained = [], legacyDiff = 0, legacyN = 0, bad = 0;
 for (const inst of insts) for (const meter of meters) for (const bpm of [60, 88, 120, 160, 208]) for (const key of ['C', 'Bb', 'Am', 'F#']) {
   const out = [], scs = [];
-  for (let level = 1; level <= 7; level++) {
-    const set = { gen: 2, mode: 'melody', prac: 'scale', sv: 2, minor: 'h', kref: '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: 5 + level, edits: {}, bow: '' };
+  for (let level = 1; level <= NL; level++) {
+    const set = { gen: GEN, mode: 'melody', prac: 'scale', sv: 2, minor: 'h', kref: '', meter, level, bars: 4, key, inst, bpm, pickup: 'auto', artic: 'auto', seed: 5 + level, edits: {}, bow: '' };
     const sc = C.generate(set); out.push(rhy(sc)); scs.push(sc);
     for (const m of sc.measures) {
       const k = sc.events.filter(e => e.mi === m.mi && !e.rest).length; if (k > maxPer) { maxPer = k; maxPerAt = { inst, meter, bpm, level }; }
       const t = sc.events.filter(e => e.mi === m.mi).reduce((a, e) => a + e.dur, 0); if (Math.abs(t - sc.measLen) > 1e-6 && bad++ < 5) console.log('BAD meas len', meter, level, bpm);
     }
-    if (OLD) { const s0 = Object.assign({}, set); delete s0.sv; legacyN++; if (full(C.generate(s0)) !== full(OLD.generate(s0))) legacyDiff++; }
+    if (OLD) { const s0 = Object.assign({}, set, { gen: 2 }); delete s0.sv; legacyN++; if (full(C.generate(s0)) !== full(OLD.generate(s0))) legacyDiff++; }
   }
   n++;
-  for (let l = 1; l < 7; l++) if (out[l - 1] === out[l]) {
+  for (let l = 1; l < NL; l++) if (out[l - 1] === out[l]) {
     const p = l + '-' + (l + 1); pairs[p] = (pairs[p] || 0) + 1;
     if (bpm <= 88) slowSame.push({ p, inst, meter, bpm, key });
-    if (!(scs[l].scale.rlv < l + 1)) unexplained.push({ p, inst, meter, bpm, key });
+    if (!(scs[l].scale.rlv < C.levelProfile(scs[l].set).lv)) unexplained.push({ p, inst, meter, bpm, key });
   }
 }
 console.log('cases', n, 'maxPerMeasure', maxPer, JSON.stringify(maxPerAt), 'bad', bad);

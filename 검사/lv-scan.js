@@ -15,43 +15,44 @@ const BPMS = (process.env.BPMS || '40,60,88,120,160,208').split(',').map(Number)
 const SEEDS = +(process.env.SEEDS || 6);
 const KINDS = (process.env.KINDS || 'rhythm,melody,snare,kit').split(',');
 const RV = process.env.RV === '0' ? 0 : 2;
+const GEN = +(process.env.GEN || 3), NL = GEN >= 3 ? 5 : 7;          // v3.9: 기본은 5단계 판(gen 3), GEN=2 면 7단계 판
 const stat = {}; let slowSame = [], slowNoNew = [], unexplained = [], badLen = 0, legacyDiff = 0, legacyN = 0, total = 0;
-const bump = (k, f) => { const st = stat[k] || (stat[k] = { n: 0, same: [0, 0, 0, 0, 0, 0], noNew: [0, 0, 0, 0, 0, 0, 0] }); f(st); };
+const bump = (k, f) => { const st = stat[k] || (stat[k] = { n: 0, same: Array(NL - 1).fill(0), noNew: Array(NL).fill(0) }); f(st); };
 for (const kind of KINDS) for (const meter of meters) for (const bpm of BPMS) for (const bars of [2, 4, 8, 16]) for (const pickup of ['auto', 'on', 'off']) for (const artic of ['auto', 'none']) for (let s = 0; s < SEEDS; s++) {
   if (kind === 'kit' && pickup !== 'auto') continue;               // 드럼 세트는 못갖춘마디를 쓰지 않는다
   const seed = (1000 + s * 7919 + bars * 31) >>> 0;
   const mode = kind === 'melody' ? 'melody' : 'rhythm', drum = kind === 'rhythm' || kind === 'melody' ? '' : kind;
   const fp = [], scs = [], noNew = [];
-  for (let level = 1; level <= 7; level++) {
-    const set = { gen: 2, sv: 2, rv: RV, mode, prac: '', minor: 'h', kref: '', drum, bow: '', meter, level, bars, key: 'Bb', inst: 'clarinet', bpm, pickup, artic, seed, edits: {} };
+  for (let level = 1; level <= NL; level++) {
+    const set = { gen: GEN, sv: 2, rv: RV, mode, prac: '', minor: 'h', kref: '', drum, bow: '', meter, level, bars, key: 'Bb', inst: 'clarinet', bpm, pickup, artic, seed, edits: {} };
     globalThis.__cells = [];
-    const sc = C.generate(set); total++;
+    const sc = C.generate(set); total++; const T = C.levelProfile(set).lv;   // 안쪽 단계 (그 단계 리듬 = 조각 lv)
     const cells = globalThis.__cells; globalThis.__cells = null;
     fp.push(fpOf(sc)); scs.push(sc);
     // 마디 길이
     for (const m of sc.measures) { const t = sc.events.filter(e => e.mi === m.mi && (!e.voice || e.voice === 'u')).reduce((a, e) => a + e.dur, 0); if (Math.abs(t - m.len) > 1e-6 && badLen++ < 5) console.log('BAD len', kind, meter, level, bpm, bars, pickup); }
     // 그 단계 리듬이 빠진 마디 (선율·리듬·타악기: 못갖춘마디 빼고 마디마다)
     let miss = 0;
-    if (kind !== 'kit' && level >= 2) for (const m of sc.measures) { if (m.pickup || (m.last && m.units.length <= 1 && m.len <= sc.measLen - 1)) continue; if (!cells.some(([c, ui, fin, mi]) => mi === m.mi && !fin && c.lv === level)) miss++; }
-    noNew.push(kind === 'kit' ? (sc.rlv != null && sc.rlv < level) : miss > 0);
+    if (kind !== 'kit' && level >= 2) for (const m of sc.measures) { if (m.pickup || (m.last && m.units.length <= 1 && m.len <= sc.measLen - 1)) continue; if (!cells.some(([c, ui, fin, mi]) => mi === m.mi && !fin && c.lv === T)) miss++; }
+    noNew.push(kind === 'kit' ? (sc.rlv != null && sc.rlv < T) : miss > 0);
     if (miss && bpm <= 88) slowNoNew.push({ kind, meter, bpm, bars, pickup, level, miss, rlv: sc.rlv });
-    const scoreNew = kind === 'kit' || level < 2 || cells.some(([c, ui, fin]) => !fin && c.lv === level);
-    if (!scoreNew && !(sc.rlv < level)) unexplained.push({ why: 'noNew', kind, meter, bpm, bars, pickup, level, rlv: sc.rlv });
-    if (OLD && level % 2) { const s0 = Object.assign({}, set); delete s0.rv; legacyN++; if (full(C.generate(s0)) !== full(OLD.generate(s0))) legacyDiff++; }
+    const scoreNew = kind === 'kit' || level < 2 || cells.some(([c, ui, fin]) => !fin && c.lv === T);
+    if (!scoreNew && !(sc.rlv < T)) unexplained.push({ why: 'noNew', kind, meter, bpm, bars, pickup, level, rlv: sc.rlv });
+    if (OLD && level % 2) for (const rv of [undefined, 2]) { const s0 = Object.assign({}, set, { gen: 2, rv }); if (rv == null) delete s0.rv; legacyN++; if (full(C.generate(s0)) !== full(OLD.generate(s0))) legacyDiff++; }
   }
   for (const k of [`${kind}|${meter}|${bpm}`, `${kind}|all|${bpm}`, `${kind}|p=${pickup}|a=${artic}`]) bump(k, st => {
     st.n++;
-    for (let l = 1; l < 7; l++) if (fp[l - 1] === fp[l]) st.same[l - 1]++;
-    for (let l = 0; l < 7; l++) if (noNew[l]) st.noNew[l]++;
+    for (let l = 1; l < NL; l++) if (fp[l - 1] === fp[l]) st.same[l - 1]++;
+    for (let l = 0; l < NL; l++) if (noNew[l]) st.noNew[l]++;
   });
-  for (let l = 1; l < 7; l++) if (fp[l - 1] === fp[l]) {
+  for (let l = 1; l < NL; l++) if (fp[l - 1] === fp[l]) {
     if (bpm <= 88) slowSame.push({ p: l + '-' + (l + 1), kind, meter, bpm, bars, pickup, artic });
-    if (!(scs[l].rlv < l + 1)) unexplained.push({ why: 'same', p: l + '-' + (l + 1), kind, meter, bpm, bars, pickup, artic });
+    if (!(scs[l].rlv < C.levelProfile(scs[l].set).lv)) unexplained.push({ why: 'same', p: l + '-' + (l + 1), kind, meter, bpm, bars, pickup, artic });
   }
 }
 const pct = (a, n) => Math.round(a / n * 1000) / 10;
 for (const [k, st] of Object.entries(stat)) if (process.env.ONLY ? k.includes(process.env.ONLY) : k.includes('|all|'))
-  console.log(k.padEnd(24), 'n', String(st.n).padStart(5), ' 같은악보 1-2..6-7 %', st.same.map(x => pct(x, st.n)).join(' '), '  새리듬빠짐 1..7 %', st.noNew.map(x => pct(x, st.n)).join(' '));
+  console.log(k.padEnd(24), 'n', String(st.n).padStart(5), ' 같은악보(이웃) %', st.same.map(x => pct(x, st.n)).join(' '), '  새리듬빠짐(단계별) %', st.noNew.map(x => pct(x, st.n)).join(' '));
 console.log('scores', total, 'badLen', badLen);
 console.log('slowSame', slowSame.length, JSON.stringify(slowSame.slice(0, 4)));
 console.log('slowNoNew', slowNoNew.length, JSON.stringify(slowNoNew.slice(0, 4)));
