@@ -549,7 +549,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.8.3 (오프라인 앱) · 2026-10-01</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.8.4 (오프라인 앱) · 2026-10-01</p>
     </div>
   </section>
 </main>
@@ -1241,6 +1241,8 @@ function finishScore(set, events, measures, slurs, melody, inst, drum) {
     for (const e of events) if (e.pizz) e.artic = e.artic.filter(a => a !== 'stac' && a !== 'stacc' && a !== 'ten');   // 튕긴 소리는 저절로 사라져 길이 기호는 뺀다
     slurs = slurs.filter(([a, b]) => !events.slice(a, b + 1).some(e => e.pizz));                                         // 튕기는 곳엔 슬러 없음
   }
+  // v3.8.4 (2026-10-01 "악센트가 스타카토와 구분이 잘 안 돼 마르카토로 전부 교체"): 악센트(>)는 모두 마르카토(^)로. 옛 기록·링크·직접 붙인 기호도 같다. 난수는 그대로라 음·리듬은 안 바뀐다
+  for (const e of events) if (e.artic.includes('acc')) e.artic = [...new Set(e.artic.map(a => a === 'acc' ? 'marc' : a))];
   return { slurs, bow };
 }
 
@@ -2392,7 +2394,7 @@ function openSheet(id) {
   $('#sheetTitle').textContent = e.rest ? '쉼표 기호' : '음표 기호';
   const chips = $('#sheetChips');
   const isLast = id === score.events.length - 1;                    // 페르마타는 마지막 음에만
-  const keys = (e.rest ? ['ferm'] : Object.keys(C.ARTIC)).filter(k => (k !== 'ferm' || isLast) && (!score.drum || C.DRUM_ARTIC.includes(k)) && (!e.pizz || C.PIZZ_ARTIC.includes(k)));   // 타악기는 악센트·마르카토만, 튕기는 음은 길이 기호 없음
+  const keys = (e.rest ? ['ferm'] : Object.keys(C.ARTIC)).filter(k => k !== 'acc' && (k !== 'ferm' || isLast) && (!score.drum || C.DRUM_ARTIC.includes(k)) && (!e.pizz || C.PIZZ_ARTIC.includes(k)));   // 타악기는 악센트·마르카토만, 튕기는 음은 길이 기호 없음
   const inSlur = score.slurs.some(([a, b]) => id >= a && id <= b);
   chips.innerHTML = keys.map(k => `<button class="chip" type="button" data-k="${k}" aria-pressed="${e.artic.includes(k)}">${C.ARTIC[k].ko}</button>`).join('') +
     (e.rest || !score.melody || e.pizz ? '' : `<button class="chip" type="button" data-k="slur" aria-pressed="${inSlur}">슬러</button>`) +
