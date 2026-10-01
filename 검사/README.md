@@ -38,6 +38,8 @@
 | `node cdp.js t45-curves.js` (`W=320` 폭) | v3.8.1 슬러·붙임줄이 너무 짧아 세로줄처럼 보이는지 (선율·리듬 × 1~7단계 × 박자표 9 × 6곡 = 756개) | `nshort 0`, errs [] |
 | `node scale-levels.js ../index.html` (`OLD=<옛 index.html>` 이면 옛 기록 비교) | v3.8.2 음계에서 이웃 단계가 같은 악보인지 (악기 15 × 박자표 9 × 빠르기 5 × 조 4 × 1~7단계) | `slowSame 0`(BPM 88 이하 같은 악보 없음), `unexplained 0`(같으면 화면에 안내), `legacyDiff 0` |
 | `node cdp.js t46-scale-levels.js` | v3.8.2 음계 새 리듬(4/4·5/4·2/2 7단계, 2/2 2분음표 박, 6/8 3·4단계) 화면·가상 연주·빠른 BPM 안내 (sl-*.png) | self 100, over 0, errs [] |
+| `node lv-scan.js ../index.html` (`OLD=<옛 index.html>` 이면 옛 기록 비교, `SEEDS`·`BPMS`·`KINDS` 로 범위) | v3.8.3 난이도 1~7 전수: 리듬·선율·스네어·드럼 세트 × 박자표 9 × BPM 6 × 마디 수 4 × 못갖춘마디 3 × 기호 2 (181,440개). 같은 악보 번호로 단계만 바꿨을 때 이웃 단계가 같은 악보인지, 그 단계 리듬이 마디마다 들어갔는지 | `slowSame 0`(BPM 88 이하), `slowNoNew 0`, `unexplained 0`(같거나 빠지면 화면 안내), `badLen 0`, `legacyDiff 0` |
+| `node cdp.js t47-levels-mobile.js` | v3.8.3 390px 휴대폰에서 칸·단추로 못갖춘마디 빼기·기호 없음 → 1~7단계 (리듬·선율·드럼 세트 × 박자표 5 × BPM 88·160), 업데이트 전 저장 설정은 보던 악보 그대로 (lvm-*.png) | `bad [] 0`, errs [] |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의

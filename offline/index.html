@@ -549,7 +549,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:0">녹음과 점수는 이 기기의 브라우저 저장소(IndexedDB)에만 남고 어디에도 올라가지 않습니다. 악보 그리기에는 VexFlow를 씁니다.</p>
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.8.2 (오프라인 앱) · 2026-09-30</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.8.3 (오프라인 앱) · 2026-10-01</p>
     </div>
   </section>
 </main>
@@ -703,6 +703,18 @@ for (const k of Object.keys(CELLS)) {
     return { p, ol, lv, w, items, tot, span: tot / ULEN[k], minDur: Math.min(...items.map(i => i.dur)), allRest: items.every(i => i.rest), lead: items[0].rest };
   });
 }
+// v3.8.3: 2/2 는 2분음표가 한 박 → 4분 박 조각(s)을 두 배 길이로 늘린 조각(h, 한 칸 1680틱). set.rv 가 2 이상일 때만
+// (BPM 88 의 2/2 = 4분음표 176 이라 4분 박 조각으로는 16분·32분음표가 너무 빨라 4·7단계 리듬이 하나도 못 나오던 문제)
+{
+  const DBL = { h: 'w', q: 'h', '8': 'q', '16': '8', '32': '16' };
+  const tokOf = t => /^(r?)(32|16|8|q|h|w)(.*)$/.exec(t);          // '[3' 같은 잇단 머리는 null
+  CELLDB.h = CELLS.s.filter(([p]) => !p.split(' ').some(t => { const m = tokOf(t); return m && (m[2] === 'w' || m[2] === 'h'); })).map(([p, ol, w, lv]) => {
+    const p2 = p.split(' ').map(t => { const m = tokOf(t); return m ? m[1] + DBL[m[2]] + m[3] : t; }).join(' ');
+    const items = parseCell(p2);
+    const tot = items.reduce((a, i) => a + i.dur, 0);
+    return { p: p2, ol: 9, lv, w, items, tot, span: tot / 1680, minDur: Math.min(...items.map(i => i.dur)), allRest: items.every(i => i.rest), lead: items[0].rest };
+  });
+}
 
 /* ---------- 조표·악기 ---------- */
 const KEYS = [
@@ -823,8 +835,11 @@ function generateKit(set, LP) {
   const units = set.meter === '2/2' ? [{ type: 's', len: 1680 }, { type: 's', len: 1680 }] : [...M.units].map(u => ({ type: u, len: ULEN[u] }));
   const measLen = units.reduce((s, u) => s + u.len, 0), B = units.length;
   const spt = 60 / set.bpm / M.beat;
-  const minSec = Math.max(0.07, LP.minSec);
+  // v3.8.3: 새 판(set.rv 2)은 너무 빠른지 기준을 75%로, 단계마다 그 단계 특징(아래 feat)을 마디마다 하나 이상. rv 없는 옛 기록은 그대로
+  const NEW = !LP.legacy && set.rv >= 2;
+  const minSec = NEW ? Math.max(0.06, LP.minSec * 0.75) : Math.max(0.07, LP.minSec);
   const fits = (len, div) => len / div * spt >= minSec - 1e-9;
+  const got = {};                                              // 악보에 실제로 나온 단계 특징 → rlv
   // 박 나눔 고르기: 원하는 나눔이 너무 빠르면 한 단계씩 줄인다
   const pickDiv = (u, want) => {
     const order = u.type === 'c' ? [6, 3, 1] : want === 3 ? [3, 2, 1] : [4, 2, 1];
@@ -851,7 +866,7 @@ function generateKit(set, LP) {
       let want;
       if (finalBeat) want = 1;
       else if (inFill) want = comp ? (lv >= 4 ? 6 : 3) : lv === 6 ? 3 : lv >= 4 ? 4 : 2;
-      else if (comp) want = lv === 1 ? 1 : lv >= 7 ? 6 : 3;
+      else if (comp) want = lv === 1 ? 1 : lv >= 7 || (NEW && lv >= 4) ? 6 : 3;   // 새 판: 겹박자도 4단계부터 16분 칸
       else if (lv === 1) want = 1;
       else if (lv === 6) want = 3;                                     // 셔플
       else if (lv >= 4) want = 4;                                      // 16분 칸 (하이햇은 8분, 베이스가 16분 엇박)
@@ -873,7 +888,7 @@ function generateKit(set, LP) {
       }
       // 기본 박자 (그루브)
       const hatK = [];
-      if (comp) { if (div === 1) hatK.push(0); else if (div === 3) hatK.push(0, 1, 2); else hatK.push(0, 2, 4, ...(lv >= 7 && r() < 0.5 ? [1, 3, 5] : [])); }
+      if (comp) { if (div === 1) hatK.push(0); else if (div === 3) hatK.push(0, 1, 2); else hatK.push(0, 2, 4, ...(lv >= 7 && r() < 0.5 ? [1, 3, 5] : NEW && lv === 6 && r() < 0.5 ? [1 + 2 * Math.floor(r() * 3)] : [])); }   // 새 판 6단계 겹박자: 16분 하이햇 한 칸
       else if (div === 1) hatK.push(0);
       else if (div === 2) hatK.push(0, 1);
       else if (div === 3) hatK.push(0, 2);                                  // 셔플: 셋잇단 첫째·셋째
@@ -887,6 +902,7 @@ function generateKit(set, LP) {
         const off = div === 3 ? 2 : comp ? (div === 6 ? 4 : 2) : div / 2;      // 박의 '앤'
         if (r() < (lv >= 5 ? 0.4 : 0.28)) down[off] = true;
         if (lv >= 4 && !comp && div === 4 && r() < 0.3) down[3] = true;          // 16분 엇박 ('아')
+        if (NEW && lv >= 4 && comp && div === 6 && r() < 0.3) down[5] = true;     // 새 판: 겹박자 16분 엇박
         if (lv >= 5 && !backbeat(b) && r() < 0.15) up[off].add('snare');         // 당김 스네어
       }
       if (trip) for (let k = 1; k < div; k++) down[k] = false;         // 셔플 박은 베이스를 박 머리에만 (아래 성부 셋잇단 표시가 다음 줄과 겹침)
@@ -896,6 +912,30 @@ function generateKit(set, LP) {
     // 플램: 5단계부터 스네어 백비트에 가끔
     const flamAt = new Set();
     if (flamOK) beats.forEach((bt, b) => { if (bt.up[0].has('snare') && r() < 0.22) flamAt.add(b); });
+    if (NEW) {
+      // 단계 특징: 3 베이스 엇박 · 4 16분 칸 베이스 엇박 · 5 플램이나 당김 스네어 · 6 셔플 박(겹박자는 16분 하이햇) · 7 16분 하이햇
+      const groove = beats.map((bt, b) => ({ bt, b })).filter(({ bt, b }) => !(last && b === B - 1) && !(fillBeats > 0 && b >= fillFrom && b < fillFrom + fillBeats));
+      const hatOn = (bt, k) => bt.up[k].has('hat');
+      const feat = {
+        3: x => x.bt.div >= 2 && x.bt.down.some((d, k) => d && k > 0),
+        4: x => (x.bt.div === 4 && x.bt.down[3]) || (x.bt.div === 6 && (x.bt.down[5] || x.bt.down[1] || x.bt.down[3])),
+        5: x => flamAt.has(x.b) || (!backbeat(x.b) && x.bt.div >= 2 && x.bt.up.some((u, k) => k > 0 && u.has('snare'))),
+        6: x => x.bt.comp ? x.bt.div === 6 && [1, 3, 5].some(k => hatOn(x.bt, k)) : x.bt.trip,
+        7: x => x.bt.comp ? x.bt.div === 6 && [1, 3, 5].some(k => hatOn(x.bt, k)) : x.bt.div === 4 && (hatOn(x.bt, 1) || hatOn(x.bt, 3)),
+      };
+      const force = {
+        3: x => { if (x.bt.div < 2 || x.bt.trip) return false; x.bt.down[x.bt.comp ? (x.bt.div === 6 ? 4 : 2) : x.bt.div / 2] = true; return true; },
+        4: x => { if (x.bt.div === 4) x.bt.down[3] = true; else if (x.bt.div === 6) x.bt.down[5] = true; else return false; return true; },
+        5: x => { if (backbeat(x.b) && x.bt.up[0].has('snare')) { flamAt.add(x.b); return true; } return false; },
+        6: x => { if (x.bt.comp && x.bt.div === 6) { x.bt.up[1 + 2 * Math.floor(r() * 3)].add('hat'); return true; } return false; },
+        7: x => { if (x.bt.comp && x.bt.div === 6) { for (const k of [1, 3, 5]) x.bt.up[k].add('hat'); return true; } if (!x.bt.comp && x.bt.div === 4) { x.bt.up[1].add('hat'); x.bt.up[3].add('hat'); return true; } return false; },
+      };
+      if (lv >= 3 && force[lv] && groove.length && !groove.some(feat[lv])) {
+        const order = groove.slice(); for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+        for (const x of order) if (force[lv](x)) break;
+      }
+      for (let l = 3; l <= 7; l++) if (groove.some(feat[l])) got[l] = true;
+    }
     // 칸 → 음표·쉼표
     let pos = tick;
     units.forEach((u, b) => {
@@ -936,6 +976,7 @@ function generateKit(set, LP) {
   return {
     set, M, measures, events, slurs: [], end: tick, pickLen: 0, measLen, spt, inst: INSTS.c_treble, concertKey: KEY_BY.C, writtenKey: KEY_BY.C,
     tempoName: tempoName(set.bpm), melody: false, drum: 'kit', kit: true,
+    rlv: NEW ? (lv <= 2 || got[lv] ? lv : Math.max(2, ...Object.keys(got).map(Number).filter(l => l < lv))) : undefined,
   };
 }
 
@@ -945,12 +986,17 @@ function generate(set) {
   const M = METERS[set.meter];
   const LP = levelProfile(set), lv = LP.lv, tier = LP.tier;
   if (set.mode !== 'melody' && set.drum === 'kit') return generateKit(set, LP);      // 드럼 세트는 따로 (두 성부)
+  // v3.8.3 (2026-10-01 "4~7단계 난이도가 잘 안 갈림, 같은 악보도"): 새 판(set.rv 2) =
+  //  ① 마디마다 그 단계에서 새로 배우는 리듬을 하나 이상 ② 너무 빠른지 기준을 75%로(최소 0.06초 — 6/8·9/8·12/8 BPM 88 에서 16분음표가 3·4단계에 하나도 안 나오던 문제)
+  //  ③ 2/2 는 2분음표 박 조각 ④ 그래도 그 단계 리듬이 못 나오면 rlv 에 실제 단계를 남겨 화면에 알린다. rv 없는 옛 녹음·링크는 v3.8.2 악보 그대로
+  const NEW = !LP.legacy && set.rv >= 2;
   const POOL = {}; for (const k of Object.keys(CELLDB)) POOL[k] = LP.legacy ? CELLDB[k].filter(c => c.ol <= 3) : CELLDB[k];
   const cellLv = c => LP.legacy ? c.ol : c.lv;
-  const units = [...M.units].map(u => ({ type: u, len: ULEN[u] }));
+  const units = NEW && set.meter === '2/2' ? [{ type: 'h', len: 1680 }, { type: 'h', len: 1680 }] : [...M.units].map(u => ({ type: u, len: ULEN[u] }));
   const measLen = units.reduce((s, u) => s + u.len, 0);
   const spt = 60 / set.bpm / M.beat;                               // 1틱 = 초
-  const minSec = LP.minSec;
+  const minSec = NEW ? Math.max(0.06, LP.minSec * 0.75) : LP.minSec;
+  let rlv = 0;
   const melody = set.mode === 'melody';
   const drum = !melody && DRUMS[set.drum] ? set.drum : '';
   const inst = INSTS[set.inst] || INSTS.c_treble;
@@ -973,8 +1019,14 @@ function generate(set) {
   let tick = -pickLen, gidBase = 0, uid = 0;
   let prevAllRest = false;
   plan.forEach((pm, mi) => {
+    const want = NEW && lv >= 2 && !pm.pickup && (pm.last ? pm.units.length > 1 : true);   // 이 마디에 그 단계 리듬이 있어야 하나 (끝 박 하나뿐인 마지막 마디는 자리가 없다)
+    const snap = { ev: events.length, uid, gidBase, prevAllRest };
+    for (let tryN = 0; ; tryN++) {
+    const force = want && tryN === 3;
+    let got = false, mlv = 0;
     const meas = { no: pm.no, mi, start: tick, len: pm.units.reduce((s, u) => s + u.len, 0), units: [], pickup: !!pm.pickup, last: !!pm.last };
     let ui = 0, pos = 0;
+    const lim = pm.last ? pm.units.length - 1 : pm.units.length;   // 마지막 마디의 끝 박은 긴 음 하나로 정해져 있다
     while (ui < pm.units.length) {
       const u = pm.units[ui];
       let run = 1; while (ui + run < pm.units.length && pm.units[ui + run].type === u.type) run++;
@@ -988,6 +1040,8 @@ function generate(set) {
       if (isFinal || (pm.last && ui + 1 === pm.units.length)) {
         cell = POOL[u.type].find(c => c.span === 1 && c.items.length === 1 && !c.allRest);
       } else {
+        const tgt = force && !got ? cands.filter(c => cellLv(c) === lv && ui + c.span <= lim) : [];
+        if (tgt.length) cands = tgt;
         cell = cands.length ? wpick(r, cands, c => c.w * (cellLv(c) === lv ? LP.focus : 1)) : POOL[u.type].filter(c => c.span <= run && !c.allRest).sort((a, b) => b.minDur - a.minDur)[0];
       }
       // 마지막 박 앞에서 여러 박 조각이 마지막 박을 먹지 않도록
@@ -995,6 +1049,7 @@ function generate(set) {
         cell = POOL[u.type].find(c => c.span === 1 && c.items.length === 1 && !c.allRest);
       }
       prevAllRest = cell.allRest;
+      if (NEW && !(isFinal || (pm.last && ui + 1 === pm.units.length))) { if (cellLv(cell) === lv) got = true; mlv = Math.max(mlv, cellLv(cell)); }
       const gmap = {};
       for (let k = 0; k < cell.span; k++) meas.units.push({ start: tick + pos + k * u.len, len: u.len, type: u.type, id: uid++ });
       const cellUnit = uid - cell.span;
@@ -1009,8 +1064,10 @@ function generate(set) {
       }
       pos += cell.tot; ui += cell.span;
     }
-    measures.push(meas);
-    tick += meas.len;
+    if (!want || got || force) { measures.push(meas); rlv = Math.max(rlv, mlv); break; }
+    events.length = snap.ev; uid = snap.uid; gidBase = snap.gidBase; prevAllRest = snap.prevAllRest;   // 그 단계 리듬이 없으면 이 마디를 다시
+    }
+    tick += measures[measures.length - 1].len;
   });
   const end = tick;
 
@@ -1147,7 +1204,7 @@ function generate(set) {
   const fin = finishScore(set, events, measures, slurs, melody, inst, drum);
   return {
     set, M, measures, events, slurs: fin.slurs, end, pickLen, measLen, spt, inst, concertKey: concert, writtenKey: wkey,
-    tempoName: tempoName(set.bpm), melody, drum, bow: fin.bow, kref,
+    tempoName: tempoName(set.bpm), melody, drum, bow: fin.bow, kref, rlv: NEW ? Math.max(1, rlv) : undefined,
   };
 }
 
@@ -1397,6 +1454,7 @@ function upgradeSet(set) {
 function encodeSet(set) {
   const o = { m: set.mode[0], t: set.meter, l: set.level, b: set.bars, k: set.key, p: { auto: 'a', on: 'o', off: 'f' }[set.pickup] || 'a', a: set.artic[0], s: set.seed, v: set.bpm, i: set.inst };
   if (set.gen >= 2) o.g = 2;
+  if (set.gen >= 2 && set.rv >= 2 && !PRACS[set.prac]) o.y = 2;   // v3.8.3 난이도 규칙 판 (없으면 v3.8.2 악보)
   if (set.drum && DRUMS[set.drum]) o.d = set.drum;
   if (set.bow && BOWS[set.bow]) o.w = set.bow[0];
   if (set.kref === 'w') o.r = 'w';                                   // v3.7 조표 내 악보 기준 (받는 사람도 같은 '적힌 조' → 악기가 다르면 실음은 다름)
@@ -1420,7 +1478,8 @@ function decodeSet(str, base) {
   s.bow = { p: 'pizz', m: 'mix' }[o.w] || '';
   s.kref = o.r === 'w' ? 'w' : '';
   s.prac = o.x === 's' ? 'scale' : '';
-  s.sv = o.x === 's' ? (o.q === 2 ? 2 : 0) : 2;                    // q 없는 음계 링크 = v3.8.1 까지 → 보낸 사람과 같은 옛 음계
+  s.sv = o.x === 's' ? (o.q === 2 ? 2 : 0) : 2;
+  s.rv = o.y === 2 ? 2 : 0;                                        // y 없는 링크 = v3.8.2 까지 → 보낸 사람과 같은 악보 (음계 링크는 위 q)
   s.minor = MINORS[o.n] ? o.n : 'h';
   if (A[o.a]) s.artic = A[o.a];
   if (Number.isFinite(o.s)) s.seed = o.s >>> 0;
@@ -1872,12 +1931,13 @@ function showTab(name) {
 }
 
 /* ---------- 설정 ---------- */
-const DEFAULT = { gen: 2, sv: 2, drum: '', bow: '', kref: '', prac: '', minor: 'h', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
+const DEFAULT = { gen: 2, sv: 2, rv: 2, drum: '', bow: '', kref: '', prac: '', minor: 'h', mode: 'rhythm', meter: '4/4', level: 1, bars: 4, key: 'Bb', inst: 'clarinet', bpm: 88, pickup: 'auto', artic: 'auto', seed: 1, edits: {} };
 // v2.9 까지 저장된 설정(gen 없음)은 새 7단계로 옮긴다. gen 0 = 옛 기록·옛 링크로 일부러 연 옛 악보라 그대로 둔다
 const savedSet = store.get('set', {}) || {};
 let set = Object.assign({}, DEFAULT, savedSet);
 if (!('gen' in savedSet)) { set.gen = 0; C.upgradeSet(set); if (store.get('set', null)) store.set('set', set); }
 set.edits = set.edits || {};
+if (store.get('set', null) && !('rv' in savedSet)) set.rv = 0;   // v3.8.3: 업데이트 직후에도 보던 악보는 그대로, 단계·새 악보를 누르면 새 난이도 규칙
 if (!store.get('set', null)) set.seed = newSeed();
 // 공유 링크로 들어온 경우: 한 번 읽고 저장한 뒤 주소에서 지운다 (새로고침 때 다시 덮어쓰지 않게)
 function readHash() {
@@ -1948,7 +2008,7 @@ let lockedSet = null;             // 녹음 중 바뀐 폼을 되돌릴 때 쓰�
 function changed(opts = {}) {
   if (busyRec()) { if (lockedSet) set = lockedSet; syncForm(); return; }
   if (opts.reseed) set.seed = newSeed();
-  if (opts.reseed || opts.structural) { set.edits = {}; C.upgradeSet(set); set.sv = 2; }   // 새 악보가 되면 새 음계 방식(v3.8.2)
+  if (opts.reseed || opts.structural) { set.edits = {}; C.upgradeSet(set); set.sv = 2; set.rv = 2; }   // 새 악보가 되면 새 음계 방식(v3.8.2)·새 난이도 규칙(v3.8.3)
   store.set('set', set);
   syncForm(); rebuild();
   if (typeof renderGame === 'function') try { renderGame(); } catch (e) { }
@@ -2002,6 +2062,7 @@ function rebuild() {
     : `악보 번호 ${set.seed} · ${set.meter} · ${set.bars}마디${score.pickLen ? ' + 못갖춘마디' : ''} · ${C.levelProfile(set).label}`;
   // v3.8.2: 그 단계 리듬이 너무 빨라 아래 단계 리듬이 나오면 알려 준다 (같은 악보가 나오는 까닭)
   if (score.scale && set.sv >= 2 && score.scale.rlv < set.level) info += ` (이 박자·빠르기에서는 ${score.scale.rlv}단계 리듬 — 빠르기를 낮추면 ${set.level}단계 리듬)`;
+  else if (!score.scale && score.rlv != null && score.rlv < set.level) info += ` (이 박자·빠르기에서는 ${set.level}단계 리듬이 너무 빨라 ${score.rlv}단계 리듬까지 — 빠르기를 낮추면 ${set.level}단계 리듬)`;   // v3.8.3
   if (score.drum) info += ` · ${C.DRUMS[score.drum].name}`;
   if (score.melody) {
     info += ` · ${score.inst.name}`;
@@ -3231,7 +3292,7 @@ $('#resPlay').onclick = e => { if (curTake && curTake.audio) playBlob(asBlob(cur
 // 녹음 기록의 설정을 깊게 복사해 쓴다 (고쳐도 기록은 그대로, 옛 기록은 기본값으로 채움)
 function useTakeSet(ts) {
   const inst = set.inst;
-  set = Object.assign({}, DEFAULT, { gen: 0, sv: 0 }, JSON.parse(JSON.stringify(ts || {})));   // gen 없는 옛 기록은 옛 3단계 악보 그대로, sv 없는 옛 음계 기록은 v3.8.1 음계 그대로
+  set = Object.assign({}, DEFAULT, { gen: 0, sv: 0, rv: 0 }, JSON.parse(JSON.stringify(ts || {})));   // gen 없는 옛 기록은 옛 3단계 악보 그대로, sv 없는 옛 음계 기록은 v3.8.1 음계 그대로
   if (!C.INSTS[set.inst]) set.inst = inst;
   set.edits = set.edits && typeof set.edits === 'object' ? set.edits : {};
   store.set('set', set); syncForm(); rebuild();

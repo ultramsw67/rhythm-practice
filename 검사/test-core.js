@@ -20,7 +20,7 @@ for (let i = 0; i < 6000; i++) {
     mode: r() < 0.5 ? 'rhythm' : 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7),
     bars: [2, 4, 8, 12, 16][Math.floor(r() * 5)], key: C.KEYS[Math.floor(r() * 30)].name, inst: insts[Math.floor(r() * insts.length)],
     bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][Math.floor(r() * 3)], artic: ['auto', 'manual', 'none'][Math.floor(r() * 3)],
-    seed: Math.floor(r() * 1e9), edits: {}, gen: 2,
+    seed: Math.floor(r() * 1e9), edits: {}, gen: 2, rv: i % 2 ? 2 : 0,   // v3.8.3 새 난이도 규칙(rv 2)과 옛 규칙 둘 다
   };
   if (i % 5 === 0) { set.gen = 0; set.level = 1 + (set.level % 3); }       // 옛 3단계 악보(저장된 녹음)도 계속 시험
   const LP = C.levelProfile(set);
@@ -56,7 +56,7 @@ for (let i = 0; i < 6000; i++) {
     if (e.dots === 2) stats.dd++;
     if (e.base === '32') stats.t32++;
     if (e.artic.length) stats.artic++;
-    if (e.dur * sc.spt < LP.minSec - 1e-9 && !(LP.lv <= 2 && (e.base === 'q' || e.base === 'h' || e.base === 'w'))) bad('too fast note ' + e.base, set);
+    if (e.dur * sc.spt < (set.rv >= 2 && !LP.legacy ? Math.max(0.06, LP.minSec * 0.75) : LP.minSec) - 1e-9 && !(LP.lv <= 2 && (e.base === 'q' || e.base === 'h' || e.base === 'w'))) bad('too fast note ' + e.base, set);
     // 새 7단계: 그 단계보다 어려운 리듬이 나오지 않는지
     if (!LP.legacy) {
       if (LP.lv <= 6 && (e.base === '32' || e.dots === 2 || (e.tup && e.tup.n >= 4))) bad('lv' + LP.lv + ' has lv7 rhythm', set);
@@ -87,14 +87,14 @@ for (let i = 0; i < 6000; i++) {
 // 드럼 세트 (v3.3): 두 성부 마디 길이·이어짐, 시간표가 모든 음을 한 번씩, 너무 빠른 음 없음, 결정적
 { let kn = 0, kb = 0; const kbad = (m, s) => { kb++; bad('kit ' + m, s); };
   for (let i = 0; i < 3000; i++) { const r = C.mulberry(50000 + i);
-    const set = { gen: 2, drum: 'kit', mode: 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 7), bars: [1, 2, 4, 8, 16][Math.floor(r() * 5)], key: 'C', inst: 'clarinet', bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][i % 3], artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
+    const set = { gen: 2, drum: 'kit', mode: 'rhythm', meter: meters[i % meters.length], level: 1 + (i % 7), bars: [1, 2, 4, 8, 16][Math.floor(r() * 5)], key: 'C', inst: 'clarinet', bpm: 40 + Math.floor(r() * 169), pickup: ['auto', 'on', 'off'][i % 3], artic: 'auto', seed: Math.floor(r() * 1e9), edits: {}, rv: (i >> 1) % 2 ? 2 : 0 };
     let sc; try { sc = C.generate(set); } catch (e) { kbad('throw ' + e.message, set); continue; } kn++;
     if (!sc.kit || sc.pickLen) kbad('not kit / pickup', set);
     if (JSON.stringify(C.generate(set).events) !== JSON.stringify(sc.events)) kbad('not deterministic', set);
     for (const ms of sc.measures) for (const v of ['u', 'd']) { const ev = sc.events.filter(e => e.mi === ms.mi && e.voice === v); let t = ms.start; for (const e of ev) { if (e.start !== t) kbad('gap', set); t += e.dur; } if (t - ms.start !== ms.len) kbad('len ' + v, set); }
     const tl = C.timeline(sc, 1); const ids = tl.notes.flatMap(x => x.ids).sort((a, b) => a - b), nr = sc.events.filter(e => !e.rest).map(e => e.id);
     if (JSON.stringify(ids) !== JSON.stringify(nr)) kbad('timeline ids', set);
-    if (sc.events.some(e => !e.rest && !e.tup && e.dur * sc.spt < Math.max(0.07, C.levelProfile(set).minSec) - 1e-9)) kbad('too fast', set);
+    if (sc.events.some(e => !e.rest && !e.tup && e.dur * sc.spt < (set.rv >= 2 ? Math.max(0.06, C.levelProfile(set).minSec * 0.75) : Math.max(0.07, C.levelProfile(set).minSec)) - 1e-9)) kbad('too fast', set);
     if (sc.events.some(e => e.flam) && set.level < 5) kbad('flam below 5', set);
     if (sc.events.some(e => !e.rest && e.keys.some(k => !C.KIT_KEYS[k]))) kbad('bad key', set);
   }
@@ -103,7 +103,7 @@ for (let i = 0; i < 6000; i++) {
 let inv = 0, invBad = 0;
 for (let i = 0; i < 400; i++) {
   const r = C.mulberry(9000 + i);
-  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7), gen: i % 4 ? 2 : 0, bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
+  const base = { mode: 'melody', meter: meters[Math.floor(r() * meters.length)], level: 1 + Math.floor(r() * 7), gen: i % 4 ? 2 : 0, rv: i % 3 ? 2 : 0, bars: [2, 4, 8][Math.floor(r() * 3)], key: C.KEYS[Math.floor(r() * 30)].name, bpm: 60 + Math.floor(r() * 100), pickup: 'auto', artic: 'auto', seed: Math.floor(r() * 1e9), edits: {} };
   const sig = inst => {
     const sc = C.generate({ ...base, inst });
     const ns = sc.events.filter(e => !e.rest);
