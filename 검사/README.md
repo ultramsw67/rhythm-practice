@@ -41,7 +41,8 @@
 | `node lv-scan.js ../index.html` (`OLD=<옛 index.html>` 이면 옛 기록 비교, `SEEDS`·`BPMS`·`KINDS` 로 범위) | v3.8.3 난이도 전수(v3.9 부터 기본 5단계 판, `GEN=2` 면 7단계 판): 리듬·선율·스네어·드럼 세트 × 박자표 9 × BPM 6 × 마디 수 4 × 못갖춘마디 3 × 기호 2 (181,440개). 같은 악보 번호로 단계만 바꿨을 때 이웃 단계가 같은 악보인지, 그 단계 리듬이 마디마다 들어갔는지 | `slowSame 0`(BPM 88 이하), `slowNoNew 0`, `unexplained 0`(같거나 빠지면 화면 안내), `badLen 0`, `legacyDiff 0` |
 | `node variety.js ../index.html` (`N` 악보 수) | v3.9 새 악보 다양성: 박자표 4 × 1~5단계, 새 악보 300번에서 한 악보 안 박 리듬 종류·앞 마디와 같은 마디 비율·서로 다른 마디 리듬 수 (5단계 판 vs 7단계 판) | 5단계 판 dupMeas 대부분 0~1% |
 | `node cdp.js t47-levels-mobile.js` | v3.8.3 390px 휴대폰에서 칸·단추로 못갖춘마디 빼기·기호 없음 → 1~7단계 (리듬·선율·드럼 세트 × 박자표 5 × BPM 88·160), 업데이트 전 저장 설정은 보던 악보 그대로 (lvm-*.png) | `bad [] 0`, errs [] |
-| **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
+| `node cdp.js t50-v391.js` · `node cdp.js qa-g/g7-overlap.js` | v3.9.1 공개 전 점검: 안드로이드 앱 안 → 크롬 넘김 때 받은 악보(?rp=)·라인 주소·?rp= 열기·망가진 저장값 3가지·채점 시험 연타·망가진 백업 / 내 연주 듣기가 녹음·들어보기·화면 숨김 때 멈추는지 | `bad []` / `playerDuringRec:false`·`bothPlaying:false` |
+| **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로, 크롬이 늦게 뜨면 한 번 더). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의
 - **가짜 마이크 파일(FAKE_WAV)은 영문 경로에 두세요.** 한글 경로(이 폴더)면 크롬이 못 읽어 "소리가 거의 녹음되지 않았습니다"가 나온다 (2026-09-28 확인, 원래 버전도 같음)

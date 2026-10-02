@@ -3,7 +3,10 @@
 # wav 만들기: node gen-wav.js ../index.html '<SET>' <폴더>/fake.wav 0.7 — fake=선율 seed777(t22 SET), drum=스네어 5단계 seed91, l7=리듬 7단계 seed1234, kit=드럼 세트 5단계 seed7, contrabass=더블베이스 선율 3단계 B♭ seed5, scale=음계 7단계 4/4 알토 색소폰 seed3 (v3.8.2), lv68=리듬 6/8 4단계 seed4242 기호 없음 (v3.8.3). v3.8.3 부터 SET 에 "rv":2 (새 난이도 규칙), v3.9 부터 "gen":3 (5단계: 스네어·드럼 세트 4단계, 리듬·음계 5단계, lv68 은 6/8 3단계) (아래 t4 SET 과 같게)
 # 사용: bash run-all.sh <영문 경로 폴더: fake.wav(seed777 선율)·drum.wav·l7.wav 가 있는 곳>  (서버 127.0.0.1:8765 켜 둘 것)
 W="$1"; cd "$(dirname "$0")"; LOG=run-all.log; : > $LOG
-run() { local name="$1"; shift; sleep 2; rm -rf chrome-prof; echo "=== $name" >> $LOG; env "$@" timeout 300 node cdp.js $name >> $LOG 2>&1; echo "exit $?" >> $LOG; }
+# 크롬이 늦게 떠서 실패하면(앞 시험의 크롬이 덜 닫힘) 크롬을 정리하고 한 번 더 (v3.9.1)
+run() { local name="$1"; shift; sleep 2; rm -rf chrome-prof; echo "=== $name" >> $LOG; local out; out=$(env "$@" timeout 300 node cdp.js $name 2>&1); local rc=$?
+  if [ $rc -ne 0 ] && echo "$out" | grep -q "크롬이 뜨지 않았습니다"; then echo "(크롬 다시 띄움)" >> $LOG; powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"name='chrome.exe'\" | Where-Object { \$_.CommandLine -like '*remote-debugging-port=9333*' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" >/dev/null 2>&1; sleep 5; rm -rf chrome-prof; out=$(env "$@" timeout 300 node cdp.js $name 2>&1); rc=$?; fi
+  echo "$out" >> $LOG; echo "exit $rc" >> $LOG; }
 echo "=== test-core" >> $LOG; node test-core.js ../index.html 2>&1 | tail -3 | cut -c1-300 >> $LOG
 echo "=== scale-quick" >> $LOG; node scale-quick.js ../index.html >> $LOG 2>&1
 echo "=== scale-levels" >> $LOG; node scale-levels.js ../index.html >> $LOG 2>&1
@@ -35,5 +38,7 @@ run t46-scale-levels.js
 run t47-levels-mobile.js
 run t4.js FAKE_WAV="$W/lv68.wav" SET='{"gen":3,"rv":2,"mode":"rhythm","meter":"6/8","level":3,"bars":4,"key":"C","inst":"clarinet","bpm":88,"pickup":"off","artic":"none","seed":4242,"edits":{}}'
 run t43b-scale-fit.js BPM=120
+run t50-v391.js X=1
+run qa-g/g7-overlap.js X=1
 run t21-offline.js MODE=file FAKE_WAV="$W/fake.wav"
 echo ALLDONE >> $LOG

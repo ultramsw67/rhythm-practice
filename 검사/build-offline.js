@@ -26,6 +26,9 @@ function common(s, badge) {
   need(s, '.home-btn{'); s = s.replace('.home-btn{', '.off-badge{display:inline-block;vertical-align:middle;font-size:11px;font-weight:700;color:#fff;background:#2f855a;border-radius:999px;padding:2px 8px;margin-left:4px}\n.home-btn{');
   const v = `버전 ${ver} · `; need(s, v);
   s = s.replace(v, `버전 ${ver} (오프라인 ${badge}) · `);
+  // 아이폰 홈 화면에 두 앱을 다 저장해도 이름이 겹치지 않게 (v3.9.1, manifest short_name 과 같게)
+  need(s, '<meta name="apple-mobile-web-app-title" content="수드 리듬 연습">');
+  s = s.replace('<meta name="apple-mobile-web-app-title" content="수드 리듬 연습">', '<meta name="apple-mobile-web-app-title" content="수드 리듬(오프)">');
   need(s, '<h2>이 앱에 대해</h2>');
   s = s.replace('<h2>이 앱에 대해</h2>', '<h2>이 앱에 대해</h2>\n      <p id="offlineStatus" style="margin:0 0 8px;font-weight:600">오프라인 준비 중…</p>');
   return s;
@@ -129,6 +132,5 @@ fs.writeFileSync(path.join(OUT2, '읽어 주세요.txt'), '\ufeff' + [
   '2. 기본 브라우저가 다른 것이면: 파일을 오른쪽 클릭 → 연결 프로그램 → Chrome 또는 Microsoft Edge 를 고르세요.',
   '3. 이 폴더를 통째로 USB 나 다른 PC 에 옮겨도 그대로 열립니다. sounds 폴더(악기 소리)도 꼭 같이 옮기세요.',
   '4. 녹음과 점수는 이 PC 의 브라우저 안에 저장됩니다. 폴더를 옮기면 보관함은 새로 시작하니 먼저 보관함 → 전체 백업 내보내기를 하세요.',
-  '5. 공유 링크는 인터넷 버전 주소로 만들어집니다: ' + ONLINE,
 ].join('\r\n') + '\r\n');
 console.log('offline built', ver, CACHE, '| desktop file', Math.round(fs.statSync(path.join(OUT2, '수드 리듬 연습 오프라인.html')).size / 1024) + 'KB');
