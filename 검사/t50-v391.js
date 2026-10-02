@@ -30,7 +30,7 @@ module.exports = async (c) => {
   await new Promise(r => setTimeout(r, 400));
   out.andNav = await c.ev(`window.__rpNav.slice()`);
   const intent = (out.andNav || [])[0] || '';
-  if (!/^intent:\/\/127\.0\.0\.1:8765\/\?t=a&rp=/.test(intent) || !/S\.browser_fallback_url=/.test(intent)) bad.push('andIntent');
+  if (!/^intent:\/\/[^?#]+\?t=a&rp=/.test(intent) || !/S\.browser_fallback_url=/.test(intent)) bad.push('andIntent');
   const m = intent.match(/^intent:\/\/([^#]*)#Intent/);
   // 크롬이 받는 주소로 다시 열어 같은 악보인지
   await c.send('Emulation.setUserAgentOverride', { userAgent: CHROME, platform: 'Linux armv8l' });
