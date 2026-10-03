@@ -1,6 +1,7 @@
 #!/bin/bash
 # 전체 회귀 검사 (v3.2): 시험마다 크롬 프로필을 새로 만들어 앞 시험의 저장값이 섞이지 않게 한다
 # wav 만들기: node gen-wav.js ../index.html '<SET>' <폴더>/fake.wav 0.7 — fake=선율 seed777(t22 SET), drum=스네어 5단계 seed91, l7=리듬 7단계 seed1234, kit=드럼 세트 5단계 seed7, contrabass=더블베이스 선율 3단계 B♭ seed5, scale=음계 7단계 4/4 알토 색소폰 seed3 (v3.8.2), lv68=리듬 6/8 4단계 seed4242 기호 없음 (v3.8.3). v3.8.3 부터 SET 에 "rv":2 (새 난이도 규칙), v3.9 부터 "gen":3 (5단계: 스네어·드럼 세트 4단계, 리듬·음계 5단계, lv68 은 6/8 3단계) (아래 t4 SET 과 같게)
+# v3.9.2: swing.wav = 리듬 스타일 스윙 3단계 seed321 BPM 120 (아래 t4 SET 과 같게). style-scan 은 OLDIDX=<옛 index.html> 이면 스타일 없는 악보 비교
 # 사용: bash run-all.sh <영문 경로 폴더: fake.wav(seed777 선율)·drum.wav·l7.wav 가 있는 곳>  (서버 127.0.0.1:8765 켜 둘 것)
 W="$1"; cd "$(dirname "$0")"; LOG=run-all.log; : > $LOG
 # 크롬이 늦게 떠서 실패하면(앞 시험의 크롬이 덜 닫힘) 크롬을 정리하고 한 번 더 (v3.9.1)
@@ -14,6 +15,7 @@ echo "=== lv-scan" >> $LOG; node lv-scan.js ../index.html | tail -5 >> $LOG 2>&1
 echo "=== lv-scan gen2" >> $LOG; GEN=2 SEEDS=3 node lv-scan.js ../index.html | tail -4 >> $LOG 2>&1
 echo "=== variety" >> $LOG; N=100 node variety.js ../index.html >> $LOG 2>&1
 echo "=== range-scan" >> $LOG; node range-scan.js ../index.html | tail -1 >> $LOG 2>&1
+echo "=== style-scan" >> $LOG; OLD="$OLDIDX" node style-scan.js ../index.html | tail -3 >> $LOG 2>&1
 echo "=== test-score" >> $LOG; node test-score.js ../index.html 2>&1 | grep -E "LOW|^perfect|^jitter|^drop|^wrong|^fast" >> $LOG
 run t4.js FAKE_WAV="$W/fake.wav" SET='{"gen":3,"rv":2,"mode":"melody","meter":"4/4","level":2,"bars":4,"key":"Bb","inst":"clarinet","bpm":96,"pickup":"off","artic":"auto","seed":777,"edits":{}}'
 run t4.js FAKE_WAV="$W/drum.wav" SET='{"gen":3,"rv":2,"drum":"snare","mode":"rhythm","meter":"4/4","level":4,"bars":4,"key":"C","inst":"clarinet","bpm":100,"pickup":"off","artic":"auto","seed":91,"edits":{}}'
@@ -39,6 +41,9 @@ run t47-levels-mobile.js
 run t4.js FAKE_WAV="$W/lv68.wav" SET='{"gen":3,"rv":2,"mode":"rhythm","meter":"6/8","level":3,"bars":4,"key":"C","inst":"clarinet","bpm":88,"pickup":"off","artic":"none","seed":4242,"edits":{}}'
 run t43b-scale-fit.js BPM=120
 run t50-v391.js X=1
+run t51-styles.js X=1
+run t51-styles.js W=320
+run t4.js FAKE_WAV="$W/swing.wav" SET='{"gen":3,"rv":2,"style":"swing","drum":"","mode":"rhythm","meter":"4/4","level":3,"bars":4,"key":"C","inst":"clarinet","bpm":120,"pickup":"off","artic":"auto","seed":321,"edits":{}}'
 run qa-g/g7-overlap.js X=1
 run t21-offline.js MODE=file FAKE_WAV="$W/fake.wav"
 echo ALLDONE >> $LOG
