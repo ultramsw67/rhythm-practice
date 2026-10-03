@@ -363,6 +363,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
             <label class="f rhy">리듬 스타일
               <select id="style"><option value="">기본 (스타일 없음)</option></select>
             </label>
+            <label class="opt rhy accf"><input type="checkbox" id="accomp" checked> 들어보기에 스타일 반주</label>
             <label class="f melo kreff">조표 기준
               <select id="kref"><option value="">합주 실음 (지휘자가 말한 조)</option><option value="w">내 악보에 적힌 조 (혼자 연습)</option><option value="same" hidden disabled>이 악기는 둘이 같음 (고를 필요 없음)</option></select>
             </label>
@@ -554,7 +555,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.9.2 · 2026-10-03</p>
+      <p class="muted" style="margin:8px 0 0">버전 v3.9.3 · 2026-10-03</p>
     </div>
   </section>
 </main>
@@ -759,157 +760,170 @@ for (const k of Object.keys(CELLS)) {
 // kit: 드럼 세트 그루브 (한 마디, 칸마다 위 성부 글자·아래 성부 b) — h 하이햇 r 라이드 s 스네어 x 림(크로스 스틱) c 크래시 t 탐, '.' 빈 칸
 const STYLES = {
   // 순서 = 화면 순서 (관악단에 쓸모 있는 순 — 조사 보고서 20장). 패턴 근거: 2026-10-03 조사(출처 62곳, 볼트 「2026-10-03 리듬 스타일 조사」)
+  // v3.9.3 (2026-10-03 "스타일이 확실히 구분되게, 드럼 세트는 심각히 구분 안 됨"): 단계마다 그 스타일만의 리듬을 넣고 다른 스타일과 같은 조각을 줄임(style-scan 이 셈),
+  //   드럼 세트는 스타일마다 교본 그루브와 다른 악기(라이드+발 하이햇·카우벨·림 클라베·행진 스네어·움-파·수르두) — 같은 그루브 0
+  // kit 글자: 위 성부 h 하이햇 r 라이드 s 스네어 x 림 B 카우벨 c 크래시 t 미들 탐 / 아래 성부 b 베이스 드럼 p 발 하이햇. u2·d2 = 짝수째 마디 (두 마디 한 바퀴)
   march: {
     name: '행진곡', mark: 'March', meters: ['2/4', '6/8', '2/2'], bpm: 116, bpmBy: { '2/2': 100 }, acc: [0], stac: 0.3, from: { '2/2': ['2/4', 'dbl'] },
     desc: '행진곡 — 2/4·6/8·2/2(컷 타임), 또렷하고 짧게. 뒷박 반주는 호른·알토 색소폰이 자주 읽습니다',
-    lvDesc: ['4분·2분음표 (걸음 박)', '8분음표', '점8분+16분 (행진 부점)', '뒷박 반주·16분음표', '당김·셋잇단 팡파르'],
+    lvDesc: ['걸음 박 (4분음표·점4분+8분)', '행진 부점 (점8분+16분)', '부점 이어 치기·뒷박 반주', '16분음표 행진 리듬', '셋잇단 팡파르·당김'],
     lv: [
-      ['q q', 'h', 'q. q.', 'h.'],
-      ['8 8 q', 'q 8 8', '8 8 8 8', 'q 8 q 8', 'q 8 q.'],
-      ['8. 16 q', '8. 16 8. 16', '8. 16 8 8', 'q. q 8', '8 8 8 q.'],
-      ['r8 8 r8 8', '16 16 8 q', '8 16 16 8 8', 'r8 8 8 r8 8 8', '8. 16 8 8. 16 8'],
-      ['8 q 8', 'r16 16 8 8 8', '[3 8 8 8] q', '8. 16 r8 8', 'q 8 8 8 8', '8 16 16 8 q.'],
+      ['q q', 'q. 8', 'q. q.', 'q 8 q.'],
+      ['8. 16 q', 'q 8. 16', 'q 8 q 8', '8. 16 8 q.'],
+      ['8. 16 8. 16', 'r8 8 r8 8', '8. 16 8 8', 'r8 8 8 r8 8 8', '8. 16 8 8. 16 8'],
+      ['16 16 8 q', '8 16 16 8 8', '16 16 8 8. 16', '8 16 16 8 q.'],
+      ['[3 8 8 8] q', '[3 8 8 8] 8. 16', 'r16 16 8 8 8', '16 16 16 16 8 8 8 16 16'],
     ],
-    kit: { '2/4': { a: { u: 's s s s', d: 'b . b .' }, b: { u: 's . s s s s s .', d: 'b . . . b . . .' } }, '6/8': { a: { u: 's . s s . s', d: 'b . . b . .' } }, '2/2': { a: { u: 's s s s', d: 'b . b .' }, b: { u: 's . s s s s s .', d: 'b . . . b . . .' } } },
+    kit: {
+      '2/4': { a: { u: 's . s s s . s s', d: 'b . . . b . . .' }, b: { u: 's s s s s . s .', d: 'b . . . b . . .' } },
+      '6/8': { a: { u: 's . s s . s', d: 'b . . b . .' }, b: { u: 's s s s . s', d: 'b . . b . .' } },
+      '2/2': { a: { u: 's . s s s . s s', d: 'b . . . b . . .' }, b: { u: 's s s s s . s .', d: 'b . . . b . . .' } },
+    },
   },
   trot: {
     name: '트로트', mark: 'Trot', meters: ['2/4', '4/4'], bpm: 116, acc: [], stac: 0.15, from: { '4/4': ['2/4', 'join'] },
     desc: '트로트 — 쿵-짝 두 박, 점8분+16분(뽕짝) 리듬. 점8분+16분은 악보대로 연주합니다',
-    lvDesc: ['4분·2분음표 (쿵-짝)', '8분음표', '점8분+16분 (트로트 부점)', '쿵-짝 반주·16분 꺾기', '당김'],
+    lvDesc: ['쿵-짝 (4분+8분 둘·8분 둘+4분)', '뽕짝 부점 (점8분+16분)', '부점 이어 치기', '쿵-짝 반주·16분 꺾기', '당김'],
     lv: [
-      ['q q', 'h'],
-      ['8 8 q', 'q 8 8', '8 8 8 8'],
-      ['8. 16 8. 16', 'q. 8', '8. 16 8 8'],
-      ['q rq', 'rq q', 'r8 8 r8 8', '8. 16 q', '16 16 8 q'],
-      ['8 q 8', 'r8 8 8. 16', '16 16 8 8. 16'],
+      ['q 8 8', '8 8 q'],
+      ['8. 16 q', 'q 8. 16', '8. 16 8 8'],
+      ['8. 16 8. 16', 'q. 8', '8 8 8. 16'],
+      ['rq q', 'r8 8 8. 16', '16 16 8 8. 16', '8. 16 16 16 8'],
+      ['8 q 8', '8. 16 r8 8', '16 16 8 r8 8'],
     ],
-    kit: { '2/4': { a: { u: 'h h s h', d: 'b . . .' }, b: { u: 'h h s h', d: 'b . . b' } }, '4/4': { a: { u: 'h h s h h h s h', d: 'b . . . b . . .' }, b: { u: 'h h s h h h s h', d: 'b . . b b . . .' } } },
+    kit: {
+      '2/4': { a: { u: 'h h hs h', d: 'b . . b' }, b: { u: 'h h hs hs', d: 'b . b b' } },
+      '4/4': { a: { u: 'h h hs h h h hs h', d: 'b . . b b . . b' }, b: { u: 'h h hs h h h hs hs', d: 'b . b b b . b b' } },
+    },
   },
   swing: {
     name: '스윙', mark: 'Swing', meters: ['4/4'], bpm: 120, swing: 2 / 3, acc: [1260, 2940], stac: 0.25,
     desc: '재즈 스윙 — 악보는 곧은 8분음표로 적고, 길게-짧게(셋잇단 2:1)로 연주합니다',
-    lvDesc: ['4분·2분음표 (워킹 박)', '8분음표 길게-짧게', '엇박 시작·찰스턴', '박을 걸치는 당김', '셋잇단·뒷박 연속'],
+    lvDesc: ['워킹 박·2·4박 (두-밧)', '8분음표 길게-짧게', '엇박 시작·찰스턴', '박을 걸치는 당김', '셋잇단·뒷박 연속'],
     lv: [
-      ['q q q q', 'h q q', 'q q h', 'rq q rq q'],
-      ['q 8 8 q 8 8', '8 8 8 8 8 8 8 8', '8 8 q 8 8 q', 'q q 8 8 8 8'],
-      ['q. 8 rh', 'r8 8 q r8 8 q', 'q. 8 q q', 'q 8 8 r8 8 q'],
-      ['q 8 q 8 q', '8 q 8 q q', '8 q 8 h', 'q q 8 q 8'],
+      ['q q q q', 'rq q rq q', 'q q rq q'],
+      ['q 8 8 q 8 8', '8 8 q 8 8 q', 'q q q 8 8'],
+      ['q. 8 rh', 'r8 8 q r8 8 q', 'q 8 8 r8 8 q'],
+      ['q 8 q 8 q', '8 q 8 h', 'q q 8 q 8'],
       ['q [3 8 8 8] r8 8 q', '8 8 r8 8 r8 8 r8 8', 'r8 q 8 r8 q 8', '8 q q q 8'],
     ],
-    kit: { '4/4': { a: { u: 'r . r r r . r r', d: 'b . b . b . b .' }, b: { u: 'r . r rs r . r rs', d: 'b . b . b . b .' } } },
+    kit: { '4/4': { a: { u: 'r . r r r . r r', d: 'b . bp . b . bp .' }, b: { u: 'r . r rs r . r rs', d: 'b . bp . b . bp .' } } },
   },
   shuffle: {
     name: '셔플', mark: 'Shuffle', meters: ['4/4'], bpm: 100, swing: 2 / 3, acc: [840, 2520], stac: 0.1,
     desc: '블루스·록 셔플 — 8분음표를 박마다 또렷하게 길게-짧게(따-다 따-다) 연주합니다',
-    lvDesc: ['4분·2분음표', '8분음표 길게-짧게 이어 치기', '4분+8분 둘', '엇박 8분음표', '셋잇단·당김'],
+    lvDesc: ['따-다 따-다 (8분음표 길게-짧게)', '4분+8분 둘', '쉼표 섞인 셔플', '엇박 셔플', '셋잇단·당김'],
     lv: [
-      ['q q q q', 'h h', 'q q h'],
-      ['8 8 8 8 8 8 8 8', '8 8 q 8 8 q'],
-      ['q 8 8 q 8 8', '8 8 8 8 q rq', 'q q 8 8 8 8'],
-      ['8 8 8 8 r8 8 q', 'r8 8 r8 8 r8 8 r8 8', '8 8 r8 8 8 8 q'],
+      ['8 8 8 8 8 8 8 8', '8 8 8 8 q q', 'q q 8 8 8 8'],
+      ['q 8 8 q 8 8', '8 8 q 8 8 q', '8 8 8 8 q 8 8'],
+      ['8 8 8 8 q rq', '8 8 r8 8 8 8 q', 'q rq 8 8 8 8'],
+      ['8 8 8 8 r8 8 q', 'r8 8 r8 8 r8 8 r8 8', '8 q 8 8 q 8'],
       ['[3 8 8 8] 8 8 [3 8 8 8] 8 8', '8 q 8 q q', 'r8 8 8 q 8 8 8'],
     ],
-    kit: { '4/4': { a: { u: 'h h hs h h h hs h', d: 'b . . . b . . .' }, b: { u: 'h h hs h h h hs h', d: 'b . b . b . b .' } } },
+    kit: { '4/4': { a: { u: 'h h hs hs h h hs hs', d: 'b . b . b . b .' }, b: { u: 'h hs hs hs h hs hs hs', d: 'b . b b b . b b' } } },
   },
   waltz: {
     name: '왈츠', mark: 'Waltz', meters: ['3/4'], bpm: 132, acc: [0], stac: 0.15,
     desc: '3/4 왈츠 — 첫 박을 무겁게(쿵-짝-짝). 호른·트롬본은 둘째·셋째 박 반주를 자주 읽습니다',
-    lvDesc: ['점2분·4분음표', '2분+4분', '점4분+8분, 8분음표', '쿵-짝-짝 반주', '당김·셋잇단'],
+    lvDesc: ['쿵-짝-짝 (점2분·4분음표, 둘째·셋째 박 반주)', '2분+4분', '점4분+8분', '8분음표 흐름', '당김·셋잇단'],
     lv: [
-      ['h.', 'q q q'],
-      ['h q', 'q h'],
-      ['q. 8 q', 'q 8 8 q', 'q q 8 8', '8 8 q q'],
-      ['rq q q', 'q rq rq', 'q. 8 8 8', 'h 8 8'],
+      ['h.', 'q q q', 'rq q q', 'q rq rq'],
+      ['h q', 'q h', 'h 8 8'],
+      ['q. 8 q', 'q. 8 8 8', 'rq q. 8'],
+      ['q 8 8 q', '8 8 q q', 'q q 8 8', '8 8 8 8 q'],
       ['8 q 8 q', '[3 8 8 8] q q', 'r8 8 q q', '8 q q 8'],
     ],
-    kit: { '3/4': { a: { u: '. s s', d: 'b . .' }, b: { u: 'h h hs h hs h', d: 'b . . . . .' } } },
+    kit: { '3/4': { a: { u: '. . s . s .', d: 'b . . . . .' }, b: { u: 'r . rs . rs r', d: 'b . p . p .' } } },
   },
   rock: {
     name: '록·팝 (8비트)', mark: 'Rock', meters: ['4/4'], bpm: 112, acc: [840, 2520], stac: 0.1,
     desc: '록·팝 8비트 — 곧은 8분음표, 2·4박 강세. 가요·팝 편곡의 바탕입니다',
-    lvDesc: ['4분·2분음표', '8분음표', '점4분+8분, 3-3-2', '당김', '뒷박 연속'],
+    lvDesc: ['2분·4분음표 (곧은 박)', '곧은 8분음표 섞기', '점4분+8분, 3-3-2', '당김', '뒷박 연속·16분음표'],
     lv: [
-      ['q q q q', 'h h', 'h q q'],
-      ['8 8 q 8 8 q', '8 8 8 8 8 8 8 8', 'q 8 8 q 8 8'],
+      ['h h', 'h q q', 'q q h'],
+      ['8 8 q 8 8 q', 'q 8 8 h', 'h 8 8 8 8'],
       ['q. 8 q q', 'q. q. q', 'q. 8 h'],
       ['8 q 8 q q', 'q 8 q 8 q', '8 q 8 8 q 8'],
       ['r8 8 r8 8 8 q 8', '8 8 r8 8 r8 8 q', '8 8 16 16 8 r8 8 q'],
     ],
-    kit: { '4/4': { a: { u: 'h h hs h h h hs h', d: 'b . . . b . . .' }, b: { u: 'h h hs h h h hs h', d: 'b . . . b b . .' } } },
+    kit: { '4/4': { a: { u: 'h h hs h h h hs h', d: 'b . . . b b . .' }, b: { u: 'h h hs h h h hs h', d: 'b . . b b b . .' } } },
   },
   latin: {
-    name: '차차·라틴', mark: 'Cha-cha', meters: ['4/4'], bpm: 120, acc: [], stac: 0.2,
+    name: '차차·라틴', mark: 'Cha-cha', meters: ['4/4'], bpm: 120, acc: [2520, 2940], stac: 0.2,
     desc: '차차차·라틴 — 곧은 8분음표, "차-차-차"(4박 8분 둘 + 다음 1박)와 클라베(3-2)',
-    lvDesc: ['4분음표 (카우벨 박)', '차-차-차', '점4분+8분', '클라베 3-2', '툼바오·당김'],
+    lvDesc: ['차-차-차 (4박 8분 둘)', '차-차-차 이어 치기', '점4분+8분', '클라베 3-2', '툼바오·당김'],
     lv: [
-      ['q q q q', 'h q q'],
-      ['q q q 8 8', 'q q 8 8 q', '8 8 q q q'],
+      ['q q q 8 8', 'h q 8 8'],
+      ['q q 8 8 q', '8 8 q q 8 8', 'q 8 8 q 8 8'],
       ['q q. 8 q', 'q. 8 q 8 8', 'q. 8 h'],
       ['q. q. q', 'rq q h', 'rq q q rq'],
       ['rq q. q.', '8 q 8 q 8 8', 'r8 q 8 r8 q 8'],
     ],
-    kit: { '4/4': { a: { u: 'hx h h hx h h hx h', d: 'b . . . b . . .' }, b: { u: 'hx h h hx h h hs hs', d: 'b . . b . . b .' } } },
+    kit: { '4/4': { a: { u: 'B . B x B . Bt t', d: 'b . . . b . . .' }, b: { u: 'B . Bx . B x Bt t', d: 'b . . b b . . .' } } },
   },
   bossa: {
     name: '보사노바', mark: 'Bossa Nova', meters: ['4/4', '2/2'], bpm: 126, bpmBy: { '2/2': 63 }, acc: [], stac: 0.08,
     desc: '브라질 보사노바 — 곧은 8분음표(스윙 아님), 점4분+8분 베이스와 보사 클라베',
-    lvDesc: ['2분음표 (두 박 느낌)', '점4분+8분 (보사 베이스)', '마디 끝 당김', '보사 클라베', '선율형 당김'],
+    lvDesc: ['보사 베이스 (점4분+8분)', '점4분+8분 이어 치기', '마디 끝 당김', '보사 클라베', '선율형 당김'],
     lv: [
-      ['h h', 'q q q q'],
-      ['q. 8 q. 8', 'q. 8 q q', 'q. 8 h'],
-      ['q q q. 8', 'q. 8 r8 q 8', 'r8 8 q q. 8'],
+      ['q. 8 h', 'q. 8 q q'],
+      ['q. 8 q. 8', 'h q. 8', 'q q q. 8'],
+      ['q. 8 r8 q 8', 'r8 8 q q. 8', 'q 8 8 q. 8'],
       ['q. q. q', 'rq q. q.', 'rq 8 q 8 q'],
       ['8 q 8 q q', '8 q 8 r8 q 8', 'r8 q 8 8 q 8'],
     ],
-    kit: { '4/4': { a: { u: 'hx h h hx h h hx h', d: 'b . . b b . . b' } }, '2/2': { a: { u: 'hx h h hx h h hx h', d: 'b . . b b . . b' } } },
+    kit: {
+      '4/4': { a: { u: 'hx h h hx h h hx h', d: 'b . . b b . . b', u2: 'h h hx h h hx h h', d2: 'b . . b b . . b' } },
+      '2/2': { a: { u: 'hx h h hx h h hx h', d: 'b . . b b . . b', u2: 'h h hx h h hx h h', d2: 'b . . b b . . b' } },
+    },
   },
   polka: {
     name: '폴카', mark: 'Polka', meters: ['2/4'], bpm: 112, acc: [0], stac: 0.35,
     desc: '폴카 — 2/4 빠르고 가볍게, 움-파(쿵-짝) 반주',
-    lvDesc: ['4분·2분음표', '8분음표', '움-파 반주', '16분음표·점8분', '당김·16분 엇박'],
+    lvDesc: ['움-파 (뒷박 반주)', '8분음표 가볍게', '16분음표 섞기', '점8분+16분', '당김·16분 엇박'],
     lv: [
-      ['q q', 'h'],
-      ['8 8 q', '8 8 8 8', 'q 8 8'],
-      ['q rq', 'r8 8 r8 8', '8 8 16 16 8'],
-      ['16 16 8 8 8', '8. 16 8 8', '8 16 16 q'],
+      ['r8 8 r8 8', 'q r8 8'],
+      ['8 8 8 8', '8 8 r8 8', '8 r8 8 8'],
+      ['16 16 8 8 8', '8 8 16 16 8', '8 16 16 q'],
+      ['8. 16 8 8', '16 16 8 16 16 8', '8. 16 16 16 8'],
       ['8 q 8', 'r16 16 16 16 8 8', '16 16 16 16 8 r8'],
     ],
-    kit: { '2/4': { a: { u: '. s', d: 'b .' }, b: { u: 'h hs h hs', d: 'b . b .' } } },
+    kit: { '2/4': { a: { u: '. s . s', d: 'b . b .' }, b: { u: 'h s h s', d: 'b . b b' } } },
   },
   tango: {
     name: '탱고', mark: 'Tango', meters: ['4/4', '2/4'], bpm: 120, acc: [0, 1680], stac: 0.3,
     desc: '탱고 — 마르카토(박마다 짧고 또렷하게, 1·3박 강세), 하바네라와 3-3-2',
-    lvDesc: ['4분음표 마르카토', '점4분+8분', '하바네라', '3-3-2 · 신코파', '16분·쉼표 섞인 당김'],
+    lvDesc: ['마르카토 (1·3박 강세)', '하바네라 첫걸음 (점4분+8분)', '하바네라', '3-3-2 · 신코파', '16분·쉼표 섞인 당김'],
     lv: [
-      ['q q q q', 'q q'],
-      ['q. 8 q q', 'h q q', 'q. 8', '8 8 q'],
+      ['q rq q rq', 'q q q rq', 'q rq'],
+      ['q. 8 q q', 'q. 8', 'q. 8 h'],
       ['8. 16 8 8 8. 16 8 8', '8. 16 8 8 q q', '8. 16 8 8'],
-      ['q. q. q', '8 q. h', 'q q q. 8', '8 q 8', '16 16 8 q'],
+      ['q. q. q', '8 q. h', '8 q 8', 'q q q. 8'],
       ['r8. 16 8 8 q q', '16 16 8 r8 8 q q', 'r8. 16 8 8', '16 16 8 r8 8'],
     ],
-    kit: { '4/4': { a: { u: 'x . . . x . . . x . . . x . . .', d: 'b . . b b . b . b . . b b . b .' } }, '2/4': { a: { u: 'x . . . x . . .', d: 'b . . b b . b .' } } },
+    kit: { '4/4': { a: { u: 'x . . . x . . . x . . . x . . .', d: 'b . . b b . b . b . . b b . b .' }, b: { u: 'x . . x x . x . x . . x x . x .', d: 'b . . b b . b . b . . b b . b .' } }, '2/4': { a: { u: 'x . . . x . . .', d: 'b . . b b . b .' }, b: { u: 'x . . x x . x .', d: 'b . . b b . b .' } } },
   },
   samba: {
     name: '삼바', mark: 'Samba', meters: ['2/4'], bpm: 100, acc: [840], stac: 0.15,
     desc: '브라질 삼바 — 2/4, 16분음표 흐름, 둘째 박을 무겁게(수르두)',
-    lvDesc: ['4분음표 (수르두 박)', '8분·16분음표', '16-8-16 · 점8분+16분', '탐보림 당김', '쉼표 섞인 당김'],
+    lvDesc: ['수르두 (점8분+16분)', '16분음표 흐름', '16-8-16 (삼바 당김)', '탐보림 당김', '쉼표 섞인 당김'],
     lv: [
-      ['q q', 'h'],
-      ['8 8 8 8', '16 16 16 16 q', '8 8 q'],
-      ['16 8 16 q', '8. 16 8. 16', '16 16 8 8 8'],
+      ['8. 16 q', 'q 8. 16', '8. 16 8. 16'],
+      ['16 16 16 16 q', '16 16 8 q', '8 16 16 8 8'],
+      ['16 8 16 q', '16 8 16 8 8', 'q 16 8 16'],
       ['16 8 16 16 8 16', 'r16 16 16 16 8 8', '16 8 16 8. 16'],
       ['16 8 16 r16 8 16', '16 16 16 16 r16 8 16', '8 16 16 r16 16 8'],
     ],
-    kit: { '2/4': { a: { u: 'h h h h h h h h', d: 'b . . b b . . b' }, b: { u: 'h h hx h h hx h hx', d: 'b . . b b . . b' } } },
+    kit: { '2/4': { a: { u: 'h h hx h h hx h hx', d: 'bp . . b bp . . b' }, b: { u: 'hx h hx hx h hx h hx', d: 'bp . . b bp . . b' } } },
   },
   ballad: {
     name: '12/8 발라드', mark: 'Slow Rock', meters: ['12/8'], bpm: 60, acc: [1260, 3780], stac: 0.05,
     desc: '12/8 슬로 록·발라드 — 한 박(점4분)을 셋으로 나눠 흐르듯',
-    lvDesc: ['점4분음표', '4분+8분 (셋 나눔)', '8분음표 셋', '박 안 당김', '16분·두잇단'],
+    lvDesc: ['점4분음표·셋 나눔', '4분+8분 (셋 나눔)', '8분음표 셋 이어 치기', '박 안 당김', '16분·두잇단'],
     lv: [
-      ['q. q. q. q.', 'h. h.', 'h. q. q.'],
-      ['q 8 q 8 q 8 q 8', '8 8 8 q. 8 8 8 q.', 'q 8 q 8 q. q.'],
-      ['q. 8 8 8 q. q.', '8 8 8 8 8 8 q. q.', 'q. q 8 q. q 8'],
+      ['q. q. q. q.', 'h. q. q.', 'q. q. h.'],
+      ['q 8 q 8 q 8 q 8', 'q 8 q 8 q. q.', 'q. q 8 q. q 8'],
+      ['8 8 8 q. 8 8 8 q.', 'q. 8 8 8 q. q.', '8 8 8 8 8 8 q. q.'],
       ['q. r8 8 8 q 8 q.', '8 q 8 8 8 q. q.', '8 q 8 q q 8 q.'],
       ['8 16 16 8 q. q. q.', '[2 8 8] 8 8 8 [2 8 8] q.', '8. 16 8 q 8 q. q.'],
     ],
@@ -995,7 +1009,9 @@ function generateStyle(set, LP, g) {
     const notes = events.filter(e => !e.rest);
     for (const e of notes) {
       const pos = ((e.start % measLen) + measLen) % measLen;
-      if (S.acc && S.acc.includes(pos) && r() < (ui >= 3 ? 0.6 : 0.35)) { e.artic.push('acc'); continue; }
+      // v3.9.3: 그 스타일에서 힘주는 자리는 늘 강세 (초보자가 눈으로 배우게). 단 그 마디에 강세 없는 음이 있을 때만 — 모두 세면 '더 세게'가 없다
+      const mates = notes.filter(x => x.mi === e.mi), accAt = x => S.acc && S.acc.includes(((x.start % measLen) + measLen) % measLen);
+      if (accAt(e) && mates.some(x => !accAt(x))) { e.artic.push('acc'); continue; }
       if (drum) continue;
       const sec = e.dur * spt;
       if (S.stac && e.dur <= 840 && sec * 0.5 >= 0.06 && r() < S.stac * (ui >= 2 ? 1 : 0.5)) e.artic.push('stac');
@@ -1016,16 +1032,17 @@ function parseEnd(S, M, measLen) {
 // 드럼 세트 그루브 (스타일): 한 마디 칸 문자열 → 박마다 { div, up, down }
 function styleKitBeats(S, M, units, ui, r, mi, last, bars) {
   const K = S.kit[M.num + '/' + M.den] || S.kit[Object.keys(S.kit)[0]], G = ui >= 4 && K.b ? K.b : K.a;
-  const B = units.length, upS = G.u.split(' '), dnS = G.d.split(' ');
+  const alt = mi % 2 === 1 && G.u2, B = units.length, upS = (alt ? G.u2 : G.u).split(' '), dnS = (alt ? G.d2 || G.d : G.d).split(' ');
   const per = upS.length / B;                                     // 박마다 칸 수
   const beats = units.map((u, b) => {
-    const div = per, up = [], down = [];
+    const div = per, up = [], down = [], dk = [];
     for (let k = 0; k < div; k++) {
       const tok = upS[b * div + k], s = new Set();
-      for (const ch of tok) { const key = { h: 'hat', r: 'ride', s: 'snare', x: 'rim', c: 'crash', t: 'tom_m' }[ch]; if (key) s.add(key); }
-      up.push(s); down.push(dnS[b * div + k] === 'b');
+      for (const ch of tok) { const key = { h: 'hat', r: 'ride', s: 'snare', x: 'rim', c: 'crash', t: 'tom_m', B: 'bell' }[ch]; if (key) s.add(key); }
+      const dt = dnS[b * div + k] || '.', ds = new Set(); if (dt.includes('b')) ds.add('bass'); if (dt.includes('p')) ds.add('pedal');
+      up.push(s); down.push(ds.size > 0); dk.push(ds);
     }
-    return { div, up, down, trip: false, comp: u.type === 'c' };
+    return { div, up, down, dk, trip: false, comp: u.type === 'c' };
   });
   // 단계: 1 그루브만 · 2 + 프레이즈 첫 박 크래시 · 3 + 네 마디마다 필인 · 4 + 마디마다 베이스 엇박 하나(둘째 그루브가 있으면 그것) · 5 + 스네어 당김·두 박 필인
   const freeOff = (bt, k) => k > 0 && !bt.down[k] && !bt.up[k].has('snare') && !bt.up[k].has('rim');
@@ -1040,9 +1057,11 @@ function styleKitBeats(S, M, units, ui, r, mi, last, bars) {
   }
   // 3단계부터 네 마디마다 마지막 박(5단계는 두 박)을 스네어로 시작해 탐으로 채우기
   const fill = ui >= 3 && bars > 1 && ((mi + 1) % 4 === 0) && !last;
-  if (fill) for (let b = Math.max(0, B - (ui >= 5 && B >= 2 ? 2 : 1)); b < B; b++) { const bt = beats[b]; for (let k = 0; k < bt.div; k++) { bt.up[k] = new Set([k === 0 ? 'snare' : k % 2 ? 'tom_h' : 'tom_m']); bt.down[k] = k === 0; } }
-  if (ui >= 2 && (mi === 0 || mi % 4 === 0)) { const s = beats[0].up[0]; s.delete('hat'); s.delete('ride'); s.add('crash'); beats[0].down[0] = true; }
-  if (last) { const bt = beats[B - 1]; for (let k = 0; k < bt.div; k++) { bt.up[k] = new Set(k === 0 ? ['crash'] : []); bt.down[k] = k === 0; } }
+  if (fill) for (let b = Math.max(0, B - (ui >= 5 && B >= 2 ? 2 : 1)); b < B; b++) { const bt = beats[b]; for (let k = 0; k < bt.div; k++) { bt.up[k] = new Set([k === 0 ? 'snare' : k % 2 ? 'tom_h' : 'tom_m']); bt.down[k] = k === 0; bt.dk[k] = new Set(k === 0 ? ['bass'] : []); } }
+  if (ui >= 2 && (mi === 0 || mi % 4 === 0)) { const s = beats[0].up[0]; s.delete('hat'); s.delete('ride'); s.delete('bell'); s.add('crash'); beats[0].down[0] = true; beats[0].dk[0].add('bass'); }
+  if (last) { const bt = beats[B - 1]; for (let k = 0; k < bt.div; k++) { bt.up[k] = new Set(k === 0 ? ['crash'] : []); bt.down[k] = k === 0; bt.dk[k] = new Set(k === 0 ? ['bass'] : []); } }
+  // 아래 성부 악기 맞추기: 꺼진 칸은 비우고, 켜졌는데 악기가 없으면(변화·필인·끝) 베이스 드럼
+  for (const bt of beats) for (let k = 0; k < bt.div; k++) { if (!bt.down[k]) bt.dk[k] = new Set(); else if (!bt.dk[k] || !bt.dk[k].size) bt.dk[k] = new Set(['bass']); }
   return beats;
 }
 
@@ -1150,8 +1169,8 @@ const EXCL = [['stac', 'stacc', 'ten'], ['acc', 'marc']];
    위 성부(손, 기둥 위) = 하이햇·스네어·탐·크래시, 아래 성부(발, 기둥 아래) = 베이스 드럼.
    박마다 나눔(4분·8분·16분·셋잇단 / 점4분 박은 8분 셋·16분 여섯)을 정하고 칸마다 칠 악기를 고른 뒤 음표·쉼표로 바꾼다.
    북은 소리를 끌 수 없으니 붙임줄은 없고, 다음 칠 때까지 남는 길이는 쉼표로 적는다. 못갖춘마디는 넣지 않는다 */
-const KIT_KEYS = { bass: 'f/4', tom_f: 'a/4', snare: 'c/5', tom_m: 'd/5', tom_h: 'e/5', hat: 'g/5/x2', crash: 'a/5/x2', ride: 'f/5/x2', rim: 'c/5/x2' };   // v3.9.2 라이드(맨 윗줄 X)·림(크로스 스틱, 스네어 자리 X)
-const KIT_KO = { bass: '베이스 드럼', tom_f: '플로어 탐', snare: '스네어', tom_m: '미들 탐', tom_h: '하이 탐', hat: '하이햇', crash: '크래시', ride: '라이드 심벌', rim: '림 (크로스 스틱)' };
+const KIT_KEYS = { bass: 'f/4', tom_f: 'a/4', snare: 'c/5', tom_m: 'd/5', tom_h: 'e/5', hat: 'g/5/x2', crash: 'a/5/x2', ride: 'f/5/x2', rim: 'c/5/x2', bell: 'e/5/D2', pedal: 'd/4/x2' };   // v3.9.3 카우벨(넷째 칸 채운 마름모)·발 하이햇(오선 아래 X)   // v3.9.2 라이드(맨 윗줄 X)·림(크로스 스틱, 스네어 자리 X)
+const KIT_KO = { bass: '베이스 드럼', tom_f: '플로어 탐', snare: '스네어', tom_m: '미들 탐', tom_h: '하이 탐', hat: '하이햇', crash: '크래시', ride: '라이드 심벌', rim: '림 (크로스 스틱)', bell: '카우벨', pedal: '하이햇 (발)' };
 const KIT_VAL = [[1680, 'h', 0], [1260, 'q', 1], [840, 'q', 0], [630, '8', 1], [420, '8', 0], [315, '16', 1], [210, '16', 0], [105, '32', 0]];
 function kitPieces(ticks) {                                  // 길이를 적을 수 있는 음표 값들로 (큰 것부터)
   const out = [];
@@ -1294,7 +1313,7 @@ function generateKit(set, LP) {
         if (hitK[0] > 0) push(0, hitK[0], null);
         hitK.forEach((k, j) => {
           const nx = j + 1 < hitK.length ? hitK[j + 1] : bt.div;
-          const keys = voice === 'u' ? [...bt.up[k]] : ['bass'];
+          const keys = voice === 'u' ? [...bt.up[k]] : bt.dk ? [...bt.dk[k]] : ['bass'];
           push(k, nx - k, keys);
           if (voice === 'u' && k === 0 && flamAt.has(b)) events[events.length - (tup ? 1 : kitPieces((nx - k) * slot).length)].flam = true;
         });
@@ -2339,6 +2358,7 @@ function syncForm() {
   if (set.mode !== 'melody' && set.style && !STf) set.style = '';      // 선율 모드에서 박자표를 바꾸고 돌아온 경우 등 — 맞지 않으면 스타일 없음으로
   $('#style').value = STf ? set.style : '';
   for (const o of $('#meter').options) o.disabled = !!STf && !STf.meters.includes(o.value);
+  $('#accomp').checked = store.get('accomp', true) !== false;
   if (STf && LPf.g3) $('#levelHint').textContent = STf.name + (set.drum === 'kit' ? ' 드럼 세트' : '') + ' ' + LPf.ui + '단계 — ' + C.styleLvName(set, LPf.ui) + '. ' + STf.desc;
   $('#meter').value = set.meter; $('#bars').value = String(set.bars); $('#pickup').value = set.pickup; $('#artic').value = set.artic;
   $('#inst').value = set.inst; $('#key').value = set.key;
@@ -2347,6 +2367,7 @@ function syncForm() {
   $('#beatLabel').textContent = '(' + ({ q: '♩', h: '𝅗𝅥', '8': '♪' }[M.beatName]) + (M.beatDots ? '.' : '') + ' = ' + set.bpm + ', ' + C.tempoName(set.bpm) + ')';
   document.querySelectorAll('.melo').forEach(el => el.classList.toggle('hide', set.mode !== 'melody'));
   document.querySelectorAll('.rhy').forEach(el => el.classList.toggle('hide', set.mode === 'melody'));
+  document.querySelectorAll('.accf').forEach(el => el.classList.toggle('hide', !C.styleOf(set) || set.drum === 'kit' || set.mode === 'melody'));
   document.querySelectorAll('.bowf').forEach(el => el.classList.toggle('hide', set.mode !== 'melody' || !(C.INSTS[set.inst] || {}).strings));   // 현악기(더블베이스)만
   $('#bow').value = C.BOWS[set.bow] ? set.bow : '';
   $('#drum').value = C.DRUMS[set.drum] ? set.drum : '';
@@ -2403,6 +2424,7 @@ $('#artic').onchange = e => { set.artic = e.target.value; set.edits = {}; change
 $('#inst').onchange = e => { set.inst = e.target.value; changed({ structural: true }); };
 $('#key').onchange = e => { set.key = e.target.value; changed({ structural: true }); };
 $('#drum').onchange = e => { set.drum = e.target.value; changed({ structural: true }); };
+$('#accomp').onchange = e => store.set('accomp', !!e.target.checked);
 // v3.9.2 리듬 스타일: 고르면 그 스타일 박자표·보통 빠르기로 (빠르기는 나중에 바꿀 수 있음)
 $('#style').onchange = e => {
   const v = C.STYLES[e.target.value] ? e.target.value : '';
@@ -2454,6 +2476,10 @@ function rebuild() {
   if (score.scale && rU != null && rU < set.level) info += ` (이 박자·빠르기에서는 ${rU}단계 리듬 — 빠르기를 낮추면 ${set.level}단계 리듬)`;
   else if (!score.scale && rU != null && rU < set.level) info += ` (이 박자·빠르기에서는 ${set.level}단계 리듬이 너무 빨라 ${rU}단계 리듬까지 — 빠르기를 낮추면 ${set.level}단계 리듬)`;   // v3.8.3
   if (score.drum) info += ` · ${C.DRUMS[score.drum].name}`;
+  if (score.kit) {   // v3.9.3 초보자용: 이 악보에 나온 드럼과 자리
+    const used = new Set(score.events.flatMap(e => e.keys || [])), POS = { crash: '맨 위 X', ride: '맨 윗줄 X', hat: '윗줄 위 X', bell: '넷째 칸 ◆', tom_h: '넷째 칸', tom_m: '넷째 줄', snare: '셋째 칸', rim: '셋째 칸 X', tom_f: '둘째 칸', bass: '첫째 칸', pedal: '오선 아래 X' };
+    info += ' · 드럼: ' + Object.keys(POS).filter(k => used.has(k)).map(k => `${C.KIT_KO[k]}(${POS[k]})`).join(', ');
+  }
   if (score.swing) info += ' · 8분음표는 길게-짧게(셋잇단 2:1)로 연주';
   if (score.melody) {
     info += ` · ${score.inst.name}`;
@@ -2938,6 +2964,12 @@ function drumHit(c, dest, kind, t, p) {
     const dec = Math.min(0.6, Math.max(0.25, p.len * 1.2));
     noise(dec, [['highpass', 4500, 0.7], ['peaking', 8000, 1.2, 6]], 0.12 * pk);
     tone('sine', 3200, 3150, 0.3, Math.min(0.35, dec), 0.05 * pk);                          // 종소리 같은 울림
+  } else if (kind === 'bell') {                                           // v3.9.3 카우벨 '똥' (차차·라틴)
+    tone('square', 587, 580, 0.1, 0.16, 0.06 * pk);
+    tone('square', 845, 840, 0.1, 0.12, 0.045 * pk);
+    noise(0.03, [['bandpass', 2500, 2]], 0.15 * pk);
+  } else if (kind === 'pedal') {                                          // v3.9.3 발 하이햇 '칙' (스윙 2·4박) — 손 하이햇보다 짧고 작게
+    noise(0.03, [['highpass', 5000, 0.7], ['peaking', 8000, 1, 3]], 0.14 * pk);
   } else if (kind === 'rim') {                                            // v3.9.2 림 '딱' (보사노바 크로스 스틱)
     noise(0.04, [['bandpass', 2200, 2.5]], 0.5 * pk);
     tone('triangle', 900, 820, 0.02, 0.05, 0.16 * pk);
@@ -3223,11 +3255,22 @@ async function playScore() {
   // 한꺼번에 다 예약하면 휴대폰이 소리 부품 수백 개를 동시에 처리하다 밀려 소리가 뭉개지고 빠진다 → 1.5초 앞까지만 조금씩 예약 (v3.1)
   const out = outChain(c, master), st = { i: 0 }, AHEAD = 1.5;
   let ci2 = 0;
+  // v3.9.3 (2026-10-03 "리듬 스타일이 확실히 구분되게, 초보자가 배울 수 있게"): 리듬 스타일이면 그 스타일 반주(드럼 그루브)를 작게 같이 들려준다
+  // 녹음 때는 마이크에 섞이지 않게 들려주지 않는다. 설정 #accomp 로 끌 수 있다
+  let acc = null;
+  if (score.style && score.drum !== 'kit' && $('#accomp') && $('#accomp').checked) {
+    try {
+      const ks = C.generate(Object.assign({}, score.set, { drum: 'kit', level: 1, edits: {} }));
+      const ag = c.createGain(); ag.gain.value = 0.75; ag.connect(out);   // 게인 0.75 — 드럼 소리 자체가 작아 실측으로 연습 리듬보다 7~12dB 작음 (t52)
+      acc = { tl: C.timeline(ks, ci), st: { i: 0 }, g: ag };
+    } catch (e) { console.error(e); acc = null; }
+  }
   const feed = () => {
     const until = c.currentTime - t0 + AHEAD;
     for (; ci2 < clicks.length && clicks[ci2].t < until; ci2++) nodes.push(scheduleClick(c, master, t0 + clicks[ci2].t, clicks[ci2].level));
     const r = schedulePlayback(c, out, t0, tl, score.melody, snd, { st, until, drum: score.drum, pizz: pz });
     nodes.push(...r.nodes);
+    if (acc) nodes.push(...schedulePlayback(c, acc.g, t0, acc.tl, false, null, { st: acc.st, until, drum: 'kit' }).nodes);
     return r;
   };
   const pb = feed();
@@ -3244,7 +3287,7 @@ async function playScore() {
     for (const id of playing.on) if (!want.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) { el.classList.remove('now'); el.classList.add('done'); } }
     for (const id of want) if (!playing.on.has(id)) { const el = document.getElementById('vf-ev' + id); if (el) el.classList.add('now'); }
     playing.on = want; beamsDone();
-    if (now > tl.total + 0.1) { stopPlay(); return; }
+    if (now > (acc ? Math.max(tl.total, acc.tl.total + 0.4) : tl.total) + 0.1) { stopPlay(); return; }   // 반주가 있으면 끝 크래시 여운까지
     playing.raf = requestAnimationFrame(tick);
   };
   playing.raf = requestAnimationFrame(tick);

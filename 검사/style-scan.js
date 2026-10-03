@@ -22,7 +22,22 @@ for (const [k, S] of Object.entries(C.STYLES)) {
     if (!C.STYLEDB[k][l - 1].some(c => c.tot === len)) bad.push(['noPattern', k, m, l]);
   }
   const K = S.kit;
-  for (const m of S.meters) { const G = K[m] || K[Object.keys(K)[0]]; for (const g of [G.a, G.b].filter(Boolean)) { const n = g.u.split(' ').length, B = C.METERS[m].units.length; if (n !== g.d.split(' ').length || n % B) bad.push(['kitGrid', k, m, n, B]); } }
+  for (const m of S.meters) { const G = K[m] || K[Object.keys(K)[0]]; for (const g of [G.a, G.b, G.a && G.a.u2 ? { u: G.a.u2, d: G.a.d2 || G.a.d } : null].filter(Boolean)) { const n = g.u.split(' ').length, B = C.METERS[m].units.length; if (n !== g.d.split(' ').length || n % B) bad.push(['kitGrid', k, m, n, B]); } }
+}
+// ⑧ 스타일끼리 구분 (v3.9.3 "확실히 구분되게"): 같은 박자표 스타일끼리 ① 드럼 세트 그루브(a·b)가 같으면 안 됨 ② 단계마다 같은 리듬 조각 수
+const share = {};
+{
+  const ks = Object.keys(C.STYLES), mlen = m => [...C.METERS[m].units].reduce((s, u) => s + (u === "c" ? 1260 : 840), 0);
+  for (const a of ks) for (const b of ks) if (a < b) for (const m of C.STYLES[a].meters) if (C.STYLES[b].meters.includes(m)) {
+    const ka = C.STYLES[a].kit[m], kb = C.STYLES[b].kit[m];
+    if (ka && kb) for (const ga of [ka.a, ka.b].filter(Boolean)) for (const gb of [kb.a, kb.b].filter(Boolean)) if (ga.u === gb.u && ga.d === gb.d) bad.push(["sameKit", a, b, m]);
+    for (let i = 0; i < 5; i++) {
+      const A = new Set(C.STYLEDB[a][i].filter(c => c.tot === mlen(m)).map(c => c.p)), Bs = C.STYLEDB[b][i].filter(c => c.tot === mlen(m)).map(c => c.p);
+      const n = Bs.filter(p => A.has(p)).length; if (n) share["L" + (i + 1)] = (share["L" + (i + 1)] || []).concat(a + "/" + b + "(" + m + "):" + n);
+    }
+  }
+  // 1단계 대표 리듬은 겹치면 안 됨
+  if (share.L1) bad.push(["sameL1", share.L1]);
 }
 // ②③④⑤⑥
 let n = 0, same = 0, selfN = 0, selfBad = [], rlvLow = 0;
@@ -75,6 +90,7 @@ if (process.env.OLD) {
 // 멜로디 모드에서는 스타일을 무시
 const mel = C.generate(Object.assign({}, base, { mode: 'melody', style: 'swing' }));
 if (mel.style) bad.push(['melodyStyled']);
+console.log('share', JSON.stringify(share));
 console.log('styles', Object.keys(C.STYLES).length, 'scores', n, 'sameNeighbor(≤88)', same, 'rlvLow(≤88)', rlvLow, 'self', selfN, 'selfBad', selfBad.length, OLD_STR());
 function OLD_STR() { return process.env.OLD ? 'legacyDiff ' + legacyDiff : ''; }
 if (selfBad.length) console.log('selfBad', JSON.stringify(selfBad.slice(0, 10)));
