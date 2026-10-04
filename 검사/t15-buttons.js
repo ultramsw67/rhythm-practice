@@ -28,7 +28,7 @@ module.exports = async (c) => {
     const auto0 = JSON.stringify(RP.score.events.map(e=>e.artic));
     const host=document.querySelector('#score'); host.scrollIntoView(); const s=host._scale, rc=host.getBoundingClientRect();
     const h=host._hits.find(x=>!x.rest); host.dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:rc.left+h.x*s,clientY:rc.top+6+((h.y0+h.y1)/2)*s}));
-    document.querySelector('#sheetChips [data-k=acc]').click();
+    document.querySelector('#sheetChips [data-k=marc]').click();
     const shown = !document.querySelector('#editResetRow').classList.contains('hide');
     document.querySelector('#editReset').click();
     return { hidden0, shown, back: JSON.stringify(RP.score.events.map(e=>e.artic)) === auto0, hiddenAfter: document.querySelector('#editResetRow').classList.contains('hide'), sheetClosed: document.querySelector('#articSheet').classList.contains('hide') };

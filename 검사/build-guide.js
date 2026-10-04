@@ -41,6 +41,7 @@ const page = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>수드 리듬 연습 사용법</title>
 <link rel="icon" href="img/sood-192.jpg">
 <style>
