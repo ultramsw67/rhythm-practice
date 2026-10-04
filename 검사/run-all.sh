@@ -9,7 +9,8 @@ if ! curl -s -o /dev/null --max-time 5 http://127.0.0.1:8765/index.html; then ec
 # 크롬이 늦게 떠서 실패하면(앞 시험의 크롬이 덜 닫힘) 크롬을 정리하고 한 번 더 (v3.9.1)
 run() { local name="$1"; shift; sleep 2; rm -rf chrome-prof; echo "=== $name" >> $LOG; local out; out=$(env "$@" timeout 300 node cdp.js $name 2>&1); local rc=$?
   if [ $rc -ne 0 ] && echo "$out" | grep -q "크롬이 뜨지 않았습니다"; then echo "(크롬 다시 띄움)" >> $LOG; powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"name='chrome.exe'\" | Where-Object { \$_.CommandLine -like '*remote-debugging-port=9333*' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force }" >/dev/null 2>&1; sleep 5; rm -rf chrome-prof; out=$(env "$@" timeout 300 node cdp.js $name 2>&1); rc=$?; fi
-  if [ $rc -eq 0 ] && echo "$out" | grep -q "SCRIPT ERR"; then rc=9; fi   # 시험 스크립트 오류도 실패로 (v3.9.4: 서버가 꺼져 페이지를 못 열었는데 exit 0 으로 지나감)
+  if [ $rc -eq 0 ] && echo "$out" | grep -q "SCRIPT ERR"; then rc=9; fi
+  if [ $rc -eq 0 ] && { [ "$name" = t4.js ] || [ "$name" = t3.js ] || [ "$name" = t21-offline.js ]; } && ! echo "$out" | grep -q "100점"; then rc=8; fi   # 녹음 시험은 100점이어야 통과 (v3.9.6: 점수가 낮아도 exit 0 으로 지나가던 것)   # 시험 스크립트 오류도 실패로 (v3.9.4: 서버가 꺼져 페이지를 못 열었는데 exit 0 으로 지나감)
   echo "$out" >> $LOG; echo "exit $rc" >> $LOG; }
 echo "=== test-core" >> $LOG; node test-core.js ../index.html 2>&1 | tail -3 | cut -c1-300 >> $LOG
 echo "=== scale-quick" >> $LOG; node scale-quick.js ../index.html >> $LOG 2>&1
