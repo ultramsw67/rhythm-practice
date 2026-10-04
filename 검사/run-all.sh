@@ -31,6 +31,7 @@ run t27-recquality.js FAKE_WAV="$W/fake.wav"
 run t27-recquality.js FAKE_WAV="$W/fake.wav" BT=keep
 for t in t1.js t2.js t6-fixes.js t7-art.js t8-guide.js t9-brand.js t10-v12.js t11-color.js t12-artic-sound.js t13-play.js t14-highlight.js t16-screens.js t18-reset-start.js t19-install.js t20-melody-mobile.js t23-clip.js t24-tune.js t30-samples.js t32-inapp.js t33-ui.js t34-score-fit.js t35-levels.js t35b-legacy.js t36-play-bars.js t37-chunked.js t38-drums.js t39-kit.js t40-newinst.js t41-bow.js t42-piano.js t43-scale.js t43b-scale-fit.js; do run $t X=1; done
 for t in t15-buttons.js t17-reclock.js t28-background.js t29-return-again.js; do run $t FAKE_WAV="$W/fake.wav"; done
+run t53-rec-color.js FAKE_WAV="$W/fake.wav"
 run t43-scale.js W=320
 run t36-play-bars.js SAMPLES=1
 run qa-f/f1b-clip.js X=1
