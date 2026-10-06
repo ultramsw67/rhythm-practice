@@ -95,11 +95,12 @@
 <meta name="apple-mobile-web-app-title" content="수드 리듬 연습">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
-/* v2.9 화면 (2026-09-28): 따뜻한 미색 바탕 + 차분한 청록, 시니어 단원용 큰 글자·큰 버튼.
+/* v4.0 화면 (2026-10-06): 코발트 파랑 + 살구(기록 카드·LED 점에만), 음악 도구 느낌(아래 「v4.0」 묶음). v2.9 의 큰 글자·큰 버튼은 그대로.
    악보 종이(--paper)·진행 표시 색·채점 색(--ok/--warn/--bad/--miss)·브랜드 남색 #1f3b63 은 그대로 둔다 */
 :root{
-  --bg:#f5f2ea; --card:#fffefb; --ink:#2b2a27; --sub:#58534c; --line:#e2dccf;
-  --accent:#2a6f6b; --accent-ink:#ffffff; --soft:#e4efec; --field:#faf8f3;
+  --bg:#f3f6fc; --card:#ffffff; --ink:#1d2433; --sub:#4e586a; --line:#dbe3f0;
+  --accent:#2b5fd9; --accent2:#3a6ae0; --accent-ink:#ffffff; --soft:#e5edff; --field:#f6f8fc;
+  --hd1:#2453c4; --hd2:#3a6ae0; --warm:#ff9466; --warm-soft:#fff1ea; --warm-line:#ffd3bd;
   --rec:#c4553b; --rec-ink:#ffffff;
   --paper:#fffdf8; --paper-ink:#111111;
   --ok:#1f9d55; --warn:#d99a00; --bad:#d23c3c; --miss:#9aa1ab;
@@ -108,8 +109,9 @@
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#1a1c1b; --card:#232725; --ink:#ece8df; --sub:#b3ada3; --line:#373c39;
-    --accent:#7cc4b8; --accent-ink:#0e1f1c; --soft:#1f3431; --field:#1d201f;
+    --bg:#131925; --card:#1b2332; --ink:#e8ecf4; --sub:#a9b3c4; --line:#2d3850;
+    --accent:#8fb1ff; --accent2:#6f98f5; --accent-ink:#0d1730; --soft:#22304d; --field:#171f2c;
+    --hd1:#1b3474; --hd2:#2c56b4; --warm:#ff9e78; --warm-soft:#2a211e; --warm-line:#5a3a2c;
     --rec:#e0775d; --rec-ink:#1a0d08;
     --paper:#e9e6de; --paper-ink:#111111;
     --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
@@ -117,8 +119,9 @@
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1a1c1b; --card:#232725; --ink:#ece8df; --sub:#b3ada3; --line:#373c39;
-  --accent:#7cc4b8; --accent-ink:#0e1f1c; --soft:#1f3431; --field:#1d201f;
+  --bg:#131925; --card:#1b2332; --ink:#e8ecf4; --sub:#a9b3c4; --line:#2d3850;
+  --accent:#8fb1ff; --accent2:#6f98f5; --accent-ink:#0d1730; --soft:#22304d; --field:#171f2c;
+  --hd1:#1b3474; --hd2:#2c56b4; --warm:#ff9e78; --warm-soft:#2a211e; --warm-line:#5a3a2c;
   --rec:#e0775d; --rec-ink:#1a0d08;
   --paper:#e9e6de; --paper-ink:#111111;
   --ok:#2fb96b; --warn:#e0a800; --bad:#e25555; --miss:#8a909a;
@@ -270,6 +273,114 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
 }
 @media (max-width:360px){ header{gap:6px;padding-left:12px;padding-right:12px} header h1{font-size:min(var(--fs-h1),18px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis} .theme-btn{padding:4px 8px} .acts2{grid-template-columns:1fr} }
 @media (min-width:900px){ .cols{display:grid;grid-template-columns:360px 1fr;gap:14px;align-items:start} }
+/* ===== v4.0 화면 (2026-10-06 "단색이라 단조로워" → A안 코발트·살구 + 음악 도구 느낌 + 단추 크기·글자 비율 맞춤) =====
+   머리띠 오선·이퀄라이저, LED 점, 다이얼 점수, VU 미터 막대, 액정 BPM, 오실로스코프 파형 칸.
+   그대로 둔 것: 악보 종이 --paper·진행 표시·채점 색 --ok/--warn/--bad/--miss·녹음 단추 --rec·앱 안 안내 화면. 시안 원본: 바탕화면 수드 리듬 연습색 시안 */
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#131925;--card:#1b2332;--ink:#e8ecf4;--sub:#a9b3c4;--line:#2d3850;--field:#171f2c;
+  --accent:#8fb1ff;--accent2:#6f98f5;--accent-ink:#0d1730;--soft:#22304d;--hd1:#1b3474;--hd2:#2c56b4;
+  --warm:#ff9e78;--warm-soft:#2a211e;--warm-line:#5a3a2c;}}
+:root[data-theme="dark"]{--bg:#131925;--card:#1b2332;--ink:#e8ecf4;--sub:#a9b3c4;--line:#2d3850;--field:#171f2c;
+  --accent:#8fb1ff;--accent2:#6f98f5;--accent-ink:#0d1730;--soft:#22304d;--hd1:#1b3474;--hd2:#2c56b4;
+  --warm:#ff9e78;--warm-soft:#2a211e;--warm-line:#5a3a2c;}
+header{background:linear-gradient(115deg,var(--hd1),var(--hd2));color:#fff;border-bottom:0;box-shadow:0 2px 12px color-mix(in srgb,var(--hd1) 30%,transparent)}
+header .theme-btn{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.45);color:#fff}
+.btn.pri,.seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:var(--accent-ink)}
+.btn.pri{box-shadow:0 3px 10px color-mix(in srgb,var(--accent) 30%,transparent)}
+.card h2{color:var(--accent)}
+.big-score{background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--accent-ink)}
+.bar .fill{background:linear-gradient(90deg,var(--accent),var(--accent2))}
+nav.tabs button[aria-selected="true"] svg{background:var(--soft)}
+.game-card{border:1.5px solid var(--warm-line);background:linear-gradient(160deg,var(--warm-soft),var(--card) 75%)}
+.g-item{background:var(--card);border:1px solid var(--warm-line)}
+.g-bar i{background:linear-gradient(90deg,var(--warm),var(--accent))}
+.reward{border-color:var(--warm);background:linear-gradient(160deg,var(--warm-soft),var(--soft))}
+.start-card{border-color:var(--accent)}
+:root{--r:20px;--sh1:0 1px 2px rgba(30,50,110,.05),0 8px 24px -6px rgba(30,60,140,.12);--glass:rgba(255,255,255,.72)}
+:root[data-theme="dark"]{--sh1:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px -8px rgba(0,0,0,.6);--glass:rgba(27,35,50,.78)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--sh1:0 1px 0 rgba(255,255,255,.04) inset,0 10px 28px -8px rgba(0,0,0,.6);--glass:rgba(27,35,50,.78)}}
+body{background:radial-gradient(900px 500px at 0% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%),radial-gradient(700px 500px at 100% 40%,color-mix(in srgb,var(--warm) 7%,transparent),transparent 70%),var(--bg);background-attachment:fixed}
+header{background:radial-gradient(120% 180% at 85% -40%,rgba(255,255,255,.22),transparent 55%),linear-gradient(115deg,var(--hd1),var(--hd2));padding-bottom:12px}
+header h1{letter-spacing:-.03em;font-weight:800}
+header .theme-btn{border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.card{border-radius:var(--r);border:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:var(--sh1);padding:20px 18px}
+.card h2{letter-spacing:-.025em;font-weight:800;display:flex;align-items:center;gap:8px}
+.card h2::before{content:"";width:6px;height:1.05em;border-radius:3px;background:linear-gradient(180deg,var(--accent2),var(--warm));flex:none}
+.brand img{box-shadow:0 0 0 4px var(--card),0 6px 18px -4px rgba(30,60,140,.35)}
+.btn{border-radius:16px;border-color:color-mix(in srgb,var(--line) 85%,transparent);box-shadow:0 1px 2px rgba(20,40,90,.06);transition:transform .12s,box-shadow .2s}
+.btn.pri{background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 18px -6px color-mix(in srgb,var(--accent) 60%,transparent)}
+.btn.rec{border-radius:16px;box-shadow:0 1px 0 rgba(255,255,255,.2) inset,0 8px 18px -6px color-mix(in srgb,var(--rec) 55%,transparent)}
+.seg{border-radius:16px;border:0;background:color-mix(in srgb,var(--accent) 7%,var(--field));padding:5px}
+.seg button{border-radius:12px}
+.seg button[aria-pressed="true"]{box-shadow:0 4px 12px -4px color-mix(in srgb,var(--accent) 60%,transparent)}
+select,input[type=number],input[type=text]{border-radius:14px;border:1px solid var(--line);background-color:var(--card);box-shadow:0 1px 2px rgba(20,40,90,.05) inset}
+.paper{border-radius:16px;border:1px solid color-mix(in srgb,var(--line) 70%,transparent);box-shadow:0 1px 3px rgba(20,40,90,.06) inset}
+.game-card{border:0;background:linear-gradient(140deg,color-mix(in srgb,var(--warm) 16%,var(--card)),var(--card) 55%,color-mix(in srgb,var(--accent) 8%,var(--card)));box-shadow:var(--sh1)}
+.g-item{background:var(--glass);border:1px solid rgba(255,255,255,.6);border-radius:16px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 4px 14px -6px rgba(30,60,140,.18)}
+.g-item b{letter-spacing:-.02em}
+.g-bar{height:10px;border:0;background:color-mix(in srgb,var(--accent) 10%,var(--field))}
+.big-score{background:linear-gradient(var(--card),var(--card)) padding-box,conic-gradient(from 200deg,var(--accent),var(--accent2),var(--warm),var(--accent)) border-box;border:7px solid transparent;color:var(--accent);letter-spacing:-.04em;box-shadow:0 10px 24px -10px color-mix(in srgb,var(--accent) 60%,transparent)}
+.bar .track{height:10px;border:0;background:color-mix(in srgb,var(--accent) 10%,var(--field))}
+.take .sc{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,var(--card)),color-mix(in srgb,var(--warm) 14%,var(--card)));border-radius:16px}
+nav.tabs{background:var(--glass);backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);border-top:1px solid color-mix(in srgb,var(--line) 60%,transparent);box-shadow:0 -8px 24px -12px rgba(30,60,140,.18)}
+nav.tabs button[aria-selected="true"] svg{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 16%,var(--card)),color-mix(in srgb,var(--accent2) 10%,var(--card)))}
+.note-box,.start-card{border-radius:16px}
+.sheet{border-radius:24px 24px 0 0}
+:root[data-theme="dark"] .g-item{border-color:rgba(255,255,255,.08)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .g-item{border-color:rgba(255,255,255,.08)}}
+.toast{border-radius:999px;padding:12px 22px;box-shadow:0 10px 30px -10px rgba(0,0,0,.45)}
+
+:root{--lcd:#0f1a36;--lcd-ink:#ffb08a;--glow:0 0 8px rgba(255,148,102,.55);--mono:"SF Mono",Consolas,Menlo,"Malgun Gothic",monospace;--staff:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'8'%20height%3D'140'%3E%3Cg%20stroke%3D'rgba(43%2C95%2C217%2C.07)'%20stroke-width%3D'1'%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'10.5'%20y2%3D'10.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'17.5'%20y2%3D'17.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'24.5'%20y2%3D'24.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'31.5'%20y2%3D'31.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'38.5'%20y2%3D'38.5'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
+:root[data-theme="dark"]{--staff:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'8'%20height%3D'140'%3E%3Cg%20stroke%3D'rgba(255%2C255%2C255%2C.035)'%20stroke-width%3D'1'%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'10.5'%20y2%3D'10.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'17.5'%20y2%3D'17.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'24.5'%20y2%3D'24.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'31.5'%20y2%3D'31.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'38.5'%20y2%3D'38.5'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--staff:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'8'%20height%3D'140'%3E%3Cg%20stroke%3D'rgba(255%2C255%2C255%2C.035)'%20stroke-width%3D'1'%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'10.5'%20y2%3D'10.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'17.5'%20y2%3D'17.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'24.5'%20y2%3D'24.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'31.5'%20y2%3D'31.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'38.5'%20y2%3D'38.5'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E")}}
+body{background:var(--staff) 0 0/8px 140px repeat,radial-gradient(900px 500px at 0% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%),var(--bg);background-attachment:scroll}
+header{background:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'8'%20height%3D'56'%3E%3Cg%20stroke%3D'rgba(255%2C255%2C255%2C.09)'%20stroke-width%3D'1'%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'10.5'%20y2%3D'10.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'17.5'%20y2%3D'17.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'24.5'%20y2%3D'24.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'31.5'%20y2%3D'31.5'%2F%3E%3Cline%20x1%3D'0'%20x2%3D'8'%20y1%3D'38.5'%20y2%3D'38.5'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") 0 6px/8px 56px repeat-x,linear-gradient(115deg,#162a5c,var(--hd1) 55%,var(--hd2))}
+header h1{display:flex;align-items:center;gap:10px}
+header h1::before{content:"";width:22px;height:22px;flex:none;background:url("data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20width%3D'22'%20height%3D'22'%3E%3Cg%20fill%3D'%23fff'%3E%3Crect%20x%3D'1'%20y%3D'9'%20width%3D'3'%20height%3D'12'%20rx%3D'1.5'%2F%3E%3Crect%20x%3D'6.5'%20y%3D'3'%20width%3D'3'%20height%3D'18'%20rx%3D'1.5'%2F%3E%3Crect%20x%3D'12'%20y%3D'7'%20width%3D'3'%20height%3D'14'%20rx%3D'1.5'%2F%3E%3Crect%20x%3D'17.5'%20y%3D'12'%20width%3D'3'%20height%3D'9'%20rx%3D'1.5'%20fill%3D'%23ffb08a'%2F%3E%3C%2Fg%3E%3C%2Fsvg%3E") center/contain no-repeat}
+.card h2::before{width:10px;height:10px;border-radius:50%;background:var(--warm);box-shadow:var(--glow)}
+.card{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 3%,var(--card)),var(--card) 60px)}
+.seg button{position:relative}
+.seg button[aria-pressed="true"]::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd2bd;box-shadow:0 0 6px 1px rgba(255,180,140,.9);margin-right:8px;vertical-align:2px}
+.btn.rec{box-shadow:0 0 0 4px color-mix(in srgb,var(--rec) 18%,transparent),0 8px 18px -6px color-mix(in srgb,var(--rec) 55%,transparent)}
+#bpmNum{background:var(--lcd);color:var(--lcd-ink);border:1px solid #000;font-family:var(--mono);font-weight:700;font-size:calc(var(--fs) + 5px);text-align:center;text-shadow:var(--glow);font-variant-numeric:tabular-nums;letter-spacing:.04em;box-shadow:inset 0 2px 6px rgba(0,0,0,.5)}
+.wave-wrap{background:linear-gradient(var(--field),var(--field)) padding-box;background-image:linear-gradient(color-mix(in srgb,var(--accent) 10%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 10%,transparent) 1px,transparent 1px);background-size:100% 22.5px,30px 100%;border-radius:14px}
+.count-big{font-family:var(--mono);font-size:64px;text-shadow:0 0 18px color-mix(in srgb,var(--accent) 45%,transparent)}
+.big-score{background:radial-gradient(circle,var(--lcd) 60%,transparent 61%),repeating-conic-gradient(from -2deg,var(--accent2) 0 4deg,transparent 4deg 12deg);border:0;color:#fff;font-family:var(--mono);font-size:40px;text-shadow:0 0 12px rgba(120,160,255,.9);box-shadow:none;min-width:104px;height:104px}
+.bar .track,.g-bar{background:repeating-linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,var(--field)) 0 9px,transparent 9px 12px);border:0;height:14px;border-radius:4px}
+.bar .fill,.g-bar i{background:linear-gradient(90deg,var(--accent),var(--accent2) 70%,var(--warm));-webkit-mask:repeating-linear-gradient(90deg,#000 0 9px,transparent 9px 12px);mask:repeating-linear-gradient(90deg,#000 0 9px,transparent 9px 12px);border-radius:0}
+.bar b,.take .sc,.lat-big{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.take .sc{background:var(--lcd);color:var(--lcd-ink);text-shadow:var(--glow)}
+nav.tabs button[aria-selected="true"]{background:linear-gradient(var(--accent),var(--accent)) top center/34px 3px no-repeat}
+nav.tabs button[aria-selected="true"] svg{background:color-mix(in srgb,var(--accent) 12%,var(--card))}
+.paper{box-shadow:0 1px 0 #fff inset,0 6px 16px -10px rgba(20,40,90,.35)}
+
+.btn{min-height:54px;font-size:var(--fs);font-weight:700;padding:10px 16px}
+.btn.pri,.btn.rec,#playBtn,#resPlay{font-size:calc(var(--fs) + 1px);min-height:58px}
+@media (max-width:600px){#recBtn{min-height:62px;font-size:calc(var(--fs) + 3px);letter-spacing:.02em}#resPlay{min-height:60px}}
+header .theme-btn{min-height:44px;font-size:var(--fs-s);font-weight:700;padding:4px 14px}
+nav.tabs button{min-height:62px;font-size:var(--fs-s);gap:2px;padding:5px 0 6px}
+nav.tabs button svg{width:24px;height:24px}
+nav.tabs button[aria-selected="true"] svg{width:52px;height:30px}
+label.f select,label.f input{font-size:var(--fs)}
+.seg button{font-size:var(--fs);font-weight:600}
+.seg button[aria-pressed="true"]{font-weight:800}
+.lvseg button{font-size:calc(var(--fs) + 3px)}
+#fontSeg button{min-height:52px;padding:10px 2px;white-space:nowrap;font-size:min(var(--fs),17px)}
+:root[data-font="3"] #dailyBtn,:root[data-font="3"] #badgeBtn{font-size:calc(var(--fs) - 2px);padding:8px 8px;gap:6px}
+.take .acts .btn{min-height:48px;font-size:var(--fs-s);padding:6px 14px}
+#dailyBtn,#badgeBtn{min-height:52px;font-size:var(--fs)}
+details summary::after{font-size:var(--fs-s)}
+.chip{font-size:var(--fs);min-height:48px}
+@media (max-width:600px){.res-actions .btn:not(#resPlay){flex:1 1 100%;min-height:52px}}
+/* v4.0 보정 (코드 검토): 뒤의 .card 규칙이 카드별 모양을 덮던 것 → 두 클래스로 우선순위 올림, 휴대폰 카드 여백·좁은 폰 머리띠, 파형 칸 바탕 */
+.card.game-card{border:0;background:linear-gradient(140deg,color-mix(in srgb,var(--warm) 16%,var(--card)),var(--card) 55%,color-mix(in srgb,var(--accent) 8%,var(--card)))}
+.card.reward{border:2px solid var(--warm);background:linear-gradient(160deg,var(--warm-soft),var(--soft))}
+.card.start-card{border:2px solid var(--accent);background:var(--soft)}
+@media (max-width:600px){.card{padding:16px 14px}}
+@media (max-width:360px){header .theme-btn{padding:4px 8px;font-size:var(--fs-xs)} header h1{min-width:0;overflow:hidden;gap:6px} header h1::before{width:18px;height:18px} #homeBtn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+.wave-wrap{background-color:var(--field)}
+.btn.pri,.seg button[aria-pressed="true"],.chip[aria-pressed="true"]{background-origin:border-box}
+.toast{border-radius:16px}
+
 </style>
 </head>
 <body>
@@ -556,7 +667,7 @@ body.recording #editResetRow, body.recording #metroOn, body.recording #countIn, 
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v3.9.6 · 2026-10-04</p>
+      <p class="muted" style="margin:8px 0 0">버전 v4.0 · 2026-10-06</p>
     </div>
   </section>
 </main>
