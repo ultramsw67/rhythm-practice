@@ -43,6 +43,9 @@
 | `node cdp.js t47-levels-mobile.js` | v3.8.3 390px 휴대폰에서 칸·단추로 못갖춘마디 빼기·기호 없음 → 1~7단계 (리듬·선율·드럼 세트 × 박자표 5 × BPM 88·160), 업데이트 전 저장 설정은 보던 악보 그대로 (lvm-*.png) | `bad [] 0`, errs [] |
 | `node cdp.js t50-v391.js` · `node cdp.js qa-g/g7-overlap.js` | v3.9.1 공개 전 점검: 안드로이드 앱 안 → 크롬 넘김 때 받은 악보(?rp=)·라인 주소·?rp= 열기·망가진 저장값 3가지·채점 시험 연타·망가진 백업 / 내 연주 듣기가 녹음·들어보기·화면 숨김 때 멈추는지 | `bad []` / `playerDuringRec:false`·`bothPlaying:false` |
 | `node style-scan.js ../index.html` (`OLD=<옛 index.html>`, `SEEDS`) · `node cdp.js t51-styles.js` (`W=320`) | v3.9.2 리듬 스타일 전수(조각 길이·악보·이웃 단계·스윙 시각·잇단음표는 곧게·링크·가상 연주 100·스타일 없는 악보는 예전과 같은지) / 화면(스타일 칸·박자표 잠금·2/2 빠르기·드럼 세트·들어보기·조표 기준 칸 잠금·연습 보너스 줄) | `bad 0`, `legacyDiff 0` / `bad [] 0` |
+| `node cdp.js t54-tempo-android.js` | v4.0.1 빠르기 막대(빠르기말 칸 삭제): 안드로이드 크롬 흉내로 손가락 끌기·톡 누르기 → 빠르기·숫자 칸·빠르기 줄·요약·저장값·악보, 막대 터치 44px, 녹음 중 잠금 (폭 320·360·393·412 × 글자 3 × 밝음/어두움) | `bad [] 0`, errs [] |
+| `node cdp.js t55-android-all.js` | v4.0.1 안드로이드(크롬·삼성 인터넷) 흉내로 네 탭의 보이는 모든 단추·칸 270개를 실제 터치로 — 덮임·44px 미만·선택 칸 포커스 (단추는 touchstart 를 막아 실행 안 됨) | `bad [] 0` |
+| `PW=C:/Users/ultramsw67/Desktop/homepage/node_modules/playwright node t56-iphone-webkit.js` | v4.0.1 **사파리 엔진(웹킷)** 아이폰 흉내: 빠르기 막대 끌기·톡 누르기·네 탭 모든 칸(덮임·44px·16px 미만 글자=확대)·악보·가상 연주 100 (375·390·430 × 글자 3 × 밝음/어두움). 웹킷은 `npx playwright install webkit`(10/7 설치) — run-all 에는 없으니 **따로 돌린다** | `bad [] 0`, errs 0 |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로, 크롬이 늦게 뜨면 한 번 더). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의

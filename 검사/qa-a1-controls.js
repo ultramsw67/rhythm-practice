@@ -75,7 +75,7 @@ module.exports = async (c) => {
 
   // 9) BPM 슬라이더 / 숫자 입력(39, 209, 빈칸, abc) / 빠르기말
   out.bpm = await c.ev(`(async()=>{
-    const range = document.querySelector('#bpmRange'), num = document.querySelector('#bpmNum'), tn = document.querySelector('#tempoName');
+    const range = document.querySelector('#bpmRange'), num = document.querySelector('#bpmNum');   // v4.0.1 빠르기말 삭제
     const r = {};
     range.value = 160; range.dispatchEvent(new Event('input')); await new Promise(res=>setTimeout(res,350));
     r.sliderTo160 = {bpm:RP.set.bpm, numVal:num.value, rangeVal:range.value};
@@ -87,8 +87,6 @@ module.exports = async (c) => {
     r.typedBlank = {bpm:RP.set.bpm, numVal:num.value, rangeVal:range.value};
     num.value='abc'; num.dispatchEvent(new Event('change')); await new Promise(res=>setTimeout(res,350));
     r.typedAbc = {bpm:RP.set.bpm, numVal:num.value, rangeVal:range.value};
-    tn.value = '120'; tn.dispatchEvent(new Event('change')); await new Promise(res=>setTimeout(res,350));
-    r.tempoName120 = {bpm:RP.set.bpm, tempoNameSelVal: tn.value, beatLabel: document.querySelector('#beatLabel').textContent};
     return r;
   })()`);
 

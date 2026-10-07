@@ -5,11 +5,10 @@ module.exports = async (c) => {
   const sl = `const sl=ms=>new Promise(r=>setTimeout(r,ms)); const q=s=>document.querySelector(s); const tab=n=>q('nav.tabs [data-tab='+n+']').click(); const vis=s=>{const e=q(s); return !!e&&e.offsetParent!==null&&!e.classList.contains('hide');};`;
   const r = await c.ev(`(async()=>{ ${sl} const o={}; q('#modeSeg [data-v=melody]').click(); await sl(200); Object.assign(RP.set,{prac:'scale',key:'Am',inst:'clarinet',level:5,meter:'4/4'}); RP.syncForm(); RP.rebuild(); await sl(200);
     for (const v of ['208','160','120','60']) { const b=q('#bpmNum'); b.value=v; b.dispatchEvent(new Event('input',{bubbles:true})); b.dispatchEvent(new Event('change',{bubbles:true})); await sl(300); o['n'+v]={bpm:RP.set.bpm, range:q('#bpmRange').value, rlv: RP.score.rlv, info:q('#scoreInfo').textContent.slice(60), n:RP.score.events.length}; }
-    for (const v of ['208']) { const b=q('#bpmRange'); b.value=v; b.dispatchEvent(new Event('input',{bubbles:true})); await sl(300); o['r'+v]={bpm:RP.set.bpm, num:q('#bpmNum').value, info:q('#scoreInfo').textContent.slice(60), beat:q('#beatLabel').textContent, tn:q('#tempoName').selectedOptions[0]&&q('#tempoName').selectedOptions[0].textContent}; }
+    for (const v of ['208']) { const b=q('#bpmRange'); b.value=v; b.dispatchEvent(new Event('input',{bubbles:true})); await sl(300); o['r'+v]={bpm:RP.set.bpm, num:q('#bpmNum').value, info:q('#scoreInfo').textContent.slice(60), beat:q('#beatLabel').textContent}; }
     // 잘못된 숫자 입력
     for (const v of ['', '5', '999', 'abc', '88.6']) { const b=q('#bpmNum'); b.value=v; b.dispatchEvent(new Event('input',{bubbles:true})); b.dispatchEvent(new Event('change',{bubbles:true})); b.dispatchEvent(new Event('blur')); await sl(250); o['bad_'+v]={bpm:RP.set.bpm, num:b.value, sum:q('#setSum').textContent.slice(-12), info: /NaN|undefined/.test(q('#scoreInfo').textContent+q('#setSum').textContent+q('#beatLabel').textContent)}; }
     // 빠르기말
-    const tn=q('#tempoName'); o.tnOpts=[...tn.options].map(x=>x.value+'='+x.textContent).slice(0,20).join(' | '); tn.selectedIndex=Math.min(3,tn.options.length-1); tn.dispatchEvent(new Event('change',{bubbles:true})); await sl(300); o.tnPicked={bpm:RP.set.bpm, sel: tn.selectedOptions[0].textContent};
     // 결과 탭 빈 상태 (새 프로필이 아니면 생략)
     return o; })()`);
   console.log('BPM', JSON.stringify(r, null, 1));
