@@ -1,6 +1,7 @@
 // v4.0.1 (2026-10-07 "안드로이드 폰에서 빠르기말 고르기가 안 눌림" → 사용자 결정 "빠르기말 삭제, 막대로만 조정"):
 // 안드로이드 크롬 흉내(UA·터치) + 실제 손가락 끌기(Input.dispatchTouchEvent)로 빠르기 막대를 움직여
-// 빠르기·숫자 칸·빠르기 줄·요약 줄·저장값·악보가 바뀌는지, 막대 터치 높이 44px 이상, 빠르기말 칸이 없는지, 녹음 중 잠금을 본다.
+// 빠르기·숫자 칸·빠르기 줄·요약 줄·저장값·악보가 바뀌는지, 막대 터치 높이 44px 이상, 녹음 중 잠금을 본다.
+// v4.0.2: 빠르기말 목록 창(#tempoMenu)을 손가락으로 열고 골라 ✓·빠르기가 바뀌는지, 바깥을 누르면 닫히는지도 본다.
 // 폭 320·360·393·412 × 글자 크기 3단계 × 밝은/어두운 화면. 통과: bad [] 0, errs []
 const UA = 'Mozilla/5.0 (Linux; Android 14; SM-S918N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36';
 module.exports = async (c) => {
@@ -34,8 +35,6 @@ module.exports = async (c) => {
       await tap(p[0], p[1]);
     }
     if (!(await c.ev(`document.querySelector('#setBox').open`))) { bad.push({ tag, err: 'setBox not opened' }); continue; }
-    const gone = await c.ev(`!document.querySelector('#tempoName,#tempoSeg') && !/빠르기말 고르기/.test(document.body.innerText)`);
-    if (!gone) bad.push({ tag, err: 'tempo-name control still there' });
     const s0 = await state();
     const h = await drag(0.29, 0.9);                               // 오른쪽으로 끌기 → 빨라짐
     const s1 = await state();
@@ -49,6 +48,33 @@ module.exports = async (c) => {
     await tap(r[0] + 10 + (r[1] - 20) * 0.5, r[2]); await c.sleep(400);
     const s3 = await state();
     if (Math.abs(s3.bpm - 124) > 6 || !ok1(s3)) bad.push({ tag, err: 'tap middle', s3: s3.bpm });
+    // v4.0.2 빠르기말 목록 창: 손가락으로 열고 → 줄 크기·글자·화면 안 → Allegro 누르면 138·✓ 이동·닫힘 → 바깥 누르면 그대로 닫힘
+    const ctr = sel => c.ev(`(()=>{const e=document.querySelector('${sel}'); e.scrollIntoView({block:'center'}); const b=e.getBoundingClientRect(); return JSON.stringify([b.left+b.width/2,b.top+b.height/2])})()`).then(JSON.parse);
+    const menu = () => c.ev(`JSON.stringify({open:!document.querySelector('#tempoMenu').classList.contains('hide'), txt:document.querySelector('#tempoPickTxt').textContent,
+      ck:[...document.querySelectorAll('#tempoMenu button')].filter(b=>b.getAttribute('aria-selected')==='true').map(b=>b.textContent.trim()),
+      rows:[...document.querySelectorAll('#tempoMenu button')].map(b=>{const r=b.getBoundingClientRect(); return [Math.round(r.height), parseFloat(getComputedStyle(b).fontSize)]}),
+      box:(()=>{const r=document.querySelector('#tempoMenu').getBoundingClientRect(); return [r.left,r.top,r.right,r.bottom,innerWidth,innerHeight]})(), bpm:RP.set.bpm})`).then(JSON.parse);
+    { const p = await ctr('#tempoPick'); await tap(p[0], p[1]); await c.sleep(400); }
+    const m0 = await menu();
+    if (!m0.open) bad.push({ tag, err: 'tempo menu not opened by touch' });
+    else {
+      if (m0.rows.length !== 13) bad.push({ tag, err: 'tempo menu rows', n: m0.rows.length });
+      if (m0.rows.some(([h, fs]) => h < 44 || fs < 16)) bad.push({ tag, err: 'tempo menu row small', rows: m0.rows });
+      const [L, T, R, B, W, H] = m0.box; if (L < 0 || T < 0 || R > W || B > H) bad.push({ tag, err: 'tempo menu off screen', box: m0.box });
+      if (m0.ck.length !== 1) bad.push({ tag, err: 'tempo menu check count', ck: m0.ck });
+      const q = await c.ev(`(()=>{const e=[...document.querySelectorAll('#tempoMenu button')].find(b=>b.dataset.bpm==='138'); e.scrollIntoView({block:'nearest'}); const b=e.getBoundingClientRect(); return JSON.stringify([b.left+b.width/2,b.top+b.height/2, document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)===e||e.contains(document.elementFromPoint(b.left+b.width/2,b.top+b.height/2))])})()`).then(JSON.parse);
+      if (!q[2]) bad.push({ tag, err: 'Allegro row covered' });
+      await tap(q[0], q[1]); await c.sleep(450);
+      const m1 = await menu(), sA = await state();
+      if (m1.open || m1.bpm !== 138 || m1.ck.join() !== '✓Allegro (138)' || m1.txt !== 'Allegro (138)' || !ok1(sA)) bad.push({ tag, err: 'tempo menu pick', m1: { open: m1.open, bpm: m1.bpm, ck: m1.ck, txt: m1.txt } });
+      { const p = await ctr('#tempoPick'); await tap(p[0], p[1]); await c.sleep(400); }
+      const m2 = await menu();
+      if (!m2.open || m2.ck.join() !== '✓Allegro (138)') bad.push({ tag, err: 'tempo menu reopen check', ck: m2.ck });
+      if (w === 360) await c.shot(`t54-menu-${dark ? 'dark' : 'light'}-f${font}.png`).catch(() => { });
+      await tap(8, 12); await c.sleep(250);                      // 바깥(어두운 바탕) 누르기 → 닫힘, 빠르기 그대로
+      const m3 = await menu();
+      if (m3.open || m3.bpm !== 138) bad.push({ tag, err: 'tempo menu backdrop close', m3: { open: m3.open, bpm: m3.bpm } });
+    }
     const ox = await c.ev('document.documentElement.scrollWidth-innerWidth');
     if (ox > 0) bad.push({ tag, overflowX: ox });
     if (first) {

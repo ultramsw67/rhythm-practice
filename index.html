@@ -387,6 +387,22 @@ input[type=range]{height:44px}
 :root[data-font="1"] select,:root[data-font="1"] input[type=number],:root[data-font="1"] input[type=text]{font-size:16px}
 /* v4.0.1 설정 화면 글 속 링크(설명서·오프라인·라이선스)도 손가락 크기로 */
 #tab-settings p.muted a{display:inline-block;padding:12px 0;min-height:44px;box-sizing:border-box}
+/* v4.0.2 빠르기말 목록 창 — 아이폰 고르기 창 모양을 PC·안드로이드에도 똑같이 (휴대폰 기본 창을 쓰지 않음) */
+.tpick{font:inherit;font-size:max(16px,var(--fs));color:var(--ink);text-align:left;width:100%;min-height:52px;padding:10px 38px 10px 14px;border:1px solid var(--line);border-radius:14px;cursor:pointer;
+  background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1l6 6 6-6' fill='none' stroke='%23888' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 14px center;box-shadow:0 1px 2px rgba(20,40,90,.05) inset}
+.tpick:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.tmenu-bg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.18);touch-action:none}
+.tmenu{position:fixed;z-index:41;left:50%;top:50%;transform:translate(-50%,-50%);width:min(340px,calc(100vw - 32px));max-height:min(720px,calc(100vh - 48px));max-height:min(720px,calc(100dvh - 48px));overflow:auto;overscroll-behavior:contain;
+  background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:26px;padding:8px 0;box-shadow:0 18px 50px -10px rgba(0,0,0,.45),0 2px 8px rgba(0,0,0,.15)}
+.tmenu button{display:flex;align-items:center;width:100%;min-height:52px;padding:6px 20px 6px 14px;border:0;background:none;color:inherit;font:inherit;font-size:max(17px,calc(var(--fs) + 2px));text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.tmenu button .ck{flex:0 0 32px;font-weight:700;text-align:center;padding-right:6px}
+.tmenu button:focus-visible{background:color-mix(in srgb,var(--ink) 8%,transparent);outline:0}
+@media (hover:hover){.tmenu button:hover{background:color-mix(in srgb,var(--ink) 8%,transparent)}}
+.tmenu:focus{outline:0}
+.tmenu button:active{background:color-mix(in srgb,var(--ink) 14%,transparent)}
+.tmenu button[aria-selected="true"]{font-weight:700}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tmenu{background:#0c0f16;border-color:#2a3142}}
+:root[data-theme="dark"] .tmenu{background:#0c0f16;border-color:#2a3142}
 </style>
 </head>
 <body>
@@ -496,12 +512,14 @@ input[type=range]{height:44px}
           </div>
           <div class="hint" id="levelHint"></div>
           <div style="height:12px"></div>
-          <!-- v4.0.1 (2026-10-07 "안드로이드에서 빠르기말 고르기가 안 눌림" → 사용자 결정 "빠르기말 삭제, 막대로만"): 빠르기말 고르기 칸 없앰. 이름은 이 줄(beatLabel)에 계속 보임 -->
+          <!-- v4.0.2 (2026-10-08 "PC·아이폰·안드로이드 모두 이 UI로, 누르면 체크표시하고 빠르기 수정"): 휴대폰 기본 고르기 창 대신 앱이 직접 그리는 목록 창(#tempoMenu) — 세 기기 모양이 같음. v4.0.1 에서 지웠던 빠르기말 칸을 이 방식으로 되살림 -->
           <div class="f muted" style="margin-bottom:4px">빠르기 <span id="beatLabel"></span></div>
           <div class="tempo">
             <input type="range" id="bpmRange" min="40" max="208" step="1">
             <input type="number" id="bpmNum" min="40" max="208" step="1" inputmode="numeric" aria-label="BPM">
           </div>
+          <div style="height:8px"></div>
+          <button type="button" id="tempoPick" class="tpick" aria-haspopup="listbox" aria-expanded="false" aria-controls="tempoMenu"><span id="tempoPickTxt">빠르기말 고르기</span></button>
           <div class="hint" id="keyHint">설정을 바꾸면 악보가 바로 새로 만들어집니다. 조표는 지휘자가 말한 조(실음)를 고르면 내 악기 조로 바뀌어 나옵니다.</div>
         </details>
       </div>
@@ -672,10 +690,13 @@ input[type=range]{height:44px}
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <p class="muted" style="margin:8px 0 0" id="offlineLinkP"><a href="offline/">인터넷 없이 쓰는 오프라인 버전 열기</a> — 인터넷이 될 때 한 번 열어 홈 화면에 저장해 두세요</p>
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v4.0.1 · 2026-10-07</p>
+      <p class="muted" style="margin:8px 0 0">버전 v4.0.2 · 2026-10-08</p>
     </div>
   </section>
 </main>
+
+<div id="tempoMenuBg" class="tmenu-bg hide"></div>
+<div id="tempoMenu" class="tmenu hide" role="listbox" aria-label="빠르기말" tabindex="-1"></div>
 
 <nav class="tabs" role="tablist">
   <button type="button" role="tab" data-tab="practice" aria-selected="true">
@@ -2479,6 +2500,7 @@ function syncForm() {
   $('#meter').value = set.meter; $('#bars').value = String(set.bars); $('#pickup').value = set.pickup; $('#artic').value = set.artic;
   $('#inst').value = set.inst; $('#key').value = set.key;
   $('#bpmRange').value = set.bpm; $('#bpmNum').value = set.bpm;
+  syncTempoMenu();
   const M = C.METERS[set.meter];
   $('#beatLabel').textContent = '(' + ({ q: '♩', h: '𝅗𝅥', '8': '♪' }[M.beatName]) + (M.beatDots ? '.' : '') + ' = ' + set.bpm + ', ' + C.tempoName(set.bpm) + ')';
   document.querySelectorAll('.melo').forEach(el => el.classList.toggle('hide', set.mode !== 'melody'));
@@ -2565,6 +2587,46 @@ function setBpm(v) {
 }
 $('#bpmRange').oninput = e => setBpm(e.target.value);
 $('#bpmNum').onchange = e => setBpm(e.target.value);
+// v4.0.2 빠르기말 목록 창: 지금 빠르기와 딱 맞는 빠르기말에 ✓ (맞는 게 없으면 「빠르기말 고르기」에 ✓), 누르면 그 빠르기로 바꾸고 닫힘
+function syncTempoMenu() {
+  const hit = C.TEMPI.find(t => t[1] === set.bpm);
+  $('#tempoPickTxt').textContent = hit ? hit[0] + ' (' + hit[1] + ')' : '빠르기말 고르기';
+  $('#tempoMenu').querySelectorAll('button').forEach(b => {
+    const on = hit ? +b.dataset.bpm === hit[1] : b.dataset.bpm === '';
+    b.setAttribute('aria-selected', on); b.querySelector('.ck').textContent = on ? '✓' : '';
+  });
+}
+$('#tempoMenu').innerHTML = [['빠르기말 고르기', '']].concat(C.TEMPI).map(([n, b]) =>
+  `<button type="button" role="option" data-bpm="${b}"><span class="ck" aria-hidden="true"></span><span>${b === '' ? n : n + ' (' + b + ')'}</span></button>`).join('');
+let tempoOpenedAt = 0;             // 두 번 빠르게 누르면 두 번째 눌림이 바로 창을 닫거나 다른 줄을 고르지 않게
+function openTempoMenu() {
+  if (busyRec()) return;
+  tempoOpenedAt = Date.now();
+  $('#tempoMenu').classList.remove('hide'); $('#tempoMenuBg').classList.remove('hide');
+  $('#tempoPick').setAttribute('aria-expanded', 'true');
+  syncTempoMenu();
+  const cur = $('#tempoMenu').querySelector('[aria-selected="true"]') || $('#tempoMenu').querySelector('button');
+  try { cur.scrollIntoView({ block: 'nearest' }); cur.focus({ preventScroll: true }); } catch (e) { }
+}
+function closeTempoMenu(back) {
+  if ($('#tempoMenu').classList.contains('hide')) return;
+  $('#tempoMenu').classList.add('hide'); $('#tempoMenuBg').classList.add('hide');
+  $('#tempoPick').setAttribute('aria-expanded', 'false');
+  if (back) try { $('#tempoPick').focus({ preventScroll: true }); } catch (e) { }
+}
+$('#tempoPick').onclick = openTempoMenu;
+$('#tempoMenuBg').onclick = () => { if (Date.now() - tempoOpenedAt > 350) closeTempoMenu(true); };
+$('#tempoMenu').onclick = e => {
+  const b = e.target.closest('button'); if (!b || Date.now() - tempoOpenedAt < 350) return;
+  if (b.dataset.bpm !== '') setBpm(b.dataset.bpm);
+  closeTempoMenu(true);
+};
+$('#tempoMenu').onkeydown = e => {
+  const bs = [...$('#tempoMenu').querySelectorAll('button')], i = bs.indexOf(document.activeElement);
+  if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); closeTempoMenu(true); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); bs[Math.max(0, Math.min(bs.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)))].focus(); }
+  else if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); bs[e.key === 'Home' ? 0 : bs.length - 1].focus(); }
+};
 $('#newBtn').onclick = () => { if (busyRec()) return; stopPlay(); changed({ reseed: true }); };
 window.addEventListener('hashchange', () => { if (!busyRec() && readHash()) { stopPlay(); syncForm(); rebuild(); } });
 // 빠르기를 막 바꾼 직후라면 먼저 악보를 새로 만든다
@@ -3597,7 +3659,7 @@ async function startRec() {
   const c = audio();                       // iOS: 누른 순간(await 전)에 소리를 켜야 함
   stopPlay(); closeSheet();
   // 마이크를 여는 동안(허락 창·느린 휴대폰은 몇 초)도 녹음 중과 똑같이 잠근다 — 들어보기·설정 바꾸기가 끼어들지 않게 (v3.2 점검)
-  micBusy = true; lockedSet = JSON.parse(JSON.stringify(set)); document.body.classList.add('recording');
+  micBusy = true; lockedSet = JSON.parse(JSON.stringify(set)); document.body.classList.add('recording'); closeTempoMenu();
   try { await startRecInner(c); } finally { micBusy = false; if (!rec) { lockedSet = null; document.body.classList.remove('recording'); } }
 }
 async function startRecInner(c) {
