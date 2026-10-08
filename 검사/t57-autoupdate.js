@@ -1,7 +1,7 @@
 // v4.0.4 (2026-10-08 "PC에서는 적용되었는데 핸드폰은 아직"): 앱을 열거나 다시 앞으로 가져올 때 새 버전이면 저절로 새로고침하는지
 // 웹킷(아이폰)·크로뮴(안드로이드) 휴대폰 흉내. version.txt 를 가로채서 본다. 확인 간격(20초)에 흔들리지 않게 2초마다 "앞으로 옴"을 보내며 기다린다.
 // ① 같은 버전 → 그대로 ② 결과 탭이면 기다림 ③ 앱이 바쁘면(녹음·채점 등) 기다림 + 저장 안 한 결과 단추가 보이면 바쁨 ④ 옛 버전 표 → 그대로
-// ⑤ 연습 탭·한가함·새 버전 → 한 번 새로고침 + "새 버전…으로 바꾸는 중" 안내가 뜸 ⑥ 같은 새 버전으로 되풀이 안 함 ⑦ 들어보기 중이면 바쁨 ⑧ 오프라인 앱 오류 없음
+// ⑤ 연습 탭·한가함·새 버전 → 한 번 새로고침 + "새 버전…으로 바꾸는 중" 안내가 뜸 ⑥ 같은 새 버전으로 되풀이 안 함 ⑦ 들어보기 중이면 바쁨 ⑧ /offline/ 은 운영 종료 안내(10/8)
 // 실행(서버 127.0.0.1:8765): PW=<playwright 경로> node t57-autoupdate.js   통과: bad [] 0
 const pw = require(process.env.PW || 'playwright');
 (async () => {
@@ -57,7 +57,7 @@ const pw = require(process.env.PW || 'playwright');
     }
     // ⑧ 오프라인 앱
     await page.goto((process.env.BASE || 'http://127.0.0.1:8765/') + 'offline/?t57=' + Date.now()); await page.waitForTimeout(4000); await nudge(); await page.waitForTimeout(1500);
-    if (await page.evaluate(() => typeof window.rpBusy !== 'function')) bad.push({ name, err: 'offline rpBusy missing' });
+    if (!(await page.evaluate(() => /운영을 마쳤습니다/.test(document.body.textContent)))) bad.push({ name, err: 'offline farewell page missing' });   // 2026-10-08 오프라인 앱 운영 종료
     if (errs.length) bad.push({ name, errs });
     console.log(name, 'cur', cur, 'loads', loads, 'toast', tt);
     await b.close();

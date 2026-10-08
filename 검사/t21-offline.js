@@ -34,7 +34,7 @@ module.exports = async (c) => {
   } else {
     await c.send('Network.enable');
     await c.send('Network.emulateNetworkConditions', { offline: true, latency: 0, downloadThroughput: -1, uploadThroughput: -1 });
-    const f = 'file:///C:/Users/ultramsw67/Desktop/' + encodeURIComponent('수드 리듬 연습') + '/' + encodeURIComponent('수드 리듬 연습 오프라인') + '/' + encodeURIComponent('수드 리듬 연습 오프라인.html');
+    const f = 'file:///C:/Users/ultramsw67/Desktop/' + encodeURIComponent('수드 리듬 연습') + '/' + encodeURIComponent('보관') + '/' + encodeURIComponent('수드 리듬 연습 오프라인') + '/' + encodeURIComponent('수드 리듬 연습 오프라인.html');
     await c.go(f);
     if (process.env.FAKE_WAV) {
       const r = await c.ev(`(async()=>{ Object.assign(RP.set,{mode:'melody',meter:'4/4',level:2,bars:4,key:'Bb',inst:'clarinet',bpm:96,pickup:'off',artic:'auto',seed:777,edits:{}}); RP.rebuild(); document.querySelector('#countIn').value='1';

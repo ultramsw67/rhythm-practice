@@ -1,11 +1,14 @@
 // 오프라인 버전 만들기 — 원본 index.html 에서 자동 생성 (앱을 고친 뒤 이것만 다시 돌리면 된다)
 //   node build-offline.js
-// ① ../offline/          : 인터넷 주소 …/rhythm-practice/offline/ 에 올라가는 앱. 한 번 열면 서비스워커가 휴대폰에 저장
-// ② 바탕화면/수드 리듬 연습/수드 리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
+// ① (2026-10-08 운영 종료) 예전엔 ../offline/ 에 올라가던 웹 오프라인 앱 — 지금은 바탕화면 보관 폴더에만 만든다
+// ② 바탕화면/수드 리듬 연습/보관/수드 리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
-const OUT1 = process.env.OFFLINE_OUT1 || path.join(ROOT, 'offline');          // 시험 때는 다른 곳으로
-const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/수드 리듬 연습 오프라인';     // 2026-09-28 바탕화면 「수드 리듬 연습」 최종 폴더로 정리
+// 2026-10-08 "오프라인 앱은 내리고 너만 저장해놔": 웹 오프라인 앱은 더 이상 올리지 않는다. 저장소 offline/ 에는 운영 종료 안내(index.html)와
+// 설치된 앱을 지우는 sw.js 만 둔다(손으로 만든 파일, 이 스크립트가 덮지 않음). 오프라인 앱은 바탕화면 보관 폴더에만 만들어 둔다.
+const OUT1 = process.env.OFFLINE_OUT1 || 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/보관/오프라인 앱 (웹판, 최신)';
+if (path.resolve(OUT1) === path.resolve(ROOT, 'offline')) throw new Error('offline/ 은 운영 종료 안내 자리 — 오프라인 앱을 여기에 만들지 않는다');
+const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/보관/수드 리듬 연습 오프라인';     // 2026-09-28 바탕화면 「수드 리듬 연습」 최종 폴더로 정리 → 2026-10-08 "오프라인 내용 다 없애줘" 로 그 안 「보관」 폴더로
 const ONLINE = 'https://ultramsw67.github.io/rhythm-practice/';
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>';
 let src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -35,7 +38,7 @@ function common(s, badge) {
 }
 
 // ① 인터넷에 올리는 오프라인 앱 ------------------------------------------------
-fs.mkdirSync(path.join(OUT1, 'img'), { recursive: true });
+fs.mkdirSync(path.join(OUT1, 'img'), { recursive: true });   // OUT1 도 함께 만들어짐
 let a = common(src, '앱');
 need(a, CDN); a = a.replace(CDN, '<script src="vexflow.js"></script>');
 a = a.replace('</body>', `<script>
