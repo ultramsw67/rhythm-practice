@@ -21,7 +21,7 @@ const pw = require(process.env.PW || 'playwright');
     let served = null, loads = 0;
     await page.route('**/version.txt*', r => served ? r.fulfill({ status: 200, contentType: 'text/plain', body: served + '\n' }) : r.continue());
     page.on('load', () => loads++);
-    await page.goto('http://127.0.0.1:8765/?t57=' + Date.now());
+    await page.goto((process.env.BASE || 'http://127.0.0.1:8765/') + '?t57=' + Date.now());
     await page.evaluate(() => { localStorage.setItem('rp.startSeen', 'true'); });
     await page.reload(); await page.waitForTimeout(4000);
     const cur = await page.evaluate(() => document.querySelector('#tab-settings').textContent.match(/버전 (v[\d.]+)/)[1]);
@@ -56,7 +56,7 @@ const pw = require(process.env.PW || 'playwright');
       await page.evaluate(() => document.querySelector('#playBtn').click()); await page.waitForTimeout(500);
     }
     // ⑧ 오프라인 앱
-    await page.goto('http://127.0.0.1:8765/offline/?t57=' + Date.now()); await page.waitForTimeout(4000); await nudge(); await page.waitForTimeout(1500);
+    await page.goto((process.env.BASE || 'http://127.0.0.1:8765/') + 'offline/?t57=' + Date.now()); await page.waitForTimeout(4000); await nudge(); await page.waitForTimeout(1500);
     if (await page.evaluate(() => typeof window.rpBusy !== 'function')) bad.push({ name, err: 'offline rpBusy missing' });
     if (errs.length) bad.push({ name, errs });
     console.log(name, 'cur', cur, 'loads', loads, 'toast', tt);
