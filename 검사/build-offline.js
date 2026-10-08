@@ -52,9 +52,17 @@ a = a.replace('</body>', `<script>
   var had = !!navigator.serviceWorker.controller;
   navigator.serviceWorker.addEventListener('controllerchange', function () {
     if (!had) { had = true; return; }
-    try { if (sessionStorage.getItem('rp-sw-reloaded')) return; sessionStorage.setItem('rp-sw-reloaded', '1'); } catch (e) { }
-    say('새 버전으로 바꾸는 중…'); location.reload();
+    try { if (sessionStorage.getItem('rp-sw-reloaded')) return; } catch (e) { }
+    later();
   });
+  // v4.0.4: 녹음·채점 중이거나 저장 안 한 결과가 있으면 새로고침을 미뤘다가, 다시 앞으로 오거나 몇 초마다 보아 한가할 때 한다
+  var waitT = 0;
+  function later() {
+    clearTimeout(waitT);
+    if (window.rpBusy && window.rpBusy()) { waitT = setTimeout(later, 3000); return; }
+    try { sessionStorage.setItem('rp-sw-reloaded', '1'); } catch (e) { }
+    say('새 버전으로 바꾸는 중…'); location.reload();
+  }
   try { setTimeout(function () { sessionStorage.removeItem('rp-sw-reloaded'); }, 10000); } catch (e) { }
   navigator.serviceWorker.register('sw.js').then(function () { return navigator.serviceWorker.ready; })
     .then(function () { ok = true; show(); })
@@ -63,6 +71,8 @@ a = a.replace('</body>', `<script>
 </script>
 </body>`);
 fs.writeFileSync(path.join(OUT1, 'index.html'), a);
+// v4.0.4 온라인 앱이 새 버전을 알아채는 표 (index.html 의 autoupdate 가 읽음)
+if (!process.env.OFFLINE_OUT1) fs.writeFileSync(path.join(ROOT, 'version.txt'), ver + String.fromCharCode(10));
 fs.writeFileSync(path.join(OUT1, 'vexflow.js'), vex);
 for (const f of ['sood-192.jpg', 'icon-180.png', 'icon-192.png', 'icon-512.png']) fs.copyFileSync(path.join(ROOT, 'img', f), path.join(OUT1, 'img', f));
 // 악기 소리(선율 모드): 모두 복사해 처음 열 때 함께 저장 → 인터넷 없이도 모든 악기 소리
