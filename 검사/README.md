@@ -46,6 +46,7 @@
 | `node cdp.js t54-tempo-android.js` | v4.0.1 빠르기 막대(빠르기말 칸 삭제): 안드로이드 크롬 흉내로 손가락 끌기·톡 누르기 → 빠르기·숫자 칸·빠르기 줄·요약·저장값·악보, 막대 터치 44px, 녹음 중 잠금 (폭 320·360·393·412 × 글자 3 × 밝음/어두움) | `bad [] 0`, errs [] |
 | `node cdp.js t55-android-all.js` | v4.0.1 안드로이드(크롬·삼성 인터넷) 흉내로 네 탭의 보이는 모든 단추·칸 270개를 실제 터치로 — 덮임·44px 미만·선택 칸 포커스 (단추는 touchstart 를 막아 실행 안 됨) | `bad [] 0` |
 | `PW=C:/Users/ultramsw67/Desktop/homepage/node_modules/playwright node t56-iphone-webkit.js` | v4.0.1 **사파리 엔진(웹킷)** 아이폰 흉내: 빠르기 막대 끌기·톡 누르기·네 탭 모든 칸(덮임·44px·16px 미만 글자=확대)·악보·가상 연주 100 (375·390·430 × 글자 3 × 밝음/어두움). 웹킷은 `npx playwright install webkit`(10/7 설치) — run-all 에는 없으니 **따로 돌린다** | `bad [] 0`, errs 0 |
+| `PW=… node t57-autoupdate.js` (실주소는 `BASE=https://ultramsw67.github.io/rhythm-practice/` 앞에) | v4.0.4 **휴대폰 새 버전 자동 바꿈**: 웹킷·크로뮴에서 version.txt 를 가로채 같은 버전·결과 탭·바쁨·옛 버전 표면 그대로, 새 버전이면 한 번 새로고침+안내 문구, 되풀이 없음, 들어보기 중 바쁨, 오프라인 앱 오류 없음 (약 8분). run-all 밖 — **따로 돌린다** | `bad [] 0` |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로, 크롬이 늦게 뜨면 한 번 더). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의
