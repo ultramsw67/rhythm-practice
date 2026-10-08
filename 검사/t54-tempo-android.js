@@ -64,7 +64,10 @@ module.exports = async (c) => {
       if (m0.ck.length !== 1) bad.push({ tag, err: 'tempo menu check count', ck: m0.ck });
       const q = await c.ev(`(()=>{const e=[...document.querySelectorAll('#tempoMenu button')].find(b=>b.dataset.bpm==='138'); e.scrollIntoView({block:'nearest'}); const b=e.getBoundingClientRect(); return JSON.stringify([b.left+b.width/2,b.top+b.height/2, document.elementFromPoint(b.left+b.width/2,b.top+b.height/2)===e||e.contains(document.elementFromPoint(b.left+b.width/2,b.top+b.height/2))])})()`).then(JSON.parse);
       if (!q[2]) bad.push({ tag, err: 'Allegro row covered' });
-      await tap(q[0], q[1]); await c.sleep(450);
+      await tap(q[0], q[1]); await c.sleep(300);
+      const mW = await menu();                                    // v4.0.3: 고른 뒤 약 1초는 창이 남아 ✓ 를 보여 줌
+      if (!mW.open || mW.ck.join() !== '✓Allegro (138)') bad.push({ tag, err: 'tempo menu should stay ~1s with check', mW: { open: mW.open, ck: mW.ck } });
+      await c.sleep(1000);
       const m1 = await menu(), sA = await state();
       if (m1.open || m1.bpm !== 138 || m1.ck.join() !== '✓Allegro (138)' || m1.txt !== 'Allegro (138)' || !ok1(sA)) bad.push({ tag, err: 'tempo menu pick', m1: { open: m1.open, bpm: m1.bpm, ck: m1.ck, txt: m1.txt } });
       { const p = await ctr('#tempoPick'); await tap(p[0], p[1]); await c.sleep(400); }

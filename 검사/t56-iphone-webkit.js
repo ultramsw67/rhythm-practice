@@ -54,7 +54,11 @@ const UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/6
       const [L, T, R, B, W, H] = m0.box; if (L < 0 || T < 0 || R > W || B > H) bad.push({ tag, err: 'tempo menu off screen', box: m0.box });
       if (m0.ck.length !== 1) bad.push({ tag, err: 'tempo menu check count', ck: m0.ck });
       await page.screenshot({ path: `t56-menu-${w}-f${font}-${dark ? 'dark' : 'light'}.png` });
-      await page.tap('#tempoMenu button[data-bpm="88"]'); await page.waitForTimeout(450);
+      await page.tap('#tempoMenu button[data-bpm="88"]'); await page.waitForTimeout(300);
+      const mW = await menu();                                    // v4.0.3: 고른 뒤 약 1초는 창이 남아 ✓ 를 보여 줌
+      if (!mW.open || mW.ck.join() !== '✓Andante (88)') bad.push({ tag, err: 'tempo menu should stay ~1s with check', mW: { open: mW.open, ck: mW.ck } });
+      await page.screenshot({ path: `t56-menu-picked-${w}-f${font}-${dark ? 'dark' : 'light'}.png` });
+      await page.waitForTimeout(1000);
       const m1 = await menu(), sA = await rst();
       if (m1.open || m1.bpm !== 88 || m1.ck.join() !== '✓Andante (88)' || m1.txt !== 'Andante (88)' || !okS(sA)) bad.push({ tag, err: 'tempo menu pick', m1 });
       await page.tap('#tempoPick'); await page.waitForTimeout(400);
