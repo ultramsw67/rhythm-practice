@@ -136,7 +136,7 @@ fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT2, 'LICENSES.txt')
 let g = guide.replace('<title>수드 리듬 연습 사용법</title>', '<title>수드 리듬 연습 사용법 (오프라인)</title>')
   .split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"')
   .replace('<link rel="icon" href="img/sood-192.jpg">', '<link rel="icon" href="' + iconPng + '">')
-  .replace('<a href="./">앱으로</a>', '<a href="수드 리듬 연습 오프라인.html">앱으로</a>');
+  .replace('<a href="index.html">앱으로</a>', '<a href="수드 리듬 연습 오프라인.html">앱으로</a>');
 fs.writeFileSync(path.join(OUT2, '사용법.html'), g);
 fs.writeFileSync(path.join(OUT2, '읽어 주세요.txt'), '\ufeff' + [
   '수드 리듬 연습 오프라인 (PC 파일 버전) ' + ver,

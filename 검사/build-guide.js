@@ -70,7 +70,7 @@ th{background:var(--soft)}
 </style>
 </head>
 <body>
-<header><img src="img/sood-192.jpg" alt="" width="34" height="34" style="border-radius:50%"><h1>${esc(title)}</h1><a href="./">앱으로</a></header>
+<header><img src="img/sood-192.jpg" alt="" width="34" height="34" style="border-radius:50%"><h1>${esc(title)}</h1><a href="index.html">앱으로</a></header>
 <main><div class="doc">
 ${html.replace('<hr>\n', tocHtml + '\n<hr>\n')}
 </div></main>
