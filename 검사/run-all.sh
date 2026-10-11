@@ -40,6 +40,7 @@ run qa-f/f3b-slowmic.js X=1
 run qa-f/f3c-micbusy-set.js X=1
 run t3.js FAKE_WAV="$W/fake.wav" SET='{"gen":3,"rv":2,"mode":"melody","meter":"4/4","level":2,"bars":4,"key":"Bb","inst":"clarinet","bpm":96,"pickup":"off","artic":"auto","seed":777,"edits":{}}'
 run t44-game.js FAKE_WAV="$W/fake.wav"
+run t59-stat.js FAKE_WAV="$W/fake.wav"
 run t45-curves.js
 run t46-scale-levels.js
 run t47-levels-mobile.js
