@@ -403,6 +403,16 @@ input[type=range]{height:44px}
 .tmenu button[aria-selected="true"]{font-weight:700}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tmenu{background:#0c0f16;border-color:#2a3142}}
 :root[data-theme="dark"] .tmenu{background:#0c0f16;border-color:#2a3142}
+/* v4.1 수드 도우미 (sood-guide.js — 음악 앱 4개 공통, 고치지 않고 여기서 자리만 맞춤): 아래 탭 막대 바로 위 왼쪽.
+   기호 창·도우미 끔일 때 숨김, 녹음 중엔 다른 단추처럼 흐리게·잠금, 맨 아래 내용이 단추에 가리지 않게 여백 */
+.sg-fab{bottom:calc(var(--navh, 70px) + 12px)!important}
+.sg-peek{bottom:calc(var(--navh, 70px) + 86px)!important}
+body.sheet-on .sg-fab, body.sheet-on .sg-peek, body.guide-off .sg-fab, body.guide-off .sg-peek{display:none!important}
+body.recording .sg-fab{opacity:.4;pointer-events:none}
+body.recording .sg-peek{display:none!important}
+body:not(.guide-off):not(.sheet-on){padding-bottom:calc(var(--navh, 70px) + 92px)}
+body:not(.guide-off) .toast{bottom:calc(var(--navh, 70px) + 86px)}
+body.tmenu-on .sg-fab, body.tmenu-on .sg-peek{display:none!important}
 </style>
 </head>
 <body>
@@ -430,6 +440,7 @@ input[type=range]{height:44px}
       <div class="row">
         <button class="btn pri" id="startLat" type="button">지연 보정 먼저 하기 (1분)</button>
         <button class="btn" id="startClose" type="button">알겠습니다</button>
+        <button class="btn" id="startGuide" type="button">🔊 수드가 읽어 주기</button>
       </div>
       <div class="hint">지연 보정은 처음 한 번만 하면 됩니다. 안 하면 정확히 불어도 "늦다"고 나올 수 있습니다.</div>
     </div>
@@ -652,6 +663,11 @@ input[type=range]{height:44px}
       <div class="hint">녹음할 때마다 음표 점수가 쌓이고 칭호가 오릅니다. 기록은 이 기기 안에만 남습니다. 꺼도 기록은 그대로 쌓이고, 다시 켜면 보입니다.</div>
     </div>
     <div class="card">
+      <h2>수드 도우미</h2>
+      <label class="opt"><input type="checkbox" id="guideOn"> 화면 왼쪽 아래에 수드 도우미 단추 보이기</label>
+      <div class="hint">단추를 누르면 수드가 지금 화면 사용법을 소리 내어 읽어 줍니다. 읽는 문장은 노란 줄로 표시되니 같이 따라 읽으세요. 녹음·들어보기 중에는 나오지 않습니다.</div>
+    </div>
+    <div class="card">
       <h2>이어폰을 끼고 연습하세요</h2>
       <p class="muted" style="margin:0">스피커로 메트로놈을 틀면 클릭 소리가 녹음에 섞여 채점이 흔들릴 수 있습니다. <b>유선 이어폰</b>이 가장 좋습니다. 블루투스 이어폰은 소리가 늦게 나오고, 켠 채 녹음하면 음질이 통화 수준으로 떨어질 수 있습니다. 앱이 휴대폰 마이크로 바꿔 녹음을 시도하지만, 그래도 먹먹하면 블루투스를 끄고 "듣는 방법 → 스피커"로 녹음하세요.</p>
     </div>
@@ -690,7 +706,7 @@ input[type=range]{height:44px}
       <p class="muted" style="margin:8px 0 0"><a href="guide.html">사용 설명서 보기 (PC·아이폰·안드로이드)</a></p>
       <!-- 2026-10-08 "오프라인 내용 다 없애줘": 오프라인 버전 열기 링크 삭제. 이어서 오프라인 앱 운영 종료 (/offline/ = 안내·설치 지우기만, 앱은 바탕화면 보관 폴더·git 태그 오프라인앱-내리기전-2026-10-08) -->
       <p class="muted" style="margin:8px 0 0">악보: VexFlow (MIT) · 음표 글꼴 Bravura·Petaluma (SIL OFL 1.1)·Gonville<br>악기 소리: FluidR3 GM (Frank Wen, MIT) · MIDI.js Soundfonts (CC BY 3.0, 음역만 골라 씀)<br><a href="LICENSES.txt" target="_blank" rel="noopener">사용한 자료와 라이선스 전문</a></p>
-      <p class="muted" style="margin:8px 0 0">버전 v4.0.6 · 2026-10-11</p>
+      <p class="muted" style="margin:8px 0 0">버전 v4.1 · 2026-10-18</p>
     </div>
   </section>
 </main>
@@ -721,6 +737,8 @@ input[type=range]{height:44px}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>
+<script src="sood-guide-helps.js"></script>
+<script src="sood-guide.js"></script>
 
 <!-- ============================================================
      CORE : 화면·소리와 무관한 순수 계산 (node 로도 시험 가능)
@@ -2602,7 +2620,7 @@ let tempoOpenedAt = 0;             // 두 번 빠르게 누르면 두 번째 눌
 function openTempoMenu() {
   if (busyRec()) return;
   tempoOpenedAt = Date.now();
-  $('#tempoMenu').classList.remove('hide'); $('#tempoMenuBg').classList.remove('hide');
+  $('#tempoMenu').classList.remove('hide'); $('#tempoMenuBg').classList.remove('hide'); document.body.classList.add('tmenu-on');
   $('#tempoPick').setAttribute('aria-expanded', 'true');
   syncTempoMenu();
   const cur = $('#tempoMenu').querySelector('[aria-selected="true"]') || $('#tempoMenu').querySelector('button');
@@ -2612,7 +2630,7 @@ let tempoCloseT = 0;               // v4.0.2-1: 고른 뒤 약 1초 ✓ 를 보�
 function closeTempoMenu(back) {
   clearTimeout(tempoCloseT);
   if ($('#tempoMenu').classList.contains('hide')) return;
-  $('#tempoMenu').classList.add('hide'); $('#tempoMenuBg').classList.add('hide');
+  $('#tempoMenu').classList.add('hide'); $('#tempoMenuBg').classList.add('hide'); document.body.classList.remove('tmenu-on');
   $('#tempoPick').setAttribute('aria-expanded', 'false');
   if (back) try { $('#tempoPick').focus({ preventScroll: true }); } catch (e) { }
 }
@@ -3402,6 +3420,7 @@ async function clockRunning(c, maxMs) {
 }
 let playing = null, playStarting = false;
 async function playScore() {
+  try { if (window.SoodGuide) window.SoodGuide.stop(); } catch (e) { }   // v4.1 수드 도우미가 읽던 소리 멈춤(녹음·들어보기에 섞이지 않게)
   if (playing) { stopPlay(); return; }
   if (cal) { toast('지연 보정을 재는 중입니다. 끝난 뒤에 누르세요'); return; }
   if (rec || playStarting || micBusy) return;
@@ -3653,6 +3672,7 @@ function drawWave() {
 
 let rec = null, wakeLock = null, lastCap = null, micBusy = false;
 async function startRec() {
+  try { if (window.SoodGuide) window.SoodGuide.stop(); } catch (e) { }   // v4.1 수드 도우미가 읽던 소리 멈춤(녹음·들어보기에 섞이지 않게)
   if (rec) { finishRec(true); return; }
   if (!score || micBusy) return;
   if (cal) { toast('지연 보정을 재는 중입니다. 끝난 뒤에 누르세요'); return; }
@@ -3790,6 +3810,7 @@ function analyzeAsync1(pcm, sr, tset, tl, sc, lat, opt) {
 // 지연 측정
 let cal = null;
 async function calibrate(kind) {
+  try { if (window.SoodGuide) window.SoodGuide.stop(); } catch (e) { }   // v4.1 수드 도우미가 읽던 소리 멈춤(녹음·들어보기에 섞이지 않게)
   if (rec || cal || micBusy) return;
   cal = true;                              // 바로 잠가 두 번 눌러도 한 번만
   stopPlayer();
@@ -3968,6 +3989,7 @@ $('#resSave').onclick = async () => { if (!curTake) return; const ok = await DB.
 
 // 가상 연주로 채점 시험
 async function selfTest(sloppy) {
+  try { if (window.SoodGuide) window.SoodGuide.stop(); } catch (e) { }   // v4.1 수드 도우미가 읽던 소리 멈춤(녹음·들어보기에 섞이지 않게)
   if (!score || rec || cal || micBusy || scoring) return;
   flushBpm();                              // 빠르기를 막 바꿨으면 그 빠르기 악보로 (v3.9.1)
   toast('가상 연주를 채점하는 중…');
@@ -4491,8 +4513,46 @@ function syncNavH() { try { document.documentElement.style.setProperty('--navh',
 syncNavH(); window.addEventListener('resize', syncNavH);
 window.RP = { get score() { return score; }, get set() { return set; }, draw, rebuild, syncForm, openSheet };
 // v4.0.4 새 버전 자동 바꿈(아래 autoupdate)이 보는 "지금 새로고침하면 안 됨": 녹음·채점·들어보기·지연 보정 중, 저장 안 한 결과, 보관함이 메모리뿐
-window.rpBusyCore = () => !!(rec || micBusy || playing || playStarting || scoring || cal || (DB.memOnly && DB.mem.size) || !$('#resSave').classList.contains('hide'));
+window.rpBusyCore = () => !!(rec || micBusy || playing || playStarting || scoring || cal || (DB.memOnly && DB.mem.size) || !$('#resSave').classList.contains('hide') || !!document.querySelector('.sg-wrap'));
 window.rpToast = toast;
+/* ---------- v4.1 수드 도우미 (2026-10-18 "도움말 필요할 때 등장해서 음성으로 해당 내용을 읽게") ----------
+   공통 모듈 sood-guide.js(고치지 않음) + 이 앱 도움말 sood-guide-helps.js. 녹음 목소리 sood-voice/<해시>.mp3, 없으면 기계 목소리.
+   화면(탭)마다 도움말, 가만히 40초면 화면마다 한 번 말풍선. 녹음·채점·들어보기·지연 보정 중엔 안 나오고 읽지 않음 */
+function guideOn() { return store.get('guideOn', true) !== false; }
+function applyGuide() {
+  const pref = guideOn(), on = pref && !!(window.SoodGuide && window.SOOD_HELPS);   // 모듈을 못 불러왔으면 끈 것과 같게
+  document.body.classList.toggle('guide-off', !on);
+  $('#guideOn').checked = pref; $('#startGuide').classList.toggle('hide', !on);
+  try { if (window.SoodGuide) { window.SoodGuide.setVisible(on); if (!on) window.SoodGuide.close(); } } catch (e) { }
+}
+function guideCtx() {
+  if (!$('#tab-result').classList.contains('hide')) return $('#resEmpty').classList.contains('hide') ? 'result' : 'resultEmpty';
+  if (!$('#tab-library').classList.contains('hide')) return 'library';
+  if (!$('#tab-settings').classList.contains('hide')) return 'settings';
+  return 'practice';
+}
+// 저절로 나오면 안 되는 때: 도우미 끔, 녹음·마이크 준비·들어보기·채점(가상 연주 포함)·지연 보정, 기호 창·빠르기말 창 열림
+const guideBusy = () => !!(!guideOn() || rec || micBusy || playing || playStarting || scoring || cal ||
+  document.body.classList.contains('sheet-on') || document.querySelector('#tempoMenu:not(.hide)') || document.getElementById('inappGate'));
+if (window.SoodGuide && window.SOOD_HELPS) {
+  // 모듈 v1.1.0 은 화면 어디든 누르는 순간(pointerdown·touchstart) 말풍선을 지워서, 말풍선 자체를 눌러도 창이 안 열림(click 이 오기 전에 사라짐)
+  // → 말풍선을 누를 때만 그 처리를 건너뛰게 모듈보다 먼저 듣는다 (init 전에 등록해야 먼저 불림)
+  window.addEventListener('click', e => {
+    if (!(e.target && e.target.closest && e.target.closest('.sg-fab, .sg-peek, #startGuide')) || rec || micBusy || cal) return;
+    try { if (playing || playStarting) stopPlay(); stopPlayer(); } catch (er) { }
+  }, true);
+  ['pointerdown', 'touchstart'].forEach(ev => window.addEventListener(ev, e => {
+    if (e.target && e.target.closest && e.target.closest('.sg-peek')) e.stopImmediatePropagation();
+  }, { passive: true, capture: true }));
+  try {
+    window.SoodGuide.init({ char: 'conductor', helps: window.SOOD_HELPS, voiceDir: 'sood-voice/', context: guideCtx, isBusy: guideBusy,
+      idleSec: window.__rpGuideIdle || 40, corner: 'left', bottom: 82 });
+  } catch (e) { console.error(e); }
+}
+$('#startGuide').onclick = () => { try { if (window.SoodGuide) window.SoodGuide.open('practice'); } catch (e) { } };
+$('#guideOn').onchange = e => { store.set('guideOn', e.target.checked); applyGuide(); };
+applyGuide();
+window.rpGuideBusy = guideBusy;
 stat('open');
 syncForm();
 rebuild();

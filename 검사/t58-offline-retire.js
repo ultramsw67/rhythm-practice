@@ -5,7 +5,7 @@
 // 실행: PW=<playwright 경로> node t58-offline-retire.js   (자기 서버를 8766 에 띄움)   통과: bad [] 0
 const pw = require(process.env.PW || 'playwright');
 const fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
-const OLD = process.env.OLD_OFFLINE || 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/보관/오프라인 앱 (웹판, v4.0.4 배포본)/offline';
+const OLD = process.env.OLD_OFFLINE || 'C:/Users/ultramsw67/Desktop/05 음악/수드 리듬 연습/보관/오프라인 앱 (웹판, v4.0.4 배포본)/offline';
 const NEW = path.join(__dirname, '..', 'offline');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 't58-'));
 const cp = (a, b) => { fs.mkdirSync(b, { recursive: true }); for (const f of fs.readdirSync(a)) { const s = path.join(a, f), d = path.join(b, f); fs.statSync(s).isDirectory() ? cp(s, d) : fs.copyFileSync(s, d); } };

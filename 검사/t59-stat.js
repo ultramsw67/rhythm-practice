@@ -87,7 +87,7 @@ module.exports = async (c) => {
 
   // ⑥ 안내 문구·버전
   const about = await c.ev(`document.querySelector('#tab-settings').textContent`);
-  ok('aboutText', /이름 없이 전체 숫자로 셉니다/.test(about) && /오늘의 악보/.test(about) && /v4\.0\.6/.test(about), about.slice(0, 80));
+  ok('aboutText', /이름 없이 전체 숫자로 셉니다/.test(about) && /오늘의 악보/.test(about) && /버전 v4\.\d/.test(about), about.slice(0, 80));
 
   const errs = c.logs.filter(l => /^EXC|error/i.test(l));
   ok('noErrors', !errs.length, errs);

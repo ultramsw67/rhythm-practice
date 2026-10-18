@@ -1,14 +1,14 @@
 // 오프라인 버전 만들기 — 원본 index.html 에서 자동 생성 (앱을 고친 뒤 이것만 다시 돌리면 된다)
 //   node build-offline.js
 // ① (2026-10-08 운영 종료) 예전엔 ../offline/ 에 올라가던 웹 오프라인 앱 — 지금은 바탕화면 보관 폴더에만 만든다
-// ② 바탕화면/수드 리듬 연습/보관/수드 리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
+// ② 바탕화면/05 음악/수드 리듬 연습/보관/수드 리듬 연습 오프라인/ : PC 에서 파일을 두 번 눌러 여는 판. 악보 도구·그림을 파일 안에 모두 넣음
 const fs = require('fs'), path = require('path'), crypto = require('crypto');
 const ROOT = path.join(__dirname, '..');
 // 2026-10-08 "오프라인 앱은 내리고 너만 저장해놔": 웹 오프라인 앱은 더 이상 올리지 않는다. 저장소 offline/ 에는 운영 종료 안내(index.html)와
 // 설치된 앱을 지우는 sw.js 만 둔다(손으로 만든 파일, 이 스크립트가 덮지 않음). 오프라인 앱은 바탕화면 보관 폴더에만 만들어 둔다.
-const OUT1 = process.env.OFFLINE_OUT1 || 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/보관/오프라인 앱 (웹판, 최신)';
+const OUT1 = process.env.OFFLINE_OUT1 || 'C:/Users/ultramsw67/Desktop/05 음악/수드 리듬 연습/보관/오프라인 앱 (웹판, 최신)';
 if (path.resolve(OUT1) === path.resolve(ROOT, 'offline')) throw new Error('offline/ 은 운영 종료 안내 자리 — 오프라인 앱을 여기에 만들지 않는다');
-const OUT2 = 'C:/Users/ultramsw67/Desktop/수드 리듬 연습/보관/수드 리듬 연습 오프라인';     // 2026-09-28 바탕화면 「수드 리듬 연습」 최종 폴더로 정리 → 2026-10-08 "오프라인 내용 다 없애줘" 로 그 안 「보관」 폴더로
+const OUT2 = 'C:/Users/ultramsw67/Desktop/05 음악/수드 리듬 연습/보관/수드 리듬 연습 오프라인';     // 2026-09-28 바탕화면 「수드 리듬 연습」 최종 폴더로 정리 → 2026-10-08 "오프라인 내용 다 없애줘" 로 그 안 「보관」 폴더로
 const ONLINE = 'https://ultramsw67.github.io/rhythm-practice/';
 const CDN = '<script src="https://cdn.jsdelivr.net/npm/vexflow@4.2.5/build/cjs/vexflow.js"></script>';
 let src = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
@@ -16,6 +16,11 @@ const guide = fs.readFileSync(path.join(ROOT, 'guide.html'), 'utf8');
 let vex = fs.readFileSync(path.join(ROOT, 'vendor', 'vexflow-4.2.5.js'), 'utf8');
 if (process.env.MARK) vex += '\n// ' + process.env.MARK + '\n';                // 업데이트 시험용 표시
 if (vex.includes('</script')) throw new Error('vexflow 안에 </script 가 있어 파일에 넣을 수 없음');
+// v4.1 수드 도우미: 공통 모듈·도움말 글·녹음 목소리(sood-voice/*.mp3, 없으면 기계 목소리)
+const GUIDE = ['sood-guide-helps.js', 'sood-guide.js'];
+const GUIDE_SRC = GUIDE.map(f => { const t = fs.readFileSync(path.join(ROOT, f), 'utf8'); if (/<\/script|<!--/i.test(t)) throw new Error(f + ' 안에 </script 나 <!-- 가 있음'); return t; });
+const VOICES = fs.existsSync(path.join(ROOT, 'sood-voice')) ? fs.readdirSync(path.join(ROOT, 'sood-voice')).filter(f => /\.mp3$/.test(f)) : [];
+const copyVoices = dir => { fs.mkdirSync(path.join(dir, 'sood-voice'), { recursive: true }); for (const f of VOICES) fs.copyFileSync(path.join(ROOT, 'sood-voice', f), path.join(dir, 'sood-voice', f)); };
 const need = (s, a) => { if (!s.includes(a)) throw new Error('원본에서 찾지 못함: ' + a.slice(0, 60)); };
 let ver = (src.match(/버전 (v[\d.]+)/) || [])[1] || 'v?';
 if (process.env.VER_OVERRIDE) { src = src.replace('버전 ' + ver + ' · ', '버전 ' + process.env.VER_OVERRIDE + ' · '); ver = process.env.VER_OVERRIDE; }
@@ -83,12 +88,14 @@ const SOUNDS = fs.readdirSync(path.join(ROOT, 'sounds')).filter(f => /\.(js|txt)
 fs.mkdirSync(path.join(OUT1, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT1, 'sounds', f));
 fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT1, 'LICENSES.txt'));  // 외부 자료 라이선스 전문
+for (const f of GUIDE) fs.copyFileSync(path.join(ROOT, f), path.join(OUT1, f));
+copyVoices(OUT1);   // 녹음 목소리는 미리 저장하지 않고(FILES 에 없음) 들은 것만 서비스워커가 저장
 fs.writeFileSync(path.join(OUT1, 'guide.html'), guide.replace('<title>수드 리듬 연습 사용법</title>', '<title>수드 리듬 연습 사용법 (오프라인)</title>'));
 const man = JSON.parse(fs.readFileSync(path.join(ROOT, 'manifest.webmanifest'), 'utf8'));
 Object.assign(man, { id: './', name: '수드 리듬 연습 오프라인 — 수트와후드', short_name: '수드 리듬(오프)', start_url: './', scope: './' });
 fs.writeFileSync(path.join(OUT1, 'manifest.webmanifest'), JSON.stringify(man, null, 2));
 // 저장할 파일 목록과 내용 지문 → 앱을 고치면 캐시 이름이 바뀌어 새 버전을 받는다
-const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png', 'LICENSES.txt'].concat(SOUNDS.map(f => 'sounds/' + f));
+const files = ['./', 'index.html', 'vexflow.js', 'guide.html', 'manifest.webmanifest', 'img/sood-192.jpg', 'img/icon-180.png', 'img/icon-192.png', 'img/icon-512.png', 'LICENSES.txt'].concat(GUIDE).concat(SOUNDS.map(f => 'sounds/' + f));
 const h = crypto.createHash('sha1');
 for (const f of files.slice(1)) h.update(fs.readFileSync(path.join(OUT1, f)));
 const CACHE = 'rp-offline-' + ver + '-' + h.digest('hex').slice(0, 10);
@@ -118,6 +125,7 @@ const imgJpg = 'data:image/jpeg;base64,' + b64('sood-192.jpg');
 const iconPng = 'data:image/png;base64,' + b64('icon-192.png');
 let d = common(src, 'PC 파일');
 need(d, CDN); d = d.replace(CDN, '<script>\n' + vex + '\n</script>');
+GUIDE.forEach((f, i) => { const tag = '<script src="' + f + '"></script>'; need(d, tag); d = d.replace(tag, () => '<script>\n' + GUIDE_SRC[i] + '\n</script>'); });
 d = d.split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"');
 d = d.replace(/<link rel="icon" href="img\/icon-192.png">/, '<link rel="icon" href="' + iconPng + '">');
 d = d.replace(/<link rel="apple-touch-icon"[^>]*>\n?/, '').replace(/<link rel="manifest"[^>]*>\n?/, '');
@@ -132,6 +140,7 @@ d = d.replace('</body>', `<script>
 fs.writeFileSync(path.join(OUT2, '수드 리듬 연습 오프라인.html'), d);
 fs.mkdirSync(path.join(OUT2, 'sounds'), { recursive: true });
 for (const f of SOUNDS) fs.copyFileSync(path.join(ROOT, 'sounds', f), path.join(OUT2, 'sounds', f));
+copyVoices(OUT2);
 fs.copyFileSync(path.join(ROOT, 'LICENSES.txt'), path.join(OUT2, 'LICENSES.txt'));
 let g = guide.replace('<title>수드 리듬 연습 사용법</title>', '<title>수드 리듬 연습 사용법 (오프라인)</title>')
   .split('src="img/sood-192.jpg"').join('src="' + imgJpg + '"')

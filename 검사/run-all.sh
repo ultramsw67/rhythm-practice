@@ -54,5 +54,6 @@ run t4.js FAKE_WAV="$W/swing.wav" SET='{"gen":3,"rv":2,"style":"swing","drum":""
 run qa-g/g7-overlap.js X=1
 run t54-tempo-android.js X=1
 run t55-android-all.js X=1
+run t62-guide.js X=1
 run t21-offline.js MODE=file FAKE_WAV="$W/fake.wav"
 echo ALLDONE >> $LOG

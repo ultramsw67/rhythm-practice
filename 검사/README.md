@@ -6,7 +6,7 @@
 |---|---|---|
 | `node test-core.js ../index.html` | 악보 생성 6,000회 (마디 길이·붙임줄·음역·공유 링크·악기 불변) | `fail 0`, `instrument invariance 2400 / 2400` |
 | `node test-score.js ../index.html` | 가상 연주 18곡 × 11변형 채점 | `perfect` 평균 100, 흔들림·빠짐은 점수가 내려감 |
-| `node serve.js "C:/Users/ultramsw67/Desktop/수드 리듬 연습/개발 원본"` | 로컬 서버 127.0.0.1:8765 (백그라운드로 켜 두고 아래 실행) | |
+| `node serve.js "C:/Users/ultramsw67/Desktop/05 음악/수드 리듬 연습/개발 원본"` | 로컬 서버 127.0.0.1:8765 (백그라운드로 켜 두고 아래 실행) | |
 | `node cdp.js t1.js` | 악보 4종 캡처 (`r1.png` 등) | 오류 없음 |
 | `node cdp.js t6-fixes.js` | v1.1 에서 고친 버그 재확인 | 모든 항목 기대값 |
 | `node cdp.js t7-art.js` | 기호가 기둥 반대쪽에 붙는지 | `onStemSide 0` |
@@ -47,6 +47,7 @@
 | `node cdp.js t55-android-all.js` | v4.0.1 안드로이드(크롬·삼성 인터넷) 흉내로 네 탭의 보이는 모든 단추·칸 270개를 실제 터치로 — 덮임·44px 미만·선택 칸 포커스 (단추는 touchstart 를 막아 실행 안 됨) | `bad [] 0` |
 | `PW=C:/Users/ultramsw67/Desktop/homepage/node_modules/playwright node t56-iphone-webkit.js` | v4.0.1 **사파리 엔진(웹킷)** 아이폰 흉내: 빠르기 막대 끌기·톡 누르기·네 탭 모든 칸(덮임·44px·16px 미만 글자=확대)·악보·가상 연주 100 (375·390·430 × 글자 3 × 밝음/어두움). 웹킷은 `npx playwright install webkit`(10/7 설치) — run-all 에는 없으니 **따로 돌린다** | `bad [] 0`, errs 0 |
 | `PW=… node t57-autoupdate.js` (실주소는 `BASE=https://ultramsw67.github.io/rhythm-practice/` 앞에) | v4.0.4 **휴대폰 새 버전 자동 바꿈**: 웹킷·크로뮴에서 version.txt 를 가로채 같은 버전·결과 탭·바쁨·옛 버전 표면 그대로, 새 버전이면 한 번 새로고침+안내 문구, 되풀이 없음, 들어보기 중 바쁨, 오프라인 앱 오류 없음 (약 8분). run-all 밖 — **따로 돌린다** | `bad [] 0` |
+| `node cdp.js t62-guide.js` | v4.1 수드 도우미: 단추 자리(탭 막대 위·가로 넘침 없음, 390·320·아주 크게·어두운 화면), 화면마다 도움말 창(연습·결과 빈/점수·보관함·설정), 처음 안내 카드 단추, 말풍선(시험은 2초)·말풍선 누르면 창, 녹음 시작 때 읽기 멈춤·녹음 중 잠금, 들어보기 중 말풍선 없음, 설정 끄기(새로고침 뒤에도)·다시 켜기, 녹음 목소리 mp3 가 문장마다 있음·없을 때 기계 목소리로 넘어감, 오류 없음 (t62-*.png) | `bad []` |
 | **`bash run-all.sh <영문 폴더>`** | **전체 회귀 검사** (시험마다 크롬 프로필 새로, 크롬이 늦게 뜨면 한 번 더). 폴더에 fake.wav(seed777 선율)·drum.wav·l7.wav — 만드는 법은 run-all.sh 머리말 | run-all.log 에 exit 1 없음, 녹음 100점 |
 
 주의
