@@ -241,7 +241,8 @@
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
-  function hidePeek() { if (peek) { peek.remove(); peek = null; } if (fab) fab.classList.remove('sg-nudge'); }
+  var peekT;
+  function hidePeek() { clearTimeout(peekT); if (peek) { peek.remove(); peek = null; } if (fab) fab.classList.remove('sg-nudge'); }
 
   function nudge() {
     var k = ctx();
@@ -252,7 +253,8 @@
     place(peek, 74);
     peek.onclick = function () { open(k); };
     document.body.appendChild(peek);
-    setTimeout(hidePeek, 9000);
+    // 앞 말풍선의 9초 타이머가 다음 말풍선을 일찍 지우지 않게, 지울 때 타이머도 같이 지운다 (10/18 악보 보기 담당 발견)
+    peekT = setTimeout(hidePeek, 9000);
   }
 
   function resetIdle() {
@@ -270,7 +272,12 @@
     fab.onclick = function () { open(); };
     document.body.appendChild(fab);
     ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
-      window.addEventListener(ev, function () { hidePeek(); resetIdle(); }, { passive: true, capture: true });
+      // 말풍선·도우미 단추를 누른 것은 지우지 않는다 (먼저 지우면 click 이 오지 않아 창이 안 열림 — 10/18 리듬 연습 담당 발견)
+      window.addEventListener(ev, function (e) {
+        var t = e.target;
+        if (!(t && t.closest && (t.closest('.sg-peek') || t.closest('.sg-fab')))) hidePeek();
+        resetIdle();
+      }, { passive: true, capture: true });
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && wrap) close(); });
     document.addEventListener('visibilitychange', function () { if (document.hidden) stop(); });

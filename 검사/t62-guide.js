@@ -93,6 +93,19 @@ module.exports = async (c) => {
   // 화면마다 한 번만: 같은 화면에서 또 가만히 있어도 안 나옴
   await c.sleep(2600);
   ok('peekOncePerScreen', await c.ev(`!document.querySelector('.sg-peek')`), null);
+  // 손가락으로 말풍선 누르기(touchstart→touchend→click)도 창이 열림 (v4.1.1: 모듈 원본이 처리, 앱 쪽 우회 뺌)
+  await c.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 5 });
+  await c.go(BASE); await c.sleep(2800);
+  const tp = await c.ev(`(()=>{const e=document.querySelector('.sg-peek'); if(!e) return null; const b=e.getBoundingClientRect(); return {x:b.left+b.width/2,y:b.top+b.height/2};})()`);
+  if (tp) {
+    await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: tp.x, y: tp.y }] });
+    await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await c.sleep(500);
+  }
+  p = await panel();
+  ok('peekTapOpens', !!tp && !!(p && p.title === H.practice.title), { tp, p });
+  await closeP();
+  await c.send('Emulation.setTouchEmulationEnabled', { enabled: false });
 
   // ⑤ 들어보기 중엔 말풍선 안 나옴: 들어보기를 켜고 아직 말풍선이 안 나온 보관함 화면으로 가서 가만히 2.6초
   await c.go(BASE); await c.sleep(300);
